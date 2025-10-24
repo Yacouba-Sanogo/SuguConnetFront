@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'notifications_page.dart';
+import 'payment_page.dart';
 import 'dart:ui';
 
 // La page du panier
@@ -79,7 +81,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(context),
       body: _buildBody(),
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton(
@@ -92,9 +94,9 @@ class _CartPageState extends State<CartPage> {
   }
 
   // Construit la barre d'application (similaire à la page des favoris)
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: const Color(0xFFFB662F).withOpacity(0.3), // Couleur FB662F avec 30% d'opacité
       elevation: 0,
       leading: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -109,7 +111,15 @@ class _CartPageState extends State<CartPage> {
           children: [
             IconButton(
               icon: const Icon(Icons.notifications_outlined, color: Colors.black54, size: 28),
-              onPressed: () {},
+              onPressed: () {
+                // Navigation vers la page des notifications
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsPage(),
+                  ),
+                );
+              },
             ),
             Container(
               margin: const EdgeInsets.only(top: 10, right: 12),
@@ -142,7 +152,7 @@ class _CartPageState extends State<CartPage> {
         ),
         _buildTotalSection(),
         _buildCheckoutButton(),
-        const SizedBox(height: 80), // Espace pour la barre de navigation
+        const SizedBox(height: 20), // Espace pour la barre de navigation
       ],
     );
   }
@@ -258,22 +268,32 @@ class _CartPageState extends State<CartPage> {
   
   // Widget pour le bouton "Acheter"
   Widget _buildCheckoutButton() {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
         child: ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                ),
-                minimumSize: const Size(double.infinity, 50),
-            ),
-            child: const Text(
-                'Acheter',
-                style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+          onPressed: () {
+            // Navigation vers la page de paiement
+            print('Bouton de paiement cliqué'); // Debug
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PaymentPage(),
+              ),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+              ),
+              minimumSize: const Size(double.infinity, 50),
+          ),
+          child: const Text(
+              'Passer la commande',
+              style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+          ),
         ),
       );
   }

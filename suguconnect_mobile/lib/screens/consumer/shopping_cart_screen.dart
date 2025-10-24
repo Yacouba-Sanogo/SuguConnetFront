@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'payment_page.dart';
 
 class ShoppingCartScreen extends StatefulWidget {
   const ShoppingCartScreen({super.key});
@@ -12,7 +13,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
     {
       'id': 1,
       'name': 'Tomates Bio',
-      'price': 4.50,
+      'price': 4500.0, // Prix en FCFA
       'quantity': 2,
       'image': 'https://via.placeholder.com/100',
       'producer': 'Ferme Martin'
@@ -20,7 +21,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
     {
       'id': 2,
       'name': 'Salade Verte',
-      'price': 3.20,
+      'price': 3200.0, // Prix en FCFA
       'quantity': 1,
       'image': 'https://via.placeholder.com/100',
       'producer': 'Ferme Martin'
@@ -52,8 +53,8 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Panier'),
-        backgroundColor: const Color(0xFF4CAF50),
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFFFB662F).withOpacity(0.3), // Couleur FB662F avec 30% d'opacité
+        foregroundColor: Colors.black,
         elevation: 0,
       ),
       body: _cartItems.isEmpty
@@ -145,7 +146,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                     ),
                                     const SizedBox(height: 8),
                                     Text(
-                                      '${item['price']}€',
+                                      '${item['price'].toStringAsFixed(0)} FCFA',
                                       style: const TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.bold,
@@ -162,10 +163,21 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      IconButton(
-                                        onPressed: () => _updateQuantity(index, item['quantity'] - 1),
-                                        icon: const Icon(Icons.remove_circle_outline),
-                                        color: const Color(0xFF4CAF50),
+                                      GestureDetector(
+                                        onTap: () => _updateQuantity(index, item['quantity'] - 1),
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[300],
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.remove,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -181,10 +193,21 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                           ),
                                         ),
                                       ),
-                                      IconButton(
-                                        onPressed: () => _updateQuantity(index, item['quantity'] + 1),
-                                        icon: const Icon(Icons.add_circle_outline),
-                                        color: const Color(0xFF4CAF50),
+                                      GestureDetector(
+                                        onTap: () => _updateQuantity(index, item['quantity'] + 1),
+                                        child: Container(
+                                          width: 32,
+                                          height: 32,
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey[300],
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.add,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -230,7 +253,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                             ),
                           ),
                           Text(
-                            '${_totalPrice.toStringAsFixed(2)}€',
+                            '${_totalPrice.toStringAsFixed(0)} FCFA',
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -245,15 +268,16 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Fonctionnalité de commande à venir'),
-                                backgroundColor: Color(0xFFFF6B35),
+                            // Navigation vers la page de paiement
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PaymentPage(),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF6B35),
+                            backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),

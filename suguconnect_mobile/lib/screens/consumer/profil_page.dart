@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notifications_page.dart';
 
 class ProfilPage extends StatelessWidget {
   @override
@@ -56,7 +57,7 @@ class ProfilPage extends StatelessWidget {
                     
                     // Nom et email
                     Text(
-                      'Jean Dupont',
+                      'Yacouba Sanogo',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -67,7 +68,7 @@ class ProfilPage extends StatelessWidget {
                     SizedBox(height: 8),
                     
                     Text(
-                      'jean.dupont@email.com',
+                      'yacouba.sanogo@email.com',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[600],
@@ -223,8 +224,12 @@ class ProfilPage extends StatelessWidget {
                       'Notifications',
                       Icons.notifications_outlined,
                       () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Paramètres de notifications')),
+                        // Navigation vers la page des notifications
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NotificationsPage(),
+                          ),
                         );
                       },
                     ),

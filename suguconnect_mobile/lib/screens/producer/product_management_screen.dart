@@ -6,6 +6,7 @@ import '../../services/product_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import 'producer_product_form_screen.dart';
+import '../consumer/notifications_page.dart';
 
 class ProductManagementScreen extends StatefulWidget {
   const ProductManagementScreen({super.key});
@@ -84,33 +85,44 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            child: Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
+            child: GestureDetector(
+              onTap: () {
+                // Navigation vers la page des notifications
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsPage(),
                   ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.black54,
-                    size: 24,
-                  ),
-                ),
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
+                );
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.black54,
+                      size: 24,
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

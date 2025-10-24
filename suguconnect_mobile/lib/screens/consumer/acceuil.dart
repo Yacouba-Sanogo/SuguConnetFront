@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'fruit_page.dart';
+import 'notifications_page.dart';
 
 // Page d'accueil principale de l'application consommateur
 class AccueilPage extends StatelessWidget {
@@ -33,9 +34,12 @@ class AccueilPage extends StatelessWidget {
               IconButton(
                 icon: Icon(Icons.notifications_outlined, color: Colors.black87),
                 onPressed: () {
-                  // Afficher un message temporaire pour les notifications
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Notifications à venir')),
+                  // Navigation vers la page des notifications
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NotificationsPage(),
+                    ),
                   );
                 },
               ),
@@ -290,38 +294,7 @@ class AccueilPage extends StatelessWidget {
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Panier - à implémenter')),
-          );
-        },
-        backgroundColor: Colors.orange,
-        elevation: 6,
-        child: Icon(Icons.shopping_cart, color: Colors.white),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        shape: CircularNotchedRectangle(),
-        notchMargin: 8.0,
-        elevation: 10,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // Left side
-              _buildBottomItem(context, Icons.home, 'Accueil', true),
-              _buildBottomItem(context, Icons.favorite_border, 'Favoris', false),
-              // Spacer for FAB
-              SizedBox(width: 56),
-              // Right side
-              _buildBottomItem(context, Icons.receipt_long, 'Commandes', false),
-              _buildBottomItem(context, Icons.person_outline, 'Profil', false),
-            ],
-          ),
-        ),
-      ),
+     
     );
   }
 

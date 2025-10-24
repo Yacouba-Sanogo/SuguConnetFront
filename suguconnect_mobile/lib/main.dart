@@ -4,6 +4,7 @@ import 'screens/landing_page.dart';
 import 'screens/consumer/main_screen.dart';
 import 'screens/consumer/product_catalog_screen.dart';
 import 'screens/consumer/shopping_cart_screen.dart';
+import 'screens/consumer/notifications_page.dart';
 import 'screens/producer/producer_dashboard_screen.dart';
 import 'screens/producer/producer_main_screen.dart';
 import 'screens/producer/product_management_screen.dart';
@@ -44,6 +45,7 @@ class MyApp extends StatelessWidget {
           '/consumer': (context) => MainScreen(), // Interface consommateur
           '/consumer/catalog': (context) => const ProductCatalogScreen(), // Catalogue produits
           '/consumer/cart': (context) => const ShoppingCartScreen(), // Panier
+          '/consumer/notifications': (context) => const NotificationsPage(), // Notifications
           '/producer': (context) => const ProducerMainScreen(), // Interface producteur
           '/producer/products': (context) => const ProductManagementScreen(), // Gestion produits
         },

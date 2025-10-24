@@ -3,6 +3,7 @@ import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:suguconnect_mobile/widgets/dashboard_stat_card.dart';
 import 'package:suguconnect_mobile/widgets/action_button.dart';
 import 'package:suguconnect_mobile/screens/producer/product_management_screen.dart';
+import '../consumer/notifications_page.dart';
 
 class ProducerDashboardScreen extends StatelessWidget {
   const ProducerDashboardScreen({super.key});
@@ -39,33 +40,44 @@ class ProducerDashboardScreen extends StatelessWidget {
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            child: Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
+            child: GestureDetector(
+              onTap: () {
+                // Navigation vers la page des notifications
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsPage(),
                   ),
-                  child: const Icon(
-                    Icons.notifications_outlined,
-                    color: Colors.black54,
-                    size: 24,
-                  ),
-                ),
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.primaryColor,
-                      shape: BoxShape.circle,
+                );
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.notifications_outlined,
+                      color: Colors.black54,
+                      size: 24,
                     ),
                   ),
-                ),
-              ],
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

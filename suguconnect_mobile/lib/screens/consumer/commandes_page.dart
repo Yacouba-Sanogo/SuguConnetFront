@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'order_detail_page.dart';
 
+// Page des commandes avec design moderne et onglets de filtrage
 class CommandesPage extends StatefulWidget {
   @override
   _CommandesPageState createState() => _CommandesPageState();
@@ -7,6 +9,39 @@ class CommandesPage extends StatefulWidget {
 
 class _CommandesPageState extends State<CommandesPage> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _selectedFilter = 'Tous'; // Filtre sélectionné
+
+  // Données fictives des commandes
+  final List<Map<String, dynamic>> _orders = [
+    {
+      'id': '12345',
+      'client': 'Ali Touré',
+      'status': 'Livrée',
+      'date': '2024-01-15',
+      'total': 12500.0,
+    },
+    {
+      'id': '12346',
+      'client': 'Fatou Diallo',
+      'status': 'En attente',
+      'date': '2024-01-16',
+      'total': 8500.0,
+    },
+    {
+      'id': '12347',
+      'client': 'Moussa Keita',
+      'status': 'Livrée',
+      'date': '2024-01-17',
+      'total': 15200.0,
+    },
+    {
+      'id': '12348',
+      'client': 'Aminata Traoré',
+      'status': 'Livrée',
+      'date': '2024-01-18',
+      'total': 9800.0,
+    },
+  ];
 
   @override
   void initState() {
@@ -15,331 +50,340 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Mes Commandes',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.bold,
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(),
+      body: Column(
+        children: [
+          _buildFilterTabs(),
+          Expanded(
+            child: _buildOrdersList(),
           ),
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => Navigator.pop(context),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.orange,
-          labelColor: Colors.orange,
-          unselectedLabelColor: Colors.grey,
-          tabs: [
-            Tab(text: 'En cours'),
-            Tab(text: 'Livrées'),
-            Tab(text: 'Annulées'),
-          ],
+        ],
+      ),
+    
+    );
+  }
+
+  // Construit la barre d'application avec logo et notifications
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      leading:       Container(
+        margin: const EdgeInsets.all(8),
+        child: Image.asset(
+          'assets/images/logo.png',
+          width: 24,
+          height: 24,
+          color: const Color(0xFFFB662F),
         ),
       ),
-      body: Container(
-        color: Colors.grey[50],
-        child: TabBarView(
-          controller: _tabController,
+      title: const Text(
+        'Commandes',
+        style: TextStyle(
+          color: Colors.black,
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ),
+      ),
+      centerTitle: true,
+      actions: [
+        Stack(
           children: [
-            _buildCommandesList('en_cours'),
-            _buildCommandesList('livrees'),
-            _buildCommandesList('annulees'),
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined, color: Colors.black),
+              onPressed: () {
+                // Navigation vers les notifications
+                Navigator.pushNamed(context, '/consumer/notifications');
+              },
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFB662F),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
           ],
+        ),
+      ],
+    );
+  }
+
+  // Construit les onglets de filtrage
+  Widget _buildFilterTabs() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _buildFilterTab('Tous', _selectedFilter == 'Tous'),
+          const SizedBox(width: 8),
+          _buildFilterTab('En attente', _selectedFilter == 'En attente'),
+          const SizedBox(width: 8),
+          _buildFilterTab('Livrées', _selectedFilter == 'Livrées'),
+        ],
+      ),
+    );
+  }
+
+  // Construit un onglet de filtre
+  Widget _buildFilterTab(String label, bool isSelected) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedFilter = label;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFFFB662F) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? const Color(0xFFFB662F) : Colors.grey.shade300,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.black,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCommandesList(String status) {
-    List<Map<String, dynamic>> commandes = _getCommandesByStatus(status);
+  // Construit la liste des commandes
+  Widget _buildOrdersList() {
+    // Filtrer les commandes selon le filtre sélectionné
+    List<Map<String, dynamic>> filteredOrders = _orders.where((order) {
+      if (_selectedFilter == 'Tous') return true;
+      if (_selectedFilter == 'En attente') return order['status'] == 'En attente';
+      if (_selectedFilter == 'Livrées') return order['status'] == 'Livrée';
+      return true;
+    }).toList();
 
-    if (commandes.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.shopping_cart_outlined,
-              size: 80,
-              color: Colors.grey[400],
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: filteredOrders.length,
+      itemBuilder: (context, index) {
+        final order = filteredOrders[index];
+        return _buildOrderCard(order);
+      },
+    );
+  }
+
+  // Construit une carte de commande
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    return GestureDetector(
+      onTap: () {
+        // Navigation vers la page de détail de la commande
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OrderDetailPage(
+              orderId: order['id'],
+              client: order['client'],
+              status: order['status'],
+              total: order['total'],
+              date: order['date'],
             ),
-            SizedBox(height: 16),
-            Text(
-              'Aucune commande ${_getStatusText(status)}',
-              style: TextStyle(
-                fontSize: 18,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            SizedBox(height: 8),
-            Text(
-              'Commencez vos achats maintenant !',
-              style: TextStyle(
-                color: Colors.grey[500],
-              ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
-      );
-    }
-
-    return ListView.builder(
-      padding: EdgeInsets.all(16),
-      itemCount: commandes.length,
-      itemBuilder: (context, index) {
-        final commande = commandes[index];
-        return Container(
-          margin: EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
-                spreadRadius: 1,
-                blurRadius: 5,
-                offset: Offset(0, 2),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Commande n°${order['id']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.visibility, color: Colors.grey),
+                        onPressed: () {
+                          // Navigation vers la page de détail de la commande
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => OrderDetailPage(
+                                orderId: order['id'],
+                                client: order['client'],
+                                status: order['status'],
+                                total: order['total'],
+                                date: order['date'],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.grey),
+                        onPressed: () {
+                          // Supprimer la commande
+                          _showDeleteDialog(order['id']);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Client: ${order['client']}',
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: order['status'] == 'Livrée' 
+                          ? const Color(0xFFFB662F) 
+                          : Colors.orange,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      order['status'],
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${order['total'].toStringAsFixed(0)} FCFA',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Color(0xFF4CAF50),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          child: Padding(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header de la commande
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Commande #${commande['id']}',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _getStatusColor(status)),
-                      ),
-                      child: Text(
-                        _getStatusText(status),
-                        style: TextStyle(
-                          color: _getStatusColor(status),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                
-                SizedBox(height: 8),
-                
-                Text(
-                  'Date: ${commande['date']}',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14,
-                  ),
-                ),
-                
-                SizedBox(height: 12),
-                
-                // Liste des produits
-                ...commande['produits'].map<Widget>((produit) {
-                  return Container(
-                    margin: EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Center(
-                            child: Icon(Icons.image, color: Colors.grey, size: 24),
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                produit['nom'],
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              Text(
-                                'Quantité: ${produit['quantite']}',
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '${produit['prix']} €',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
-                
-                SizedBox(height: 12),
-                
-                Divider(),
-                
-                // Total et actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Total',
-                            style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
-                            ),
-                          ),
-                          Text(
-                            '${commande['total']} €',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (status == 'en_cours') ...[
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Suivi de commande activé')),
-                          );
-                        },
-                        child: Text('Suivre'),
-                      ),
-                      SizedBox(width: 8),
-                    ],
-                    ElevatedButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Commande ${commande['id']} sélectionnée')),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: Text('Voir détails'),
-                    ),
-                  ],
-                ),
-              ],
+        ),
+      ),
+    );
+  }
+
+  // Affiche une boîte de dialogue de confirmation de suppression
+  void _showDeleteDialog(String orderId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Supprimer la commande'),
+          content: const Text('Êtes-vous sûr de vouloir supprimer cette commande ?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Annuler'),
             ),
-          ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _orders.removeWhere((order) => order['id'] == orderId);
+                });
+                Navigator.of(context).pop();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Commande supprimée')),
+                );
+              },
+              child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
+            ),
+          ],
         );
       },
     );
   }
 
-  List<Map<String, dynamic>> _getCommandesByStatus(String status) {
-    switch (status) {
-      case 'en_cours':
-        return [
-          {
-            'id': '12345',
-            'date': '15 Jan 2024',
-            'total': '45.50',
-            'produits': [
-              {'nom': 'Tomates fraîches', 'quantite': 2, 'prix': '8.50'},
-              {'nom': 'Pommes', 'quantite': 3, 'prix': '6.00'},
-              {'nom': 'Salade', 'quantite': 1, 'prix': '3.50'},
-            ],
-          },
-          {
-            'id': '12346',
-            'date': '14 Jan 2024',
-            'total': '32.75',
-            'produits': [
-              {'nom': 'Riz basmati', 'quantite': 1, 'prix': '12.75'},
-              {'nom': 'Lentilles', 'quantite': 2, 'prix': '8.00'},
-            ],
-          },
-        ];
-      case 'livrees':
-        return [
-          {
-            'id': '12340',
-            'date': '10 Jan 2024',
-            'total': '28.30',
-            'produits': [
-              {'nom': 'Carottes', 'quantite': 2, 'prix': '4.30'},
-              {'nom': 'Oignons', 'quantite': 1, 'prix': '3.00'},
-            ],
-          },
-        ];
-      case 'annulees':
-        return [];
-      default:
-        return [];
-    }
-  }
-
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'en_cours':
-        return 'En cours';
-      case 'livrees':
-        return 'Livrée';
-      case 'annulees':
-        return 'Annulée';
-      default:
-        return '';
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'en_cours':
-        return Colors.orange;
-      case 'livrees':
-        return Colors.green;
-      case 'annulees':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+  // Construit la barre de navigation inférieure
+  Widget _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      type: BottomNavigationBarType.fixed,
+      currentIndex: 2, // Index pour "Commandes"
+      selectedItemColor: const Color(0xFFFB662F),
+      unselectedItemColor: Colors.grey,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: 'Accueil',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.inventory),
+          label: 'Produits',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.list_alt),
+          label: 'Commandes',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.person),
+          label: 'Profil',
+        ),
+      ],
+      onTap: (index) {
+        // Navigation vers les différentes pages
+        switch (index) {
+          case 0:
+            Navigator.pushReplacementNamed(context, '/consumer');
+            break;
+          case 1:
+            Navigator.pushNamed(context, '/consumer/catalog');
+            break;
+          case 2:
+            // Déjà sur la page des commandes
+            break;
+          case 3:
+            // Navigation vers le profil
+            break;
+        }
+      },
+    );
   }
 }

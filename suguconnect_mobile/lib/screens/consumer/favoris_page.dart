@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'detaille_produit.dart';
 
@@ -9,13 +10,13 @@ class FavorisPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(context),
       body: _buildBody(),
     );
   }
 
   // Construit la barre d'application
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: const Color(0xFFF9F9F9),
       elevation: 0,
@@ -33,7 +34,15 @@ class FavorisPage extends StatelessWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.notifications_outlined, color: Colors.black54, size: 28),
-              onPressed: () {},
+              onPressed: () {
+                // Navigation vers la page des notifications
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationsPage(),
+                  ),
+                );
+              },
             ),
             Container(
               margin: const EdgeInsets.only(top: 10, right: 12),
