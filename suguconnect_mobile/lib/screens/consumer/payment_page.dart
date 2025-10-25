@@ -73,7 +73,7 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // Widget pour la carte du bénéficiaire
+  // Widget pour la carte des produits commandés
   Widget _buildBeneficiaryCard() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -85,32 +85,140 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Amadou Dembélé',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Commande',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              GestureDetector(
+                onTap: () {
+                  // TODO: Navigation vers la page de détails de commande
+                },
+                child: const Row(
+                  children: [
+                    Text('Voir tout', style: TextStyle(color: Colors.grey)),
+                    SizedBox(width: 4),
+                    Icon(Icons.keyboard_arrow_down, color: Colors.grey, size: 16),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Affichage des produits
           Row(
             children: [
-              const Text('Homme', style: TextStyle(color: Colors.grey)),
-              const SizedBox(width: 8),
-              const Text('7ans', style: TextStyle(color: Colors.grey)),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Fournitures scolaires, cantine',
-                    style: TextStyle(color: Colors.grey),
-                    overflow: TextOverflow.ellipsis),
+              // Carottes
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/carottes.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'Carottes\n2.500 FCFA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: const [
-                  Text('30.000 fcfa',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text('(Par mois)',
-                      style: TextStyle(color: Colors.grey, fontSize: 12)),
-                ],
-              )
+              const SizedBox(width: 12),
+              // Oignons
+              Expanded(
+                child: Container(
+                  height: 120,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/Oignons.png'),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
+                        ],
+                      ),
+                    ),
+                    child: const Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          'Oignons\n1.800 FCFA',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ],
+          ),
+          const SizedBox(height: 12),
+          // Total de la commande
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFB662F).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Total de la commande',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  '4.300 FCFA',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFB662F),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
