@@ -96,6 +96,7 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
       ),
       centerTitle: true,
       actions: [
+        // Bouton de notifications
         Stack(
           children: [
             IconButton(
