@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
         title: 'SuguConnect', // Nom de l'application
         theme: AppTheme.lightTheme, // Thème personnalisé
         debugShowCheckedModeBanner: false, // Masquer la bannière de debug
-        home: MainScreen(), // Page d'accueil par défaut (interface consommateur)
+        home: ProducerMainScreen(), // Page d'accueil par défaut (interface producteur)
         // Configuration des routes de navigation
         routes: {
           '/landing': (context) => const LandingPage(), // Page d'accueil
