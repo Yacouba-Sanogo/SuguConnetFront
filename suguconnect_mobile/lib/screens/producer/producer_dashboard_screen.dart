@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
+import 'package:suguconnect_mobile/screens/producer/stock_management_screen.dart';
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
 
@@ -169,6 +170,26 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                     ),
                   ),
                 ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Bouton Gestion des stocks
+              SizedBox(
+                width: double.infinity,
+                child: _ModernActionButton(
+                  icon: Icons.inventory_2,
+                  label: 'Gestion des stocks',
+                  color: const Color(0xFF2196F3),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const StockManagementScreen(),
+                      ),
+                    );
+                  },
+                ),
               ),
               
               const SizedBox(height: 16),
