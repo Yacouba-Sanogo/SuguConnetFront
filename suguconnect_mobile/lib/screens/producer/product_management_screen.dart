@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import 'producer_product_form_screen.dart';
 import '../consumer/notifications_page.dart';
+import '../consumer/messaging_page.dart';
 
 class ProductManagementScreen extends StatefulWidget {
   const ProductManagementScreen({super.key});
@@ -66,10 +67,14 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.eco, color: Colors.white, size: 24),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 32,
+                height: 32,
+                color: const Color(0xFFFB662F),
+              ),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -131,7 +136,7 @@ class _ProductManagementScreenState extends State<ProductManagementScreen> {
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const ProducerProductFormScreen()),
         ),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: const Color(0xFFFB662F),
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: _isLoading
@@ -394,7 +399,7 @@ class ProductManagementCard extends StatelessWidget {
                       Text(
                         product.prixFormate,
                         style: TextStyle(
-                          color: AppTheme.primaryColor,
+                          color: const Color(0xFFFB662F),
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                         ),
@@ -861,7 +866,7 @@ class _ModernProductCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryColor,
+                    color: const Color(0xFFFB662F),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -882,7 +887,7 @@ class _ModernProductCard extends StatelessWidget {
             children: [
               _ActionButton(
                 icon: Icons.edit,
-                color: AppTheme.primaryColor,
+                color: const Color(0xFFFB662F),
                 onTap: onEdit,
               ),
               const SizedBox(width: 8),

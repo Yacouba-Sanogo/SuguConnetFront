@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
+import '../consumer/notifications_page.dart';
+import '../consumer/messaging_page.dart';
 
-class ProducerOrdersScreen extends StatelessWidget {
+class ProducerOrdersScreen extends StatefulWidget {
   const ProducerOrdersScreen({super.key});
+
+  @override
+  State<ProducerOrdersScreen> createState() => _ProducerOrdersScreenState();
+}
+
+class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,24 +41,260 @@ class ProducerOrdersScreen extends StatelessWidget {
           ),
         ),
         iconTheme: const IconThemeData(color: Colors.black87),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: const Color(0xFFFB662F),
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: const Color(0xFFFB662F),
+          tabs: const [
+            Tab(text: 'En attente'),
+            Tab(text: 'Expédiée'),
+            Tab(text: 'Livrée'),
+          ],
+        ),
       ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(20),
-        itemCount: 6,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (context, index) {
-          return _ModernOrderCard(
-            orderNumber: 'Commande #12${index + 10}',
-            product: 'Orange',
-            quantity: '3',
-            price: '40 000 fcfa',
-            status: index % 3 == 0 ? 'En attente' : index % 3 == 1 ? 'Expédiée' : 'Livrée',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ProducerOrderDetailScreen()),
+      body: Column(
+        children: [
+          // Barre de recherche
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.white,
+            child: TextField(
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Rechercher une commande...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFFFB662F)),
+                ),
+                filled: true,
+                fillColor: Colors.grey.shade50,
+              ),
             ),
-          );
-        },
+          ),
+          // Liste des commandes par onglet
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildOrderList('En attente'),
+                _buildOrderList('Expédiée'),
+                _buildOrderList('Livrée'),
+              ],
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildOrderList(String status) {
+    // Données filtrées par statut et recherche
+    final allOrders = [
+      {'num': 'Commande #1210', 'product': 'Orange', 'qty': '3', 'price': '40 000 fcfa', 'status': 'En attente'},
+      {'num': 'Commande #1211', 'product': 'Tomate', 'qty': '5', 'price': '25 000 fcfa', 'status': 'En attente'},
+      {'num': 'Commande #1212', 'product': 'Pomme', 'qty': '2', 'price': '30 000 fcfa', 'status': 'Expédiée'},
+      {'num': 'Commande #1213', 'product': 'Carotte', 'qty': '4', 'price': '20 000 fcfa', 'status': 'Expédiée'},
+      {'num': 'Commande #1214', 'product': 'Oignon', 'qty': '3', 'price': '15 000 fcfa', 'status': 'Livrée'},
+      {'num': 'Commande #1215', 'product': 'Mais', 'qty': '6', 'price': '35 000 fcfa', 'status': 'Livrée'},
+    ];
+
+    final filteredOrders = allOrders
+        .where((order) => order['status'] == status)
+        .where((order) => order['num']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            order['product']!.toLowerCase().contains(_searchQuery.toLowerCase()))
+        .toList();
+
+    if (filteredOrders.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 16),
+            Text(
+              'Aucune commande',
+              style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.all(20),
+      itemCount: filteredOrders.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, index) {
+        final order = filteredOrders[index];
+        return _ModernOrderCard(
+          orderNumber: order['num']!,
+          product: order['product']!,
+          quantity: order['qty']!,
+          price: order['price']!,
+          status: status,
+          onTap: () => _showOrderDetailDialog(context, order),
+        );
+      },
+    );
+  }
+
+  void _showOrderDetailDialog(BuildContext context, Map<String, String> order) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            constraints: const BoxConstraints(maxWidth: 500),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Détails de la commande',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  
+                  // Stepper
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: _ModernOrderStepper(activeStep: order['status'] == 'En attente' ? 0 : order['status'] == 'Expédiée' ? 1 : 2),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Informations de la commande
+                  Row(
+                    children: [
+                      Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.local_grocery_store,
+                          color: Colors.orange.shade600,
+                          size: 32,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              order['num']!,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text('Produit : ${order['product']}'),
+                            Text('Quantité : ${order['qty']}'),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFB662F).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                order['price']!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFFB662F),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Bouton d'action
+                  if (order['status'] == 'En attente')
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Commande expédiée avec succès')),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFB662F),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Confirmer l\'expédition',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -135,14 +393,14 @@ class ProducerOrderDetailScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            color: const Color(0xFFFB662F).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Text(
                             'Prix total : 120 000 fcfa',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.primaryColor,
+                              color: const Color(0xFFFB662F),
                             ),
                           ),
                         ),
@@ -162,13 +420,13 @@ class ProducerOrderDetailScreen extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: const Color(0xFFFB662F),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                   elevation: 2,
-                  shadowColor: AppTheme.primaryColor.withOpacity(0.3),
+                  shadowColor: const Color(0xFFFB662F).withOpacity(0.3),
                 ),
                 child: const Text(
                   'Confirmer l\'expédition de la commande',
@@ -325,7 +583,7 @@ class _ModernOrderStepper extends StatelessWidget {
                         height: 3,
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+                          color: isActive ? const Color(0xFFFB662F) : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -344,7 +602,7 @@ class _ModernOrderStepper extends StatelessWidget {
               child: Text(
                 steps[i],
                 style: TextStyle(
-                  color: isActive ? AppTheme.primaryColor : Colors.grey.shade500,
+                  color: isActive ? const Color(0xFFFB662F) : Colors.grey.shade500,
                   fontSize: 12,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 ),
@@ -373,9 +631,9 @@ class _ModernDot extends StatelessWidget {
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: isCompleted ? AppTheme.primaryColor : (isActive ? AppTheme.primaryColor : Colors.grey.shade300),
+        color: isCompleted ? const Color(0xFFFB662F) : (isActive ? const Color(0xFFFB662F) : Colors.grey.shade300),
         shape: BoxShape.circle,
-        border: isActive && !isCompleted ? Border.all(color: AppTheme.primaryColor, width: 3) : null,
+        border: isActive && !isCompleted ? Border.all(color: const Color(0xFFFB662F), width: 3) : null,
       ),
       child: isCompleted
           ? const Icon(

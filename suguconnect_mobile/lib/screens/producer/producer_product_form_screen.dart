@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
+import 'dart:io';
 
 class ProducerProductFormScreen extends StatefulWidget {
   const ProducerProductFormScreen({super.key});
 
   @override
   State<ProducerProductFormScreen> createState() => _ProducerProductFormScreenState();
+  
+  static Future<Map<String, dynamic>?> show(BuildContext context) async {
+    return await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ProducerProductFormScreen(),
+      ),
+    );
+  }
 }
 
 class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
@@ -17,6 +28,8 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
   String _unit = 'Kg';
   String _category = 'Légumes';
   final _descCtrl = TextEditingController();
+  bool _isBio = false;
+  List<File> _selectedImages = [];
 
   @override
   void dispose() {
@@ -136,12 +149,13 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
                       child: Row(
                         children: [
                           _ModernQtyBtn(icon: Icons.remove, onTap: () => _changeQty(-1)),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
                           Expanded(
                             child: TextFormField(
                               controller: _qtyCtrl,
                               textAlign: TextAlign.center,
                               keyboardType: TextInputType.number,
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
@@ -157,12 +171,12 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 18),
                               ),
                               validator: (v) => (int.tryParse(v ?? '') == null) ? 'Invalide' : null,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 4),
                           _ModernQtyBtn(icon: Icons.add, onTap: () => _changeQty(1)),
                         ],
                       ),
@@ -206,60 +220,175 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
               
               const SizedBox(height: 24),
               
-              // Photo du produit avec design de la maquette
+              // Photos du produit (jusqu'à 4)
               _ModernSection(
-                title: 'Photo du produit',
-                child: Container(
-                  height: 160,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.grey.shade300, 
-                      style: BorderStyle.solid,
-                      width: 2,
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.camera_alt_outlined,
-                        color: Colors.grey.shade600,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Ajouter des images pour votre produit',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
+                title: 'Photos du produit (max 4)',
+                child: Column(
+                  children: [
+                    // Grille des images
+                    if (_selectedImages.isNotEmpty)
+                      GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 1,
                         ),
-                        textAlign: TextAlign.center,
+                        itemCount: _selectedImages.length,
+                        itemBuilder: (context, index) {
+                          return Stack(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  _selectedImages[index],
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                  height: double.infinity,
+                                ),
+                              ),
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedImages.removeAt(index);
+                                    });
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '(4 photos maximum)',
-                        style: TextStyle(
-                          color: Colors.grey.shade500,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFEE8E3),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Text(
-                          'Choisir une image',
-                          style: TextStyle(
-                            color: Colors.black87,
-                            fontWeight: FontWeight.w500,
+                    
+                    const SizedBox(height: 12),
+                    
+                    // Bouton ajouter image
+                    if (_selectedImages.length < 4)
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 100,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppTheme.primaryColor,
+                              width: 2,
+                              style: BorderStyle.solid,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.add_photo_alternate,
+                                color: AppTheme.primaryColor,
+                                size: 32,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Ajouter une photo (${_selectedImages.length}/4)',
+                                style: TextStyle(
+                                  color: AppTheme.primaryColor,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
+                      ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Option Bio
+              _ModernSection(
+                title: 'Caractéristiques',
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _isBio ? Colors.green.shade300 : Colors.grey.shade300,
+                      width: _isBio ? 2 : 1,
+                    ),
+                    boxShadow: _isBio ? [
+                      BoxShadow(
+                        color: Colors.green.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ] : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: _isBio ? Colors.green.shade50 : Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.eco,
+                          color: _isBio ? Colors.green.shade700 : Colors.grey.shade600,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Produit Bio',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: _isBio ? Colors.green.shade700 : Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Agriculture biologique certifiée',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: _isBio,
+                        onChanged: (value) {
+                          setState(() {
+                            _isBio = value;
+                          });
+                        },
+                        activeColor: Colors.green,
+                        activeTrackColor: Colors.green.shade300,
                       ),
                     ],
                   ),
@@ -331,31 +460,189 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
   void _changeQty(int delta) {
     final current = int.tryParse(_qtyCtrl.text) ?? 0;
     final next = (current + delta).clamp(0, 1000000);
-    _qtyCtrl.text = next.toString();
-    setState(() {});
+    setState(() {
+      _qtyCtrl.text = next.toString();
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    
+    // Afficher un dialogue pour choisir entre galerie et appareil photo
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Choisir une source'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+              title: const Text('Galerie'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+              title: const Text('Appareil photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (source != null) {
+      try {
+        final XFile? image = await picker.pickImage(
+          source: source,
+          maxWidth: 1200,
+          maxHeight: 1200,
+          imageQuality: 85,
+        );
+        
+        if (image != null) {
+          setState(() {
+            _selectedImages.add(File(image.path));
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Erreur lors de la sélection: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // Vérifier si le nom correspond à la catégorie
+  bool _validateNameCategory() {
+    final name = _nameCtrl.text.toLowerCase();
+    
+    final categoryProducts = {
+      'Légumes': ['tomate', 'carotte', 'oignon', 'poivron', 'concombre', 'aubergine', 'courgette', 'haricot', 'gombo', 'pomme de terre', 'patate', 'chou', 'salade', 'épinard', 'ail', 'échalote'],
+      'Fruits': ['mangue', 'banane', 'orange', 'citron', 'avocat', 'ananas', 'papaye', 'goyave', 'pastèque', 'melon', 'raisin', 'pomme', 'poire', 'pêche', 'abricot'],
+      'Epices': ['piment', 'poivre', 'gingembre', 'curry', 'cumin', 'coriandre', 'persil', 'basilic', 'thym', 'romarin', 'safran', 'cannelle', 'clou de girofle'],
+      'Céréales': ['riz', 'maïs', 'mil', 'blé', 'sorgho', 'avoine', 'orge', 'quinoa'],
+    };
+
+    final validNames = categoryProducts[_category] ?? [];
+    return validNames.any((valid) => name.contains(valid));
+  }
+
+  String _getCategoryHelp() {
+    switch (_category) {
+      case 'Légumes':
+        return 'Légumes valides: Tomate, Carotte, Oignon, Poivron, Gombo, Chou, Ail...';
+      case 'Fruits':
+        return 'Fruits valides: Mangue, Banane, Orange, Avocat, Ananas, Papaye...';
+      case 'Epices':
+        return 'Epices valides: Piment, Poivre, Gingembre, Curry, Safran...';
+      case 'Céréales':
+        return 'Céréales valides: Riz, Maïs, Mil, Blé, Sorgho, Quinoa...';
+      default:
+        return '';
+    }
   }
 
   void _save() {
     if (!_formKey.currentState!.validate()) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produit enregistré (maquette)')));
-    Navigator.of(context).pop();
-  }
-}
-
-class _LabeledInput extends StatelessWidget {
-  final String label;
-  final Widget child;
-  const _LabeledInput({required this.label, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label),
-        const SizedBox(height: 8),
-        child,
-      ],
+    
+    // Vérifier qu'au moins une image est sélectionnée
+    if (_selectedImages.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez ajouter au moins une image pour votre produit'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+    
+    // Vérifier que le nom correspond à la catégorie
+    if (!_validateNameCategory()) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber, color: Colors.orange, size: 28),
+              const SizedBox(width: 8),
+              const Text('Nom invalide'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Le nom "${_nameCtrl.text}" ne correspond pas à la catégorie "${_category}".',
+                style: const TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.info_outline, color: Colors.blue.shade700, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _getCategoryHelp(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Fermer'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+    
+    // Créer le produit à retourner (prendre la première image comme principale)
+    final product = {
+      'name': _nameCtrl.text,
+      'price': _priceCtrl.text,
+      'stock': int.parse(_qtyCtrl.text),
+      'category': _category,
+      'unit': _unit,
+      'description': _descCtrl.text,
+      'image': _selectedImages.first.path, // Première image comme principale
+      'images': _selectedImages.map((f) => f.path).toList(), // Liste de toutes les images
+      'isBio': _isBio,
+    };
+    
+    // Retourner le produit au parent
+    Navigator.of(context).pop(product);
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Produit ajouté avec succès${_isBio ? ' (Bio)' : ''}'),
+        backgroundColor: _isBio ? Colors.green : AppTheme.primaryColor,
+      ),
     );
   }
 }
@@ -443,7 +730,7 @@ class _ModernQtyBtn extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
-          width: 48,
+          width: 40,
           height: 48,
           decoration: BoxDecoration(
             color: icon == Icons.add ? AppTheme.primaryColor : Colors.grey.shade100,
@@ -455,7 +742,7 @@ class _ModernQtyBtn extends StatelessWidget {
           child: Icon(
             icon,
             color: icon == Icons.add ? Colors.white : Colors.grey.shade600,
-            size: 20,
+            size: 18,
           ),
         ),
       ),

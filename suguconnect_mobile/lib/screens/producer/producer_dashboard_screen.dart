@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
-import 'package:suguconnect_mobile/widgets/dashboard_stat_card.dart';
-import 'package:suguconnect_mobile/widgets/action_button.dart';
-import 'package:suguconnect_mobile/screens/producer/product_management_screen.dart';
+import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
 import '../consumer/notifications_page.dart';
+import '../consumer/messaging_page.dart';
 
-class ProducerDashboardScreen extends StatelessWidget {
+class ProducerDashboardScreen extends StatefulWidget {
   const ProducerDashboardScreen({super.key});
 
+  @override
+  State<ProducerDashboardScreen> createState() => _ProducerDashboardScreenState();
+}
+
+class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,10 +25,14 @@ class ProducerDashboardScreen extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(Icons.eco, color: Colors.white, size: 24),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 32,
+                height: 32,
+                color: const Color(0xFFFB662F),
+              ),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -71,7 +79,7 @@ class ProducerDashboardScreen extends StatelessWidget {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppTheme.primaryColor,
+                        color: Color(0xFFFB662F),
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -135,10 +143,17 @@ class ProducerDashboardScreen extends StatelessWidget {
                       icon: Icons.add_shopping_cart,
                       label: 'Ajouter un produit',
                       color: AppTheme.primaryColor,
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const ProductManagementScreen()),
-                        );
+                      onTap: () async {
+                        final product = await ProducerProductFormScreen.show(context);
+                        // Le produit est géré dans ProducerProductsScreen
+                        if (product != null && mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
+                              backgroundColor: product['isBio'] ? Colors.green : AppTheme.primaryColor,
+                            ),
+                          );
+                        }
                       },
                     ),
                   ),
@@ -168,7 +183,12 @@ class ProducerDashboardScreen extends StatelessWidget {
                   textColor: Colors.black87,
                   borderColor: Colors.grey.shade300,
                   onTap: () {
-                    Navigator.of(context).pushNamed('/producer');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MessagingPage(),
+                      ),
+                    );
                   },
                 ),
               ),

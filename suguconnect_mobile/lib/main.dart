@@ -8,6 +8,7 @@ import 'screens/consumer/notifications_page.dart';
 import 'screens/producer/producer_dashboard_screen.dart';
 import 'screens/producer/producer_main_screen.dart';
 import 'screens/producer/product_management_screen.dart';
+import 'screens/producer/producer_profile_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/auth/role_selection_screen.dart';
@@ -48,6 +49,7 @@ class MyApp extends StatelessWidget {
           '/consumer/notifications': (context) => const NotificationsPage(), // Notifications
           '/producer': (context) => const ProducerMainScreen(), // Interface producteur
           '/producer/products': (context) => const ProductManagementScreen(), // Gestion produits
+          '/producer/profile': (context) => const ProducerProfileScreen(), // Profil producteur
         },
       ),
     );
