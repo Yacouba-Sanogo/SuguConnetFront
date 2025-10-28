@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 
 class StockManagementScreen extends StatefulWidget {
-  const StockManagementScreen({super.key});
+  final int initialTabIndex;
+  
+  const StockManagementScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
@@ -91,7 +93,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(
+      length: 4,
+      vsync: this,
+      initialIndex: widget.initialTabIndex,
+    );
   }
 
   @override
@@ -222,7 +228,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                       padding: const EdgeInsets.all(16),
                       itemCount: _filteredProducts.length,
                       itemBuilder: (context, index) {
-                        return _buildStockCard(_filteredProducts[index]);
+                        return _buildProductCard(_filteredProducts[index], index);
                       },
                     ),
             ),
@@ -230,7 +236,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddStockDialog(),
+        onPressed: _showAddStockDialog,
         backgroundColor: AppTheme.primaryColor,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
@@ -369,7 +375,27 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  Widget _buildStockCard(Map<String, dynamic> product) {
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          Text(
+            'Aucun produit',
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey.shade600,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(Map<String, dynamic> product, int index) {
     Color statusColor = _getStatusColor(product['status']);
     IconData statusIcon = _getStatusIcon(product['status']);
     
@@ -436,7 +462,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                             ),
                           ),
                         ),
-                        if (product['isBio'])
+                        if (product['isBio'] == true)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
@@ -518,25 +544,6 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: color.withOpacity(0.1),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          child: Icon(icon, color: color, size: 16),
-        ),
-      ),
-    );
-  }
-
   Color _getStatusColor(String status) {
     switch (status) {
       case 'stock_normal':
@@ -563,27 +570,33 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     }
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            'Aucun produit',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: color.withOpacity(0.1),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.1),
           ),
-        ],
+          child: Icon(icon, color: color, size: 20),
+        ),
       ),
     );
   }
 
   void _showProductDetails(Map<String, dynamic> product) {
+    final minStockController = TextEditingController(text: product['minStock'].toString());
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -595,23 +608,74 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
             const Expanded(child: Text('Détails du produit')),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildDetailRow('Nom', product['name']),
-            _buildDetailRow('Prix', '${product['price']} fcfa'),
-            _buildDetailRow('Stock actuel', '${product['stock']} ${product['unit']}'),
-            _buildDetailRow('Stock minimum', '${product['minStock']} ${product['unit']}'),
-            _buildDetailRow('Catégorie', product['category']),
-            _buildDetailRow('Type', product['isBio'] ? 'Bio' : 'Conventionnel'),
-            _buildDetailRow('Dernière mise à jour', product['lastUpdated']),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDetailRow('Nom', product['name']),
+              _buildDetailRow('Prix', '${product['price']} fcfa'),
+              _buildDetailRow('Stock actuel', '${product['stock']} ${product['unit']}'),
+              const SizedBox(height: 8),
+              Text(
+                'Stock minimum d\'alerte',
+                style: TextStyle(
+                  color: Colors.grey.shade700,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: minStockController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Quantité minimum',
+                  prefixIcon: const Icon(Icons.warning_amber, color: Colors.orange),
+                  suffix: Text(product['unit'], style: TextStyle(color: Colors.grey.shade600)),
+                  border: const OutlineInputBorder(),
+                  helperText: 'Alerte quand le stock atteint cette quantité',
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildDetailRow('Catégorie', product['category']),
+              _buildDetailRow('Type', product['isBio'] ? 'Bio' : 'Conventionnel'),
+              _buildDetailRow('Dernière mise à jour', product['lastUpdated']),
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Fermer'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final newMinStock = int.tryParse(minStockController.text);
+              if (newMinStock != null && newMinStock >= 0) {
+                setState(() {
+                  product['minStock'] = newMinStock;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Stock minimum mis à jour à ${newMinStock} ${product['unit']}'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Veuillez entrer un nombre valide'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+            ),
+            child: const Text('Enregistrer'),
           ),
         ],
       ),
@@ -679,7 +743,6 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Implementer l'ajout de stock
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -729,7 +792,6 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
           ),
           ElevatedButton(
             onPressed: () {
-              // TODO: Implementer le retrait de stock
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

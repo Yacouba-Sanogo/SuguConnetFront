@@ -32,16 +32,97 @@ class _ProducerMainScreenState extends State<ProducerMainScreen> {
         duration: const Duration(milliseconds: 250),
         child: _pages[_currentIndex],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        indicatorColor: AppTheme.primaryColor.withAlpha(31),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Accueil'),
-          NavigationDestination(icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Produits'),
-          NavigationDestination(icon: Icon(Icons.receipt_long_outlined), selectedIcon: Icon(Icons.receipt_long), label: 'Commandes'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profil'),
-        ],
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 18,
+              spreadRadius: 1,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 58,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Bouton Accueil
+                _buildNavItem(
+                  icon: Icons.home_outlined,
+                  label: 'Accueil',
+                  index: 0,
+                ),
+                // Bouton Produits
+                _buildNavItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Produits',
+                  index: 1,
+                ),
+                // Bouton Commandes
+                _buildNavItem(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Commandes',
+                  index: 2,
+                ),
+                // Bouton Profil
+                _buildNavItem(
+                  icon: Icons.person_outline,
+                  label: 'Profil',
+                  index: 3,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Widget pour créer un élément de navigation
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+  }) {
+    final isSelected = _currentIndex == index;
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => setState(() => _currentIndex = index),
+          splashColor: AppTheme.primaryColor.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: isSelected ? AppTheme.primaryColor : Colors.black,
+                ),
+                SizedBox(height: 3),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isSelected ? AppTheme.primaryColor : Colors.black,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

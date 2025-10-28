@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'chat_page_simple.dart';
+import 'notifications_page.dart';
 
 // Page principale de messagerie avec liste des conversations
 class MessagingPage extends StatefulWidget {
@@ -86,22 +87,32 @@ class _MessagingPageState extends State<MessagingPage> {
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.notifications_outlined,
-                color: Colors.black54,
-                size: 24,
-              ),
-              const Text(
-                'Notifications',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 10,
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
                 ),
-              ),
-            ],
+              );
+            },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: Colors.black54,
+                  size: 24,
+                ),
+                const Text(
+                  'Notifications',
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: 10,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -139,7 +150,15 @@ class _MessagingPageState extends State<MessagingPage> {
           const SizedBox(width: 12),
           _buildFilterButton('Non lus', _selectedFilter == 'Non lus'),
           const Spacer(),
-          Container(
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
+                ),
+              );
+            },
             child: Column(
               children: [
                 const Icon(

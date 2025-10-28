@@ -17,7 +17,7 @@ class _MainScreenState extends State<MainScreen> {
   // Liste des pages disponibles dans l'interface consommateur
   final List<Widget> _pages = [
     AccueilPage(), // Page d'accueil
-    FavorisPage(), // Page des favoris
+    FavorisPage(), // Page des produits (anciennement favoris)
     CommandesPage(), // Page des commandes
     ProfilPage(), // Page de profil
   ];
@@ -51,77 +51,56 @@ class _MainScreenState extends State<MainScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
-      // BottomAppBar with notch so the FAB visually docks into it while keeping its circular shape
+      // BottomNavigationBar simple et propre comme dans l'image
       bottomNavigationBar: Container(
-        height: 70, // Hauteur totale de la barre
-        child: Stack(
-          children: [
-            // Fond de la barre de navigation qui prend toute la largeur
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 60,
-                margin: EdgeInsets.symmetric(horizontal: 0), // Pas de marge horizontale
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 18,
-                      spreadRadius: 1,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            // Barre de navigation positionnée au-dessus du fond
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 60,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Répartit l'espace équitablement
-                  children: [
-                    // Bouton Accueil
-                    _buildNavItem(
-                      icon: Icons.home,
-                      label: 'Accueil',
-                      index: 0,
-                    ),
-                    // Bouton Favoris
-                    _buildNavItem(
-                      icon: Icons.favorite,
-                      label: 'Favoris',
-                      index: 1,
-                    ),
-                    // Espace pour le FAB (invisible mais nécessaire pour l'alignement)
-                    SizedBox(width: 60),
-                    // Bouton Commandes
-                    _buildNavItem(
-                      icon: Icons.shopping_cart,
-                      label: 'Commandes',
-                      index: 2,
-                    ),
-                    // Bouton Profil
-                    _buildNavItem(
-                      icon: Icons.person,
-                      label: 'Profil',
-                      index: 3,
-                    ),
-                  ],
-                ),
-              ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 18,
+              spreadRadius: 1,
+              offset: const Offset(0, 6),
             ),
           ],
+        ),
+        child: SafeArea(
+          child: Container(
+            height: 58,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // Bouton Accueil
+                _buildNavItem(
+                  icon: Icons.home_outlined,
+                  label: 'Accueil',
+                  index: 0,
+                ),
+                // Bouton Produits
+                _buildNavItem(
+                  icon: Icons.inventory_2_outlined,
+                  label: 'Produits',
+                  index: 1,
+                ),
+                // Bouton Commandes
+                _buildNavItem(
+                  icon: Icons.receipt_long_outlined,
+                  label: 'Commandes',
+                  index: 2,
+                ),
+                // Bouton Profil
+                _buildNavItem(
+                  icon: Icons.person_outline,
+                  label: 'Profil',
+                  index: 3,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -134,7 +113,7 @@ class _MainScreenState extends State<MainScreen> {
     required int index,
   }) {
     final isSelected = _currentIndex == index;
-    return Expanded( // Chaque élément prend un espace égal
+    return Expanded(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -142,22 +121,22 @@ class _MainScreenState extends State<MainScreen> {
           splashColor: Color(0xFFFB662F).withOpacity(0.2),
           borderRadius: BorderRadius.circular(8),
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: EdgeInsets.symmetric(vertical: 6),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   icon,
                   size: 22,
-                  color: isSelected ? Color(0xFFFB662F) : Colors.black54,
+                  color: isSelected ? Color(0xFFFB662F) : Colors.black,
                 ),
-                SizedBox(height: 4),
+                SizedBox(height: 3),
                 Text(
                   label,
                   style: TextStyle(
-                    fontSize: isSelected ? 12 : 10,
-                    color: isSelected ? Color(0xFFFB662F) : Colors.black54,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontSize: 11,
+                    color: isSelected ? Color(0xFFFB662F) : Colors.black,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ],

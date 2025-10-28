@@ -196,10 +196,12 @@ class ProductCard extends StatelessWidget {
                   ),
                   child: GestureDetector(
                     onTap: () {
-                      // Tap sur l'image → page paiement
+                      // Tap sur l'image → page détails du produit
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const PaymentPage()),
+                        MaterialPageRoute(
+                          builder: (_) => ProductDetailsPage(product: product),
+                        ),
                       );
                     },
                     child: Image.asset(
@@ -260,11 +262,13 @@ class ProductCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 GestureDetector(
-                    onTap: () {
+                  onTap: () {
                     // Tap sur les données → page détail du produit
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const ProductDetailsPage()),
+                      MaterialPageRoute(
+                        builder: (_) => ProductDetailsPage(product: product),
+                      ),
                     );
                   },
                   child: Text(

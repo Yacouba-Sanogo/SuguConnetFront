@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
+import 'package:suguconnect_mobile/screens/consumer/notifications_page.dart';
 import 'dart:io';
 
 class ProducerProductsScreen extends StatefulWidget {
@@ -95,28 +96,38 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.all(8),
-            child: Stack(
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  size: 28,
-                  color: Colors.black87,
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
                 ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFFB662F),
-                      shape: BoxShape.circle,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Stack(
+                children: [
+                  const Icon(
+                    Icons.notifications_outlined,
+                    size: 28,
+                    color: Colors.black87,
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFB662F),
+                        shape: BoxShape.circle,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -246,30 +257,6 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
     );
   }
 
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: color.withOpacity(0.1),
-      shape: const CircleBorder(),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: color.withOpacity(0.1),
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-      ),
-    );
-  }
-
   Widget _buildProductImage(String imagePath) {
     // Si le chemin commence par '/', c'est un fichier local
     if (imagePath.startsWith('/')) {
@@ -394,4 +381,29 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       },
     );
   }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: color.withOpacity(0.1),
+      shape: const CircleBorder(),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color.withOpacity(0.1),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
 }

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'messaging_page.dart';
+import '../producer/producer_refunds_screen.dart';
+import '../producer/producer_payments_screen.dart';
+import '../producer/producer_orders_screen.dart';
+import 'driver_list_screen.dart';
 
 // Page des notifications avec design moderne et cartes colorées
 class NotificationsPage extends StatefulWidget {
@@ -17,7 +21,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   final List<NotificationItem> _notifications = [
     NotificationItem(
       title: "Commande",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Nouvelle commande reçue",
       time: "10:20",
       icon: Icons.receipt,
       iconColor: Colors.blue,
@@ -25,7 +29,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     ),
     NotificationItem(
       title: "Livraison",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Commande en cours de livraison",
       time: "Hier",
       icon: Icons.local_shipping,
       iconColor: Colors.orange,
@@ -33,11 +37,19 @@ class _NotificationsPageState extends State<NotificationsPage> {
     ),
     NotificationItem(
       title: "Paiement",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Nouveau paiement reçu",
       time: "10:20",
       icon: Icons.account_balance_wallet,
       iconColor: Colors.green,
       cardColor: const Color(0xFFE8F5E8), // Vert clair
+    ),
+    NotificationItem(
+      title: "Demandes de remboursement",
+      description: "2 nouvelles demandes en attente",
+      time: "Maintenant",
+      icon: Icons.money_off,
+      iconColor: const Color(0xFFFF9800),
+      cardColor: const Color(0xFFFFF8E1), // Orange très clair
     ),
   ];
 
@@ -141,75 +153,111 @@ class _NotificationsPageState extends State<NotificationsPage> {
               itemCount: _notifications.length,
               itemBuilder: (context, index) {
                 final notification = _notifications[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: notification.cardColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        // Icône de la notification
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: notification.iconColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            notification.icon,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                return GestureDetector(
+                  onTap: () {
+                    if (notification.title == "Commande") {
+                      // Navigation vers la page des commandes du producteur
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProducerOrdersScreen(),
                         ),
-                        
-                        const SizedBox(width: 16),
-                        
-                        // Contenu de la notification
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                notification.title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                notification.description,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
+                      );
+                    } else if (notification.title == "Livraison") {
+                      // Navigation vers la page des livreurs
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DriverListScreen(),
                         ),
-                        
-                        // Timestamp
-                        Text(
-                          notification.time,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
+                      );
+                    } else if (notification.title == "Demandes de remboursement") {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProducerRefundsScreen(),
+                        ),
+                      );
+                    } else if (notification.title == "Paiement") {
+                      // Pour le producteur : gestion des paiements reçus
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProducerPaymentsScreen(),
+                        ),
+                      );
+                    }
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: notification.cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
                         ),
                       ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Icône de la notification
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: notification.iconColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              notification.icon,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          
+                          const SizedBox(width: 16),
+                          
+                          // Contenu de la notification
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  notification.title,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  notification.description,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          // Timestamp
+                          Text(
+                            notification.time,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
