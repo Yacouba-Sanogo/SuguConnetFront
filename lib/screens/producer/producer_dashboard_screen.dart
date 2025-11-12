@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
 import 'package:suguconnect_mobile/screens/producer/stock_management_screen.dart';
-import 'package:suguconnect_mobile/screens/consumer/driver_list_screen.dart';
-import '../consumer/notifications_page.dart';
-import '../consumer/messaging_page.dart';
+import 'package:suguconnect_mobile/screens/producer/driver_list_screen.dart';
+import 'notifications_page.dart';
+import 'messaging_page.dart';
 
 class ProducerDashboardScreen extends StatefulWidget {
   const ProducerDashboardScreen({super.key});

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'register_screen.dart';
+import 'package:suguconnect_mobile/screens/consommateur/accueil.dart';
 import 'producer_register_screen.dart';
-import '../consumer/main_screen.dart';
 import '../producer/producer_main_screen.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
@@ -85,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
           destination = const ProducerMainScreen();
         } else {
           // Par défaut CONSOMMATEUR ou ADMIN redirigés vers l'interface consommateur
-          destination = MainScreen();
+          destination = const AccueilPage();
         }
 
         Navigator.pushReplacement(
