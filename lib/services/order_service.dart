@@ -17,10 +17,6 @@ class OrderService {
       } else {
         throw Exception('Erreur lors de la récupération des commandes');
       }
-    } catch (e) {
-      throw Exception('Erreur lors de la récupération des commandes: $e');
-    }
-  }
 
   /// Récupérer les commandes d'un producteur avec filtre de statut et recherche
   Future<List<Commande>> getOrdersByProducerFiltered(
@@ -78,6 +74,10 @@ class OrderService {
       }
     } catch (e) {
       throw Exception('Erreur lors du changement de statut: $e');
+    }
+  }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération des commandes: $e');
     }
   }
 
