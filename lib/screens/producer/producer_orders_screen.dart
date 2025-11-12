@@ -3,6 +3,8 @@ import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
+import 'package:suguconnect_mobile/models/order.dart';
+
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
 
@@ -16,6 +18,7 @@ class ProducerOrdersScreen extends StatefulWidget {
 class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
+  final _orderService = OrderService();
 
   @override
   void initState() {
@@ -114,54 +117,105 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
     );
   }
 
+  String _statusToBackend(String ui) {
+    switch (ui) {
+      case 'En attente':
+        return 'VALIDEE';
+      case 'Expédiée':
+        return 'EN_LIVRAISON';
+      case 'Livrée':
+        return 'LIVREE';
+      default:
+        return '';
+    }
+  }
+
+  String _statusToUi(String backend) {
+    switch (backend) {
+      case 'VALIDEE':
+        return 'En attente';
+      case 'EN_LIVRAISON':
+        return 'Expédiée';
+      case 'LIVREE':
+        return 'Livrée';
+      default:
+        return backend;
+    }
+  }
+
   Widget _buildOrderList(String status) {
-    // Données filtrées par statut et recherche
-    final allOrders = [
-      {'num': 'Commande #1210', 'product': 'Orange', 'qty': '3', 'price': '40 000 fcfa', 'status': 'En attente'},
-      {'num': 'Commande #1211', 'product': 'Tomate', 'qty': '5', 'price': '25 000 fcfa', 'status': 'En attente'},
-      {'num': 'Commande #1212', 'product': 'Pomme', 'qty': '2', 'price': '30 000 fcfa', 'status': 'Expédiée'},
-      {'num': 'Commande #1213', 'product': 'Carotte', 'qty': '4', 'price': '20 000 fcfa', 'status': 'Expédiée'},
-      {'num': 'Commande #1214', 'product': 'Oignon', 'qty': '3', 'price': '15 000 fcfa', 'status': 'Livrée'},
-      {'num': 'Commande #1215', 'product': 'Mais', 'qty': '6', 'price': '35 000 fcfa', 'status': 'Livrée'},
-    ];
-
-    final filteredOrders = allOrders
-        .where((order) => order['status'] == status)
-        .where((order) => order['num']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            order['product']!.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
-
-    if (filteredOrders.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade300),
-            const SizedBox(height: 16),
-            Text(
-              'Aucune commande',
-              style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
-            ),
-          ],
-        ),
-      );
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final producteurId = auth.currentUser?.id;
+    if (producteurId == null) {
+      return const Center(child: Text('Utilisateur non connecté'));
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(20),
-      itemCount: filteredOrders.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
-      itemBuilder: (context, index) {
-        final order = filteredOrders[index];
-        return _ModernOrderCard(
-          orderNumber: order['num']!,
-          product: order['product']!,
-          quantity: order['qty']!,
-          price: order['price']!,
-          status: status,
-          onTap: () => _showOrderDetailDialog(context, order),
-        );
+    final backendStatus = _statusToBackend(status);
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        setState(() {});
       },
+      child: FutureBuilder<List<Commande>>(
+        future: _orderService.getOrdersByProducerFiltered(
+          producteurId,
+          statut: backendStatus,
+          search: _searchQuery.isNotEmpty ? _searchQuery : null,
+        ),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erreur: ${snapshot.error}'));
+          }
+          final orders = snapshot.data ?? [];
+          if (orders.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade300),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Aucune commande',
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            );
+          }
+
+          return ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(20),
+            itemCount: orders.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final c = orders[index];
+              final uiStatus = _statusToUi(c.statut);
+              final qty = c.detailsCommande.isNotEmpty ? c.detailsCommande.first.quantite.toString() : '-';
+              final productName = c.detailsCommande.isNotEmpty ? c.detailsCommande.first.produit.nom : 'Produit';
+              final price = c.montantTotal.toStringAsFixed(0) + ' fcfa';
+              return _ModernOrderCard(
+                orderNumber: c.numeroCommande,
+                product: productName,
+                quantity: qty,
+                price: price,
+                status: uiStatus,
+                onTap: () => _showOrderDetailDialog(context, {
+                  'id': c.id.toString(),
+                  'num': c.numeroCommande,
+                  'product': productName,
+                  'qty': qty,
+                  'price': price,
+                  'status': uiStatus,
+                }),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -280,8 +334,13 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                               );
                               return;
                             }
-                            // TODO: remplacer par le véritable ID de la commande issu des données
-                            final commandeId = 0; // placeholder si non disponible dans 'order'
+                            final commandeId = int.tryParse(order['id'] ?? '') ?? 0;
+                            if (commandeId == 0) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Identifiant commande introuvable')),
+                              );
+                              return;
+                            }
                             await OrderService().updateOrderStatusByProducer(
                               commandeId: commandeId,
                               producteurId: userId,
@@ -292,7 +351,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('Commande expédiée avec succès')),
                               );
-                              // Optionnel: rafraîchir l'écran parent
+                              setState(() {});
                             }
                           } catch (e) {
                             if (context.mounted) {

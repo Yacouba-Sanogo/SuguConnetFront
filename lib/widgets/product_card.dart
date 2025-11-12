@@ -102,13 +102,16 @@ class ProductCard extends StatelessWidget {
                         child: FutureBuilder<Widget>(
                           future: _loadImage(context, product.imageUrl!),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
                               );
                             }
                             if (snapshot.hasError || !snapshot.hasData) {
-                              return const Icon(Icons.broken_image, size: 32, color: Colors.grey);
+                              return const Icon(Icons.broken_image,
+                                  size: 32, color: Colors.grey);
                             }
                             return snapshot.data!;
                           },
@@ -117,7 +120,7 @@ class ProductCard extends StatelessWidget {
                     : const Icon(Icons.image, size: 32, color: Colors.grey),
               ),
             ),
-            
+
             // Contenu de la carte
             Expanded(
               flex: 2,
@@ -136,9 +139,9 @@ class ProductCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     // Prix
                     Text(
                       product.prixFormate,
@@ -148,35 +151,41 @@ class ProductCard extends StatelessWidget {
                         fontSize: 16,
                       ),
                     ),
-                    
+
                     const Spacer(),
-                    
+
                     // Informations supplémentaires
                     Row(
                       children: [
                         // Stock
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: product.enStock ? Colors.green.shade100 : Colors.red.shade100,
+                            color: product.enStock
+                                ? Colors.green.shade100
+                                : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             product.enStock ? 'En stock' : 'Rupture',
                             style: GoogleFonts.itim(
-                              color: product.enStock ? Colors.green.shade700 : Colors.red.shade700,
+                              color: product.enStock
+                                  ? Colors.green.shade700
+                                  : Colors.red.shade700,
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
-                        
+
                         const Spacer(),
-                        
+
                         // Bio
                         if (product.bio)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.green.shade100,
                               borderRadius: BorderRadius.circular(4),

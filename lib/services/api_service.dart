@@ -1,14 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'auth_service.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
-  late Dio _dio;
+  Dio? _dio;
   String? _token;
 
-  ApiService() {
+  ApiService();
+
+  Future<void> _ensureClient() async {
+    if (_dio != null) return;
+    // Initialize AuthService base URL and use it as Dio baseUrl
+    await AuthService.testConnection();
+    final base = AuthService.resolvedBaseUrl ?? 'http://127.0.0.1:8080/suguconnect';
     _dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: base,
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
@@ -16,7 +22,7 @@ class ApiService {
       },
     ));
 
-    _dio.interceptors.add(InterceptorsWrapper(
+    _dio!.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         if (_token != null) {
           options.headers['Authorization'] = 'Bearer $_token';
@@ -25,7 +31,6 @@ class ApiService {
       },
       onError: (error, handler) {
         if (error.response?.statusCode == 401) {
-          // Token expiré, déconnecter l'utilisateur
           _clearToken();
         }
         handler.next(error);
@@ -55,8 +60,9 @@ class ApiService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
+    await _ensureClient();
     await _loadToken();
-    return _dio.get<T>(
+    return _dio!.get<T>(
       path,
       queryParameters: queryParameters,
       options: options,
@@ -69,8 +75,9 @@ class ApiService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
+    await _ensureClient();
     await _loadToken();
-    return _dio.post<T>(
+    return _dio!.post<T>(
       path,
       data: data,
       queryParameters: queryParameters,
@@ -84,8 +91,9 @@ class ApiService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
+    await _ensureClient();
     await _loadToken();
-    return _dio.put<T>(
+    return _dio!.put<T>(
       path,
       data: data,
       queryParameters: queryParameters,
@@ -99,8 +107,9 @@ class ApiService {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
+    await _ensureClient();
     await _loadToken();
-    return _dio.delete<T>(
+    return _dio!.delete<T>(
       path,
       data: data,
       queryParameters: queryParameters,
