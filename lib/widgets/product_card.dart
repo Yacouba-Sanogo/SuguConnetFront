@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 import '../models/product.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
+import '../providers/auth_provider.dart';
 
 class ProductCard extends StatelessWidget {
   final Produit product;
@@ -12,6 +16,59 @@ class ProductCard extends StatelessWidget {
     required this.product,
     this.onTap,
   });
+
+  // Charger une image avec authentification si nécessaire
+  Future<Widget> _loadImage(BuildContext context, String imageUrl) async {
+    try {
+      // S'assurer que l'URL de base est résolue
+      if (AuthService.resolvedBaseUrl == null) {
+        await AuthService.testConnection();
+      }
+
+      final baseUrl = AuthService.resolvedBaseUrl;
+      Uri imageUri = Uri.parse(imageUrl);
+
+      // Si l'URL est relative ou complète mais avec un autre hôte, normaliser
+      if (baseUrl != null) {
+        final baseUri = Uri.parse(baseUrl);
+        imageUri = imageUri.replace(
+          scheme: baseUri.scheme,
+          host: baseUri.host,
+          port: baseUri.port,
+        );
+      }
+
+      // Récupérer le token d'authentification
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final token = authProvider.token;
+
+      // Télécharger l'image avec le token si disponible
+      var response = await http.get(
+        imageUri,
+        headers: {
+          if (token != null) 'Authorization': 'Bearer $token',
+          'Accept': 'image/*,application/octet-stream',
+        },
+      );
+
+      // Si échec avec auth, réessayer sans token (endpoint public)
+      if (response.statusCode == 401 || response.statusCode == 403) {
+        response = await http.get(imageUri);
+      }
+
+      if (response.statusCode == 200) {
+        return Image.memory(
+          response.bodyBytes,
+          fit: BoxFit.cover,
+        );
+      }
+
+      throw Exception('HTTP ${response.statusCode}');
+    } catch (e) {
+      // Retourner une icône en cas d'erreur
+      return const Icon(Icons.broken_image, size: 32, color: Colors.grey);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,16 +94,23 @@ class ProductCard extends StatelessWidget {
                     top: Radius.circular(12),
                   ),
                 ),
-                child: product.imageUrl != null
+                child: product.imageUrl != null && product.imageUrl!.isNotEmpty
                     ? ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(12),
                         ),
-                        child: Image.network(
-                          product.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.image, size: 32, color: Colors.grey);
+                        child: FutureBuilder<Widget>(
+                          future: _loadImage(context, product.imageUrl!),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              );
+                            }
+                            if (snapshot.hasError || !snapshot.hasData) {
+                              return const Icon(Icons.broken_image, size: 32, color: Colors.grey);
+                            }
+                            return snapshot.data!;
                           },
                         ),
                       )

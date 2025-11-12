@@ -17,6 +17,65 @@ class OrderService {
       } else {
         throw Exception('Erreur lors de la récupération des commandes');
       }
+
+  /// Récupérer les commandes d'un producteur avec filtre de statut et recherche
+  Future<List<Commande>> getOrdersByProducerFiltered(
+    int producteurId, {
+    String? statut, // ex: VALIDEE, EN_LIVRAISON, LIVREE
+    String? search,
+  }) async {
+    try {
+      final query = <String, String>{};
+      if (statut != null && statut.isNotEmpty) query['statut'] = statut;
+      if (search != null && search.isNotEmpty) query['search'] = search;
+
+      final path = '/producteur/$producteurId/commandes';
+      final qp = query.isEmpty
+          ? ''
+          : ('?' + query.entries.map((e) => Uri.encodeQueryComponent(e.key) + '=' + Uri.encodeQueryComponent(e.value)).join('&'));
+
+      final response = await _apiService.get<List<dynamic>>(path + qp);
+
+      if (response.statusCode == 200) {
+        return response.data!
+            .map((json) => Commande.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Erreur lors de la récupération des commandes producteur');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération des commandes producteur: $e');
+    }
+  }
+
+  /// Changer le statut d'une commande (côté producteur)
+  Future<Commande> updateOrderStatusByProducer({
+    required int commandeId,
+    required int producteurId,
+    required String nouveauStatut, // VALIDEE, REFUSEE, EN_LIVRAISON, LIVREE
+    String? motifRejet,
+  }) async {
+    try {
+      final qp = {
+        'producteurId': producteurId.toString(),
+        'nouveauStatut': nouveauStatut,
+        if (motifRejet != null && motifRejet.isNotEmpty) 'motifRejet': motifRejet,
+      };
+      final query = '?' + qp.entries.map((e) => Uri.encodeQueryComponent(e.key) + '=' + Uri.encodeQueryComponent(e.value)).join('&');
+
+      final response = await _apiService.put<Map<String, dynamic>>(
+        '/producteur/commande/$commandeId/statut$query',
+      );
+
+      if (response.statusCode == 200) {
+        return Commande.fromJson(response.data!);
+      } else {
+        throw Exception('Erreur lors du changement de statut');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors du changement de statut: $e');
+    }
+  }
     } catch (e) {
       throw Exception('Erreur lors de la récupération des commandes: $e');
     }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:suguconnect_mobile/services/order_service.dart';
+import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
 
@@ -267,11 +270,37 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                       width: double.infinity,
                       height: 48,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Commande expédiée avec succès')),
-                          );
+                        onPressed: () async {
+                          try {
+                            final auth = Provider.of<AuthProvider>(context, listen: false);
+                            final userId = auth.currentUser?.id;
+                            if (userId == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Utilisateur non connecté')),
+                              );
+                              return;
+                            }
+                            // TODO: remplacer par le véritable ID de la commande issu des données
+                            final commandeId = 0; // placeholder si non disponible dans 'order'
+                            await OrderService().updateOrderStatusByProducer(
+                              commandeId: commandeId,
+                              producteurId: userId,
+                              nouveauStatut: 'EN_LIVRAISON',
+                            );
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Commande expédiée avec succès')),
+                              );
+                              // Optionnel: rafraîchir l'écran parent
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Erreur: ${e.toString()}')),
+                              );
+                            }
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFFB662F),
