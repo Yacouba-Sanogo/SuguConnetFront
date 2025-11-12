@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
-import '../consumer/notifications_page.dart';
-import '../consumer/messaging_page.dart';
+import 'notifications_page.dart';
+import 'messaging_page.dart';
 
 class ProducerOrdersScreen extends StatefulWidget {
   const ProducerOrdersScreen({super.key});

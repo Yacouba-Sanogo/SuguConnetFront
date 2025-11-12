@@ -10,8 +10,8 @@ import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import 'producer_product_form_screen.dart';
 import 'producer_product_detail_screen.dart';
-import '../consumer/notifications_page.dart';
-import '../consumer/messaging_page.dart';
+import 'notifications_page.dart';
+import 'messaging_page.dart';
 
 class ProductManagementScreen extends StatefulWidget {
   const ProductManagementScreen({super.key});
