@@ -3,10 +3,53 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'fruit_page.dart';
 import 'notifications_page.dart';
+import 'detaille_produit.dart';
+import '../../models/produit_populaire.dart';
+import '../../services/produit_populaire_service.dart';
+import '../../services/api_service.dart';
 
 // Page d'accueil principale de l'application consommateur
-class AccueilPage extends StatelessWidget {
+class AccueilPage extends StatefulWidget {
   const AccueilPage({super.key});
+
+  @override
+  _AccueilPageState createState() => _AccueilPageState();
+}
+
+class _AccueilPageState extends State<AccueilPage> {
+  late ProduitPopulaireService _produitPopulaireService;
+  late ApiService _apiService;
+  List<ProduitPopulaire> _produitsPopulaires = [];
+  bool _isLoading = true;
+  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiService = ApiService();
+    _produitPopulaireService = ProduitPopulaireService(_apiService);
+    _loadProduitsPopulaires();
+  }
+
+  Future<void> _loadProduitsPopulaires() async {
+    try {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+
+      final produits = await _produitPopulaireService.getProduitsPopulaires();
+      setState(() {
+        _produitsPopulaires = produits;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Erreur de chargement: $e';
+        _isLoading = false;
+      });
+    }
+  }
 
   // Fonction utilitaire pour vérifier si un asset existe au runtime
   Future<bool> _assetExists(String assetPath) async {
@@ -23,7 +66,8 @@ class AccueilPage extends StatelessWidget {
     return Scaffold(
       // Barre d'application avec logo et notifications
       appBar: AppBar(
-        title: Image.asset('assets/images/logo.png', height: 40), // Logo de l'application
+        title: Image.asset('assets/images/logo.png',
+            height: 40), // Logo de l'application
         centerTitle: true, // Centrer le titre
         backgroundColor: Colors.white, // Fond blanc
         elevation: 0, // Pas d'ombre
@@ -38,7 +82,7 @@ class AccueilPage extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const NotificationsPage(),
+                      builder: (context) => NotificationsPage(),
                     ),
                   );
                 },
@@ -89,7 +133,8 @@ class AccueilPage extends StatelessWidget {
           children: [
             // Section image principale avec texte en overlay
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0), // Marges latérales
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0), // Marges latérales
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20), // Coins arrondis
                 child: Stack(
@@ -145,9 +190,9 @@ class AccueilPage extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 20),
-            
+
             // Titre de section
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -160,9 +205,9 @@ class AccueilPage extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             // Grille de catégories
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -174,131 +219,273 @@ class AccueilPage extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                      _buildCategoryCard(
-                        context,
-                        'Fruits',
-                        // use the SVGs that exist under assets/images in this project
-                        'assets/images/Fruits.svg',
-                        'assets/images/pommes.png',
-                        Colors.deepOrange,
-                      ),
-                      _buildCategoryCard(
-                        context,
-                        'Céréales',
-                        'assets/images/Cereales.svg',
-                        'assets/images/mais.png',
-                        Colors.deepOrange,
-                      ),
-                      _buildCategoryCard(
-                        context,
-                        'Légumes',
-                        'assets/images/Legumes.svg',
-                        'assets/images/carottes.png',
-                        Colors.deepOrange,
-                      ),
-                      _buildCategoryCard(
-                        context,
-                        'Épices',
-                        'assets/images/Epices.svg',
-                        'assets/images/Oignons.png',
-                        Colors.deepOrange,
-                      ),
+                  _buildCategoryCard(
+                    context,
+                    'Fruits',
+                    // use the SVGs that exist under assets/images in this project
+                    'assets/images/Fruits.svg',
+                    'assets/images/pommes.png',
+                    Colors.deepOrange,
+                  ),
+                  _buildCategoryCard(
+                    context,
+                    'Céréales',
+                    'assets/images/Cereales.svg',
+                    'assets/images/mais.png',
+                    Colors.deepOrange,
+                  ),
+                  _buildCategoryCard(
+                    context,
+                    'Légumes',
+                    'assets/images/Legumes.svg',
+                    'assets/images/carottes.png',
+                    Colors.deepOrange,
+                  ),
+                  _buildCategoryCard(
+                    context,
+                    'Épices',
+                    'assets/images/Epices.svg',
+                    'assets/images/Oignons.png',
+                    Colors.deepOrange,
+                  ),
                 ],
               ),
             ),
-            
+
             SizedBox(height: 20),
-            
+
             // Section produits populaires
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Produits populaires',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Produits populaires',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _loadProduitsPopulaires,
+                    child: Text('Actualiser'),
+                  ),
+                ],
               ),
             ),
-            
+
             SizedBox(height: 16),
-            
+
             // Liste de produits populaires
-            Container(
-              height: 200,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                itemCount: 5,
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 150,
-                    margin: EdgeInsets.only(right: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          spreadRadius: 1,
-                          blurRadius: 5,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
-                          ),
-                          child: Center(
-                            child: Icon(Icons.image, size: 50, color: Colors.grey),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Produit ${index + 1}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '2,50 €',
-                                style: TextStyle(
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-            
+            _buildPopularProductsSection(),
+
             SizedBox(height: 80), // Espace pour le FAB
           ],
         ),
       ),
-     
     );
   }
 
-  Widget _buildCategoryCard(BuildContext context, String title, String iconPath, String headerImage, Color color) {
+  Widget _buildPopularProductsSection() {
+    if (_isLoading) {
+      return Container(
+        height: 200,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Container(
+        height: 200,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(_errorMessage!),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: _loadProduitsPopulaires,
+                child: Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_produitsPopulaires.isEmpty) {
+      return Container(
+        height: 200,
+        child: Center(child: Text('Aucun produit populaire trouvé')),
+      );
+    }
+
+    return FutureBuilder<String>(
+      future: _apiService.getBaseUrl(),
+      builder: (context, snapshot) {
+        final baseUrl = snapshot.data ?? 'http://10.0.2.2:8080';
+        return Container(
+          height: 190,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            itemCount: _produitsPopulaires.length,
+            itemBuilder: (context, index) {
+              final produit = _produitsPopulaires[index];
+
+              // Créer une structure de données compatible avec ProductDetailsPage
+              final productData = <String, String>{
+                'id': produit.produitId.toString(),
+                'name': produit.nomProduit,
+                'price': '${produit.prixUnitaire.toStringAsFixed(0)} fcfa',
+                'weight': '${produit.unite}',
+                'location': 'Local',
+                'image': produit.photoUrl,
+                'producerName': produit.nomProducteur,
+                'producerAvatar': 'assets/images/improfil.png',
+                'description': produit.description,
+              };
+
+              return GestureDetector(
+                onTap: () {
+                  // Naviguer vers la page de détail du produit
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProductDetailsPage(product: productData),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 150,
+                  margin: EdgeInsets.only(right: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.2),
+                        spreadRadius: 1,
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(12)),
+                        ),
+                        child: Center(
+                          child: produit.photoUrl.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(12)),
+                                  child: _buildProductImage(
+                                      produit.photoUrl, baseUrl),
+                                )
+                              : Icon(Icons.image, size: 50, color: Colors.grey),
+                        ),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              produit.nomProduit,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              '${produit.prixUnitaire.toStringAsFixed(2)} FCFA',
+                              style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              '${produit.unite}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProductImage(String photoUrl, String baseUrl) {
+    // Utiliser le service API pour construire l'URL de l'image
+    return FutureBuilder<String>(
+      future: _apiService.buildImageUrl(photoUrl),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          final fullUrl = snapshot.data!;
+          return Image.network(
+            fullUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Center(
+                  child: Icon(Icons.image, size: 50, color: Colors.grey));
+            },
+          );
+        } else {
+          // En attendant, utiliser l'ancienne méthode
+          if (photoUrl.startsWith('http://') ||
+              photoUrl.startsWith('https://')) {
+            return Image.network(
+              photoUrl,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Center(
+                    child: Icon(Icons.image, size: 50, color: Colors.grey));
+              },
+            );
+          }
+
+          // Sinon, construire l'URL complète
+          final fullUrl = '$baseUrl/uploads/$photoUrl';
+          return Image.network(
+            fullUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Center(
+                  child: Icon(Icons.image, size: 50, color: Colors.grey));
+            },
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildCategoryCard(BuildContext context, String title, String iconPath,
+      String headerImage, Color color) {
     return GestureDetector(
       onTap: () {
         // Navigate to the shared category page with different title and header image
@@ -376,7 +563,8 @@ class AccueilPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomItem(BuildContext context, IconData icon, String label, bool active) {
+  Widget _buildBottomItem(
+      BuildContext context, IconData icon, String label, bool active) {
     final color = active ? Colors.orange : Colors.black54;
     return GestureDetector(
       onTap: () {

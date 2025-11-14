@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+
+import 'detaille_produit.dart';
 
 // Page réutilisable pour une catégorie (Fruits, Céréales, Légumes, Épices...)
 class FruitPage extends StatefulWidget {
   final String title;
   final String headerImage; // chemin local ou URL
 
-  const FruitPage({Key? key, required this.title, required this.headerImage}) : super(key: key);
+  const FruitPage({Key? key, required this.title, required this.headerImage})
+      : super(key: key);
 
   @override
   State<FruitPage> createState() => _FruitPageState();
@@ -16,18 +19,91 @@ class FruitPage extends StatefulWidget {
 class _FruitPageState extends State<FruitPage> {
   // Liste complète des produits
   final List<Map<String, dynamic>> _allProducts = [
-    // We'll leave product data minimal; images will be chosen per-category below
-    {'id': 1, 'name': 'Produit 1', 'weight': '20 kg', 'price': 30000.0, 'location': 'à 33,5 km, Bamako', 'image': '', 'isFavorite': false, 'isAvailable': true},
-    {'id': 2, 'name': 'Produit 2', 'weight': '20 kg', 'price': 40000.0, 'location': 'à 23,5 km, Bamako', 'image': '', 'isFavorite': true, 'isAvailable': true},
-    {'id': 3, 'name': 'Produit 3', 'weight': '20 kg', 'price': 35000.0, 'location': 'à 33,5 km, Bamako', 'image': '', 'isFavorite': false, 'isAvailable': true},
-    {'id': 4, 'name': 'Produit 4', 'weight': '50 kg', 'price': 50000.0, 'location': 'à 33,5 km, Bamako', 'image': '', 'isFavorite': false, 'isAvailable': false},
-    {'id': 5, 'name': 'Produit 5', 'weight': '30 kg', 'price': 30000.0, 'location': 'à 23,5 km, Bamako', 'image': '', 'isFavorite': true, 'isAvailable': true},
-    {'id': 6, 'name': 'Produit 6', 'weight': '50 kg', 'price': 100000.0, 'location': 'à 33,5 km, Bamako', 'image': '', 'isFavorite': false, 'isAvailable': true},
+    {
+      'id': 1,
+      'name': 'Produit 1',
+      'weight': '20 kg',
+      'price': 30000.0,
+      'location': 'à 33,5 km, Bamako',
+      'image': '',
+      'isFavorite': false,
+      'isAvailable': true,
+      'producerName': 'Sory Coulibaly',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
+    {
+      'id': 2,
+      'name': 'Produit 2',
+      'weight': '20 kg',
+      'price': 40000.0,
+      'location': 'à 23,5 km, Bamako',
+      'image': '',
+      'isFavorite': true,
+      'isAvailable': true,
+      'producerName': 'Aminata Traoré',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
+    {
+      'id': 3,
+      'name': 'Produit 3',
+      'weight': '20 kg',
+      'price': 35000.0,
+      'location': 'à 33,5 km, Bamako',
+      'image': '',
+      'isFavorite': false,
+      'isAvailable': true,
+      'producerName': 'Moussa Diallo',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
+    {
+      'id': 4,
+      'name': 'Produit 4',
+      'weight': '50 kg',
+      'price': 50000.0,
+      'location': 'à 33,5 km, Bamako',
+      'image': '',
+      'isFavorite': false,
+      'isAvailable': false,
+      'producerName': 'Fatoumata Keita',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
+    {
+      'id': 5,
+      'name': 'Produit 5',
+      'weight': '30 kg',
+      'price': 30000.0,
+      'location': 'à 23,5 km, Bamako',
+      'image': '',
+      'isFavorite': true,
+      'isAvailable': true,
+      'producerName': 'Issa Koné',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
+    {
+      'id': 6,
+      'name': 'Produit 6',
+      'weight': '50 kg',
+      'price': 100000.0,
+      'location': 'à 33,5 km, Bamako',
+      'image': '',
+      'isFavorite': false,
+      'isAvailable': true,
+      'producerName': 'Djibril Sangaré',
+      'producerAvatar': 'assets/images/improfil.png'
+    },
   ];
 
   late List<Map<String, dynamic>> _filteredProducts;
   String? _selectedFilter = 'Tous';
-  final List<String> _filters = ['Tous', 'Mangues', 'Oranges', 'Poires', 'Papayes', 'Pommes', 'Ananas'];
+  final List<String> _filters = [
+    'Tous',
+    'Mangues',
+    'Oranges',
+    'Poires',
+    'Papayes',
+    'Pommes',
+    'Ananas'
+  ];
 
   @override
   void initState() {
@@ -51,7 +127,7 @@ class _FruitPageState extends State<FruitPage> {
       p['image'] = sample;
     }
   }
-  
+
   // Fonction pour filtrer les produits
   void _filterProducts(String filter) {
     setState(() {
@@ -59,7 +135,8 @@ class _FruitPageState extends State<FruitPage> {
       if (filter == 'Tous') {
         _filteredProducts = _allProducts;
       } else {
-        _filteredProducts = _allProducts.where((product) => product['name'] == filter).toList();
+        _filteredProducts =
+            _allProducts.where((product) => product['name'] == filter).toList();
       }
     });
   }
@@ -69,11 +146,11 @@ class _FruitPageState extends State<FruitPage> {
     setState(() {
       final productIndex = _allProducts.indexWhere((p) => p['id'] == id);
       if (productIndex != -1) {
-        _allProducts[productIndex]['isFavorite'] = !_allProducts[productIndex]['isFavorite'];
+        _allProducts[productIndex]['isFavorite'] =
+            !_allProducts[productIndex]['isFavorite'];
       }
     });
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +236,10 @@ class _FruitPageState extends State<FruitPage> {
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black.withOpacity(0.35)],
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.35)
+                      ],
                     ),
                   ),
                 ),
@@ -187,7 +267,7 @@ class _FruitPageState extends State<FruitPage> {
       ),
     );
   }
-  
+
   Widget _buildFilterChips() {
     return SizedBox(
       height: 50,
@@ -203,15 +283,18 @@ class _FruitPageState extends State<FruitPage> {
               label: Text(filter),
               selected: _selectedFilter == filter,
               onSelected: (selected) {
-                 if(selected) _filterProducts(filter);
+                if (selected) _filterProducts(filter);
               },
               backgroundColor: Colors.grey.shade100,
               selectedColor: Colors.deepOrange.shade100,
               labelStyle: TextStyle(
-                color: _selectedFilter == filter ? Colors.deepOrange : Colors.black87,
+                color: _selectedFilter == filter
+                    ? Colors.deepOrange
+                    : Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
-              shape: StadiumBorder(side: BorderSide(color: Colors.grey.shade200)),
+              shape:
+                  StadiumBorder(side: BorderSide(color: Colors.grey.shade200)),
               showCheckmark: false,
             ),
           );
@@ -241,95 +324,137 @@ class _FruitPageState extends State<FruitPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return InkWell(
+      onTap: () {
+        final productPayload = <String, String>{
+          'id': '${product['id']}',
+          'name': product['name'],
+          'weight': product['weight'],
+          'price': '${product['price'].toStringAsFixed(0)} fcfa',
+          'location': product['location'],
+          'image': product['image'],
+          'producerName': product['producerName'] ?? 'Producteur local',
+          'producerAvatar':
+              product['producerAvatar'] ?? 'assets/images/producer1.jpg',
+        };
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProductDetailsPage(product: productPayload),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Stack(
-              alignment: Alignment.topRight,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-                  child: Image.network(
-                    product['image'],
-                    width: double.infinity,
-                    fit: BoxFit.cover,
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.shade200,
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                alignment: Alignment.topRight,
+                children: [
+                  ClipRRect(
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(15)),
+                    child: product['image'].toString().startsWith('http')
+                        ? Image.network(
+                            product['image'],
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            product['image'],
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
                   ),
-                ),
-                // Bouton Favori
-                IconButton(
-                  icon: Icon(
-                    product['isFavorite'] ? Icons.favorite : Icons.favorite_border,
-                    color: product['isFavorite'] ? Colors.red : Colors.white,
-                  ),
-                  onPressed: () => _toggleFavorite(product['id']),
-                ),
-                // Bouton Ajouter
-                 Positioned(
-                  bottom: 8,
-                  right: 8,
-                  child: CircleAvatar(
-                    backgroundColor: Colors.white,
-                    child: IconButton(
-                      icon: const Icon(Icons.add, color: Colors.deepOrange),
-                      onPressed: () {},
+                  // Bouton Favori
+                  IconButton(
+                    icon: Icon(
+                      product['isFavorite']
+                          ? Icons.favorite
+                          : Icons.favorite_border,
+                      color: product['isFavorite'] ? Colors.red : Colors.white,
                     ),
+                    onPressed: () => _toggleFavorite(product['id']),
                   ),
-                ),
-                // Tag Indisponible
-                if (!product['isAvailable'])
+                  // Bouton Ajouter
                   Positioned(
                     bottom: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade600,
-                        borderRadius: BorderRadius.circular(5),
+                    right: 8,
+                    child: CircleAvatar(
+                      backgroundColor: Colors.white,
+                      child: IconButton(
+                        icon: const Icon(Icons.add, color: Colors.deepOrange),
+                        onPressed: () {},
                       ),
-                      child: const Text('Indisponible', style: TextStyle(color: Colors.white, fontSize: 10)),
                     ),
                   ),
-              ],
+                  // Tag Indisponible
+                  if (!product['isAvailable'])
+                    Positioned(
+                      bottom: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade600,
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: const Text('Indisponible',
+                            style:
+                                TextStyle(color: Colors.white, fontSize: 10)),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text('(${product['weight']})', style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                const SizedBox(height: 4),
-                Text('${product['price'].toStringAsFixed(0)} fcfa', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(product['name'],
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text('(${product['weight']})',
+                      style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                  const SizedBox(height: 4),
+                  Text('${product['price'].toStringAsFixed(0)} fcfa',
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '📍 ${product['location']}',
+                      style: TextStyle(
+                          color: Colors.orange.shade800,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  child: Text(
-                    '📍 ${product['location']}',
-                    style: TextStyle(color: Colors.orange.shade800, fontSize: 10, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
+                ],
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

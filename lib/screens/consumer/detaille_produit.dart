@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import 'chat_page_simple.dart';
 
 // La page de détails du produit
 class ProductDetailsPage extends StatefulWidget {
@@ -204,6 +207,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   }
 
   Widget _buildProducerInfo() {
+    final producerName = widget.product?['producerName'] ?? 'Sory Coulibaly';
+    final producerAvatar = widget.product?['producerAvatar'] ?? 'assets/images/improfil.png';
+    final producerLocation = widget.product?['location'] ?? 'Bamako';
+
+    ImageProvider avatarProvider;
+    if (producerAvatar.startsWith('http')) {
+      avatarProvider = NetworkImage(producerAvatar);
+    } else {
+      avatarProvider = AssetImage(producerAvatar);
+    }
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -212,23 +226,23 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       ),
       child: Row(
         children: [
-          const CircleAvatar(
+          CircleAvatar(
             radius: 20,
-            backgroundImage: NetworkImage('https://placehold.co/100x100/7CB342/FFFFFF?text=S.C'),
+            backgroundImage: avatarProvider,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
-                  'Producteur : Sory Coulibaly',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  'Producteur : $producerName',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
-                SizedBox(height: 2),
-                Text('Ferme : Djoliba, Koulikoro', style: TextStyle(color: Colors.grey, fontSize: 10)),
-                SizedBox(height: 2),
-                Text('Producteur local, 100% bio et équitable.', style: TextStyle(color: Colors.grey, fontSize: 10)),
+                const SizedBox(height: 2),
+                Text('Localisation : $producerLocation', style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                const SizedBox(height: 2),
+                const Text('Producteur local, 100% bio et équitable.', style: TextStyle(color: Colors.grey, fontSize: 10)),
               ],
             ),
           )
@@ -349,8 +363,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           Expanded(
             child: OutlinedButton(
               onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Fonctionnalité de discussion à venir')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ChatPageSimple(
+                      producerName: widget.product?['producerName'] ?? 'Producteur local',
+                      producerAvatar: widget.product?['producerAvatar'] ?? 'assets/images/improfil.png',
+                    ),
+                  ),
                 );
               },
               style: OutlinedButton.styleFrom(

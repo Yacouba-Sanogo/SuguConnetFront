@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/api_service.dart';
 import '../../theme/app_theme.dart';
 
 class ProducerProductsScreen extends StatefulWidget {
@@ -40,12 +41,16 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       if (base != null) {
         final baseUri = Uri.parse(base);
         // Appliquer scheme/host/port
-        imageUri = imageUri.replace(scheme: baseUri.scheme, host: baseUri.host, port: baseUri.port);
+        imageUri = imageUri.replace(
+            scheme: baseUri.scheme, host: baseUri.host, port: baseUri.port);
         // Si la base a un contextPath (ex: /suguconnect) et que le chemin image est absolu (/uploads/..),
         // préfixer le contextPath pour obtenir <basePath>/uploads/..
         final basePath = baseUri.path; // ex: /suguconnect
-        if (basePath.isNotEmpty && basePath != '/' && imageUri.path.startsWith('/')) {
-          final mergedPath = basePath.replaceAll(RegExp(r'/+$'), '') + imageUri.path;
+        if (basePath.isNotEmpty &&
+            basePath != '/' &&
+            imageUri.path.startsWith('/')) {
+          final mergedPath =
+              basePath.replaceAll(RegExp(r'/+$'), '') + imageUri.path;
           imageUri = imageUri.replace(path: mergedPath);
         }
       }
@@ -121,7 +126,9 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
             'price': (item['prixUnitaire'] ?? '').toString(),
             'stock': item['stockDisponible'] ?? item['quantite'] ?? 0,
             'image': firstPhoto,
-            'category': (item['categorie'] != null ? (item['categorie']['nom'] ?? '') : ''),
+            'category': (item['categorie'] != null
+                ? (item['categorie']['nom'] ?? '')
+                : ''),
             'description': item['description'] ?? '',
             'unite': item['unite'] ?? 'KILOGRAMME',
             'isBio': item['bio'] ?? false,
@@ -164,12 +171,14 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                           child: _error != null
                               ? Padding(
                                   padding: const EdgeInsets.all(16),
-                                  child: Text(_error!, textAlign: TextAlign.center),
+                                  child: Text(_error!,
+                                      textAlign: TextAlign.center),
                                 )
                               : const Text('Aucun produit'),
                         )
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           itemCount: _products.length,
                           itemBuilder: (context, index) {
                             return _buildProductCard(_products[index], index);
@@ -281,7 +290,7 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
               child: _buildProductImage(product['image']),
             ),
           ),
-          
+
           // Détails du produit
           Expanded(
             child: Padding(
@@ -303,7 +312,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                       ),
                       if (product['isBio'] == true)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.green.shade50,
                             borderRadius: BorderRadius.circular(8),
@@ -312,7 +322,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.eco, color: Colors.green.shade700, size: 14),
+                              Icon(Icons.eco,
+                                  color: Colors.green.shade700, size: 14),
                               const SizedBox(width: 4),
                               Text(
                                 'Bio',
@@ -348,7 +359,7 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
               ),
             ),
           ),
-          
+
           // Boutons d'action
           Padding(
             padding: const EdgeInsets.all(8),
@@ -383,7 +394,11 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
         future: _loadNetworkImage(imagePath),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)));
+            return const Center(
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)));
           }
           if (snapshot.hasError) {
             return const Icon(Icons.broken_image, size: 40);
@@ -399,7 +414,11 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
         future: _loadNetworkImage(normalized),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)));
+            return const Center(
+                child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2)));
           }
           if (snapshot.hasError) {
             return const Icon(Icons.broken_image, size: 40);
@@ -409,9 +428,11 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       );
     }
     // Asset
-    return Image.network("http://10.175.47.38:8080/suguconnect/uploads/$imagePath",
+    return Image.network(
+      "$UPLOADS_BASE_URL/$imagePath",
       fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 40),
+      errorBuilder: (context, error, stackTrace) =>
+          const Icon(Icons.image, size: 40),
     );
   }
 
@@ -425,7 +446,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       final fileName = segments.last;
 
       // Si l'URL pointe vers /files/download/... => utiliser /uploads/<file>
-      if (uri.path.contains('/files/download/') || uri.path.contains('/suguconnect/files/download/')) {
+      if (uri.path.contains('/files/download/') ||
+          uri.path.contains('/suguconnect/files/download/')) {
         return '/uploads/$fileName';
       }
 
@@ -446,18 +468,23 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
     }
   }
 
-  void _showEditProductDialog(BuildContext context, Map<String, dynamic> product) {
+  void _showEditProductDialog(
+      BuildContext context, Map<String, dynamic> product) {
     final nameController = TextEditingController(text: product['name'] ?? '');
-    final priceController = TextEditingController(text: product['price']?.toString() ?? '');
-    final stockController = TextEditingController(text: product['stock']?.toString() ?? '0');
-    final descriptionController = TextEditingController(text: product['description'] ?? '');
-    String selectedUnite = (product['unite'] ?? 'KILOGRAMME').toString().toUpperCase();
+    final priceController =
+        TextEditingController(text: product['price']?.toString() ?? '');
+    final stockController =
+        TextEditingController(text: product['stock']?.toString() ?? '0');
+    final descriptionController =
+        TextEditingController(text: product['description'] ?? '');
+    String selectedUnite =
+        (product['unite'] ?? 'KILOGRAMME').toString().toUpperCase();
     bool isBio = product['isBio'] ?? false;
     bool isLoading = false;
     File? selectedImage;
     String? currentImageUrl = product['image']?.toString();
     final ImagePicker imagePicker = ImagePicker();
-    
+
     final List<String> unites = ['KILOGRAMME', 'SAC', 'CARTON', 'TONNE'];
     final Map<String, String> uniteLabels = {
       'KILOGRAMME': 'Kilogramme',
@@ -493,7 +520,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+                  child: const Icon(Icons.photo_library,
+                      color: AppTheme.primaryColor),
                 ),
                 title: const Text('Galerie'),
                 onTap: () => Navigator.pop(context, ImageSource.gallery),
@@ -505,7 +533,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                     color: AppTheme.primaryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+                  child: const Icon(Icons.camera_alt,
+                      color: AppTheme.primaryColor),
                 ),
                 title: const Text('Appareil photo'),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
@@ -523,7 +552,7 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
             maxHeight: 1200,
             imageQuality: 85,
           );
-          
+
           if (image != null) {
             setDialogState(() {
               selectedImage = File(image.path);
@@ -552,7 +581,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
-              insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              insetPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
               child: Container(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.of(context).size.height * 0.9,
@@ -562,10 +592,14 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                   children: [
                     // En-tête moderne
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 24, vertical: 20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.8)],
+                          colors: [
+                            AppTheme.primaryColor,
+                            AppTheme.primaryColor.withOpacity(0.8)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -582,7 +616,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
+                            child: const Icon(Icons.edit_rounded,
+                                color: Colors.white, size: 24),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -602,9 +637,12 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                 color: Colors.white.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                              child: const Icon(Icons.close_rounded,
+                                  color: Colors.white, size: 20),
                             ),
-                            onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                            onPressed: isLoading
+                                ? null
+                                : () => Navigator.pop(dialogContext),
                           ),
                         ],
                       ),
@@ -636,7 +674,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                   color: Colors.grey.shade100,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: AppTheme.primaryColor.withOpacity(0.3),
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.3),
                                     width: 2,
                                   ),
                                 ),
@@ -644,7 +683,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                     ? Stack(
                                         children: [
                                           ClipRRect(
-                                            borderRadius: BorderRadius.circular(14),
+                                            borderRadius:
+                                                BorderRadius.circular(14),
                                             child: Image.file(
                                               selectedImage!,
                                               fit: BoxFit.cover,
@@ -658,25 +698,32 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                             child: Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: Colors.black.withOpacity(0.6),
-                                                borderRadius: BorderRadius.circular(8),
+                                                color: Colors.black
+                                                    .withOpacity(0.6),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
-                                              child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                              child: const Icon(Icons.edit,
+                                                  color: Colors.white,
+                                                  size: 20),
                                             ),
                                           ),
                                         ],
                                       )
-                                    : currentImageUrl != null && currentImageUrl!.isNotEmpty
+                                    : currentImageUrl != null &&
+                                            currentImageUrl!.isNotEmpty
                                         ? Stack(
                                             children: [
                                               ClipRRect(
-                                                borderRadius: BorderRadius.circular(14),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
                                                 child: Image.network(
                                                   currentImageUrl!,
                                                   fit: BoxFit.cover,
                                                   width: double.infinity,
                                                   height: double.infinity,
-                                                  errorBuilder: (context, error, stackTrace) {
+                                                  errorBuilder: (context, error,
+                                                      stackTrace) {
                                                     return _buildEmptyPhotoPlaceholder();
                                                   },
                                                 ),
@@ -685,12 +732,18 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                                 top: 8,
                                                 right: 8,
                                                 child: Container(
-                                                  padding: const EdgeInsets.all(8),
+                                                  padding:
+                                                      const EdgeInsets.all(8),
                                                   decoration: BoxDecoration(
-                                                    color: Colors.black.withOpacity(0.6),
-                                                    borderRadius: BorderRadius.circular(8),
+                                                    color: Colors.black
+                                                        .withOpacity(0.6),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
                                                   ),
-                                                  child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                                                  child: const Icon(Icons.edit,
+                                                      color: Colors.white,
+                                                      size: 20),
                                                 ),
                                               ),
                                             ],
@@ -754,26 +807,32 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                   margin: const EdgeInsets.all(8),
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor.withOpacity(0.1),
+                                    color:
+                                        AppTheme.primaryColor.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
-                                  child: const Icon(Icons.straighten_rounded, color: AppTheme.primaryColor, size: 20),
+                                  child: const Icon(Icons.straighten_rounded,
+                                      color: AppTheme.primaryColor, size: 20),
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey.shade300),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.grey.shade300),
+                                  borderSide:
+                                      BorderSide(color: Colors.grey.shade300),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2),
+                                  borderSide: const BorderSide(
+                                      color: AppTheme.primaryColor, width: 2),
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 16),
                               ),
                               items: unites.map((unite) {
                                 return DropdownMenuItem(
@@ -797,7 +856,9 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isBio ? Colors.green.shade300 : Colors.grey.shade300,
+                                  color: isBio
+                                      ? Colors.green.shade300
+                                      : Colors.grey.shade300,
                                   width: isBio ? 2 : 1,
                                 ),
                               ),
@@ -806,26 +867,33 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: isBio ? Colors.green.shade50 : Colors.grey.shade100,
+                                      color: isBio
+                                          ? Colors.green.shade50
+                                          : Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(
                                       Icons.eco_rounded,
-                                      color: isBio ? Colors.green.shade700 : Colors.grey.shade600,
+                                      color: isBio
+                                          ? Colors.green.shade700
+                                          : Colors.grey.shade600,
                                       size: 24,
                                     ),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Produit bio',
                                           style: GoogleFonts.itim(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w600,
-                                            color: isBio ? Colors.green.shade700 : Colors.black87,
+                                            color: isBio
+                                                ? Colors.green.shade700
+                                                : Colors.black87,
                                           ),
                                         ),
                                       ],
@@ -833,7 +901,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                   ),
                                   Switch(
                                     value: isBio,
-                                    onChanged: (value) => setDialogState(() => isBio = value),
+                                    onChanged: (value) =>
+                                        setDialogState(() => isBio = value),
                                     activeColor: Colors.green,
                                   ),
                                 ],
@@ -858,9 +927,12 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                         children: [
                           Expanded(
                             child: OutlinedButton(
-                              onPressed: isLoading ? null : () => Navigator.pop(dialogContext),
+                              onPressed: isLoading
+                                  ? null
+                                  : () => Navigator.pop(dialogContext),
                               style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -880,100 +952,143 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                           Expanded(
                             flex: 2,
                             child: ElevatedButton(
-                              onPressed: isLoading ? null : () async {
-                                setDialogState(() => isLoading = true);
-                                try {
-                                  final auth = Provider.of<AuthProvider>(context, listen: false);
-                                  final user = auth.currentUser;
-                                  final token = auth.token;
-                                  if (user?.id == null || token == null) {
-                                    throw Exception('Utilisateur non connecté');
-                                  }
+                              onPressed: isLoading
+                                  ? null
+                                  : () async {
+                                      setDialogState(() => isLoading = true);
+                                      try {
+                                        final auth = Provider.of<AuthProvider>(
+                                            context,
+                                            listen: false);
+                                        final user = auth.currentUser;
+                                        final token = auth.token;
+                                        if (user?.id == null || token == null) {
+                                          throw Exception(
+                                              'Utilisateur non connecté');
+                                        }
 
-                                  if (AuthService.resolvedBaseUrl == null) {
-                                    await AuthService.testConnection();
-                                  }
-                                  final base = AuthService.resolvedBaseUrl ?? '';
-                                  if (base.isEmpty) throw Exception('URL serveur introuvable');
+                                        if (AuthService.resolvedBaseUrl ==
+                                            null) {
+                                          await AuthService.testConnection();
+                                        }
+                                        final base =
+                                            AuthService.resolvedBaseUrl ?? '';
+                                        if (base.isEmpty)
+                                          throw Exception(
+                                              'URL serveur introuvable');
 
-                                  final productId = product['id'];
-                                  if (productId == null) {
-                                    throw Exception('ID du produit introuvable');
-                                  }
+                                        final productId = product['id'];
+                                        if (productId == null) {
+                                          throw Exception(
+                                              'ID du produit introuvable');
+                                        }
 
-                                  // Toujours utiliser multipart pour coller au backend (/producteur/{producteurId}/produit/{produitId})
-                                  final uri = Uri.parse('$base/producteur/${user!.id}/produit/$productId');
-                                  final request = http.MultipartRequest('PUT', uri);
-                                  request.headers['Authorization'] = 'Bearer $token';
+                                        // Toujours utiliser multipart pour coller au backend (/producteur/{producteurId}/produit/{produitId})
+                                        final uri = Uri.parse(
+                                            '$base/producteur/${user!.id}/produit/$productId');
+                                        final request =
+                                            http.MultipartRequest('PUT', uri);
+                                        request.headers['Authorization'] =
+                                            'Bearer $token';
 
-                                  // Champs optionnels acceptés par le backend
-                                  if (nameController.text.trim().isNotEmpty) {
-                                    request.fields['nom'] = nameController.text.trim();
-                                  }
-                                  if (descriptionController.text.trim().isNotEmpty) {
-                                    request.fields['description'] = descriptionController.text.trim();
-                                  }
-                                  if (priceController.text.trim().isNotEmpty) {
-                                    request.fields['prixUnitaire'] = priceController.text.replaceAll(',', '.');
-                                  }
-                                  if (stockController.text.trim().isNotEmpty) {
-                                    request.fields['quantite'] = stockController.text.trim();
-                                  }
-                                  if (selectedUnite.isNotEmpty) {
-                                    request.fields['unite'] = selectedUnite;
-                                  }
+                                        // Champs optionnels acceptés par le backend
+                                        if (nameController.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          request.fields['nom'] =
+                                              nameController.text.trim();
+                                        }
+                                        if (descriptionController.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          request.fields['description'] =
+                                              descriptionController.text.trim();
+                                        }
+                                        if (priceController.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          request.fields['prixUnitaire'] =
+                                              priceController.text
+                                                  .replaceAll(',', '.');
+                                        }
+                                        if (stockController.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          request.fields['quantite'] =
+                                              stockController.text.trim();
+                                        }
+                                        if (selectedUnite.isNotEmpty) {
+                                          request.fields['unite'] =
+                                              selectedUnite;
+                                        }
 
-                                  // Ajouter la photo seulement si sélectionnée
-                                  if (selectedImage != null) {
-                                    final stream = http.ByteStream(Stream.castFrom(selectedImage!.openRead()));
-                                    final length = await selectedImage!.length();
-                                    final multipartFile = http.MultipartFile(
-                                      'photos',
-                                      stream,
-                                      length,
-                                      filename: selectedImage!.path.split('/').last,
-                                    );
-                                    request.files.add(multipartFile);
-                                  }
+                                        // Ajouter la photo seulement si sélectionnée
+                                        if (selectedImage != null) {
+                                          final stream = http.ByteStream(
+                                              Stream.castFrom(
+                                                  selectedImage!.openRead()));
+                                          final length =
+                                              await selectedImage!.length();
+                                          final multipartFile =
+                                              http.MultipartFile(
+                                            'photos',
+                                            stream,
+                                            length,
+                                            filename: selectedImage!.path
+                                                .split('/')
+                                                .last,
+                                          );
+                                          request.files.add(multipartFile);
+                                        }
 
-                                  final response = await request.send();
-                                  if (response.statusCode == 200) {
-                                    if (context.mounted) {
-                                      Navigator.pop(dialogContext);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Produit modifié avec succès'),
-                                          backgroundColor: Color(0xFF4CAF50),
-                                        ),
-                                      );
-                                      final state = context.findAncestorStateOfType<_ProducerProductsScreenState>();
-                                      if (state != null) {
-                                        state._loadProducts();
+                                        final response = await request.send();
+                                        if (response.statusCode == 200) {
+                                          if (context.mounted) {
+                                            Navigator.pop(dialogContext);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                    'Produit modifié avec succès'),
+                                                backgroundColor:
+                                                    Color(0xFF4CAF50),
+                                              ),
+                                            );
+                                            final state =
+                                                context.findAncestorStateOfType<
+                                                    _ProducerProductsScreenState>();
+                                            if (state != null) {
+                                              state._loadProducts();
+                                            }
+                                          }
+                                        } else {
+                                          final body = await response.stream
+                                              .bytesToString();
+                                          throw Exception(
+                                              'HTTP ${response.statusCode}: $body');
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                              content: Text('Erreur: $e'),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      } finally {
+                                        if (context.mounted) {
+                                          setDialogState(
+                                              () => isLoading = false);
+                                        }
                                       }
-                                    }
-                                  } else {
-                                    final body = await response.stream.bytesToString();
-                                    throw Exception('HTTP ${response.statusCode}: $body');
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Erreur: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                } finally {
-                                  if (context.mounted) {
-                                    setDialogState(() => isLoading = false);
-                                  }
-                                }
-                              },
+                                    },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryColor,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -985,13 +1100,17 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
                                       ),
                                     )
                                   : Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        const Icon(Icons.check_circle_rounded, size: 20),
+                                        const Icon(Icons.check_circle_rounded,
+                                            size: 20),
                                         const SizedBox(width: 8),
                                         Text(
                                           'Enregistrer',
@@ -1075,7 +1194,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
@@ -1085,9 +1205,11 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Text('Supprimer le produit'),
-          content: const Text('Êtes-vous sûr de vouloir supprimer ce produit ?'),
+          content:
+              const Text('Êtes-vous sûr de vouloir supprimer ce produit ?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -1096,7 +1218,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  final auth = Provider.of<AuthProvider>(context, listen: false);
+                  final auth =
+                      Provider.of<AuthProvider>(context, listen: false);
                   final user = auth.currentUser;
                   final token = auth.token;
                   final product = _products[index];
@@ -1112,7 +1235,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                   final base = AuthService.resolvedBaseUrl ?? '';
                   if (base.isEmpty) throw Exception('URL serveur introuvable');
 
-                  final uri = Uri.parse('$base/producteur/${user!.id}/produit/$productId');
+                  final uri = Uri.parse(
+                      '$base/producteur/${user!.id}/produit/$productId');
                   final resp = await http.delete(uri, headers: {
                     'Authorization': 'Bearer $token',
                     'Accept': 'application/json',
@@ -1127,7 +1251,8 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
                     );
                     await _loadProducts();
                   } else {
-                    throw Exception('HTTP ${resp.statusCode}: ${resp.reasonPhrase ?? ''}');
+                    throw Exception(
+                        'HTTP ${resp.statusCode}: ${resp.reasonPhrase ?? ''}');
                   }
                 } catch (e) {
                   Navigator.pop(context);
@@ -1174,5 +1299,4 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       ),
     );
   }
-
 }

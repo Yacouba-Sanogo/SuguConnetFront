@@ -2,6 +2,14 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 
+// URL de base de l'API - à modifier selon l'environnement
+const String BASE_API_URL = 'http://10.175.47.34:8080';
+
+const String BASE_URL = '$BASE_API_URL/suguconnect';
+
+// URL de base pour les fichiers uploadés
+const String UPLOADS_BASE_URL = '$BASE_URL/uploads';
+
 class ApiService {
   Dio? _dio;
   String? _token;
@@ -12,7 +20,8 @@ class ApiService {
     if (_dio != null) return;
     // Resolve base URL dynamically via AuthService (handles 10.0.2.2, LAN IP, etc.)
     await AuthService.testConnection();
-    final base = AuthService.resolvedBaseUrl ?? 'http://10.0.2.2:8080/suguconnect';
+    final base =
+        AuthService.resolvedBaseUrl ?? 'http://10.0.2.2:8080/suguconnect';
     _dio = Dio(BaseOptions(
       baseUrl: base,
       connectTimeout: const Duration(seconds: 30),
@@ -126,4 +135,30 @@ class ApiService {
   }
 
   bool get isAuthenticated => _token != null;
+
+  // Méthode utilitaire pour obtenir l'URL de base
+  Future<String> getBaseUrl() async {
+    await _ensureClient();
+    final base = _dio?.options.baseUrl ?? 'http://10.0.2.2:8080/suguconnect';
+    return base.replaceAll('/suguconnect', '');
+  }
+
+  // Méthode utilitaire pour charger une image depuis le serveur
+  Future<String> buildImageUrl(String imagePath) async {
+    await _ensureClient();
+    final base = _dio?.options.baseUrl ?? 'http://10.0.2.2:8080/suguconnect';
+
+    // Si l'URL est déjà absolue, la retourner directement
+    if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
+      return imagePath;
+    }
+
+    // Si le chemin commence par /uploads/, l'utiliser directement
+    if (imagePath.startsWith('/uploads/')) {
+      return '$base$imagePath';
+    }
+
+    // Sinon, construire l'URL complète
+    return '$base/uploads/$imagePath';
+  }
 }
