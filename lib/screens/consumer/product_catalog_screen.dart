@@ -5,6 +5,7 @@ import '../../models/product.dart';
 import '../../services/product_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/product_card.dart';
+ 
 
 class ProductCatalogScreen extends StatefulWidget {
   const ProductCatalogScreen({super.key});

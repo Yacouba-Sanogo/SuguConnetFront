@@ -35,8 +35,49 @@ class Produit {
 
   factory Produit.fromJson(Map<String, dynamic> json) => _$ProduitFromJson(json);
   Map<String, dynamic> toJson() => _$ProduitToJson(this);
-
-  String get prixFormate => '${prix.toStringAsFixed(2)} €';
+  String get prixFormate {
+    final isInt = prix % 1 == 0;
+    final amount = isInt ? prix.toStringAsFixed(0) : prix.toStringAsFixed(2);
+    String unit = '';
+    if (uniteMesure != null && uniteMesure!.isNotEmpty) {
+      final u = uniteMesure!.toUpperCase();
+      switch (u) {
+        case 'KILOGRAMME':
+        case 'KG':
+          unit = 'kg';
+          break;
+        case 'LITRE':
+        case 'L':
+          unit = 'L';
+          break;
+        case 'SAC':
+          unit = 'sac';
+          break;
+        case 'CARTON':
+          unit = 'carton';
+          break;
+        case 'TONNE':
+        case 'T':
+          unit = 't';
+          break;
+        case 'PIECE':
+        case 'PIÈCE':
+          unit = 'pc';
+          break;
+        case 'UNITE':
+        case 'UNITÉ':
+          unit = 'u';
+          break;
+        case 'PAQUET':
+          unit = 'pkt';
+          break;
+        default:
+          unit = u.toLowerCase();
+      }
+      unit = ' / $unit';
+    }
+    return '$amount fcfa$unit';
+  }
   bool get enStock => quantiteStock > 0;
 }
 

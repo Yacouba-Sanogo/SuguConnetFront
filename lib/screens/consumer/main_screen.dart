@@ -18,7 +18,7 @@ class _MainScreenState extends State<MainScreen> {
   // Liste des pages disponibles dans l'interface consommateur
   final List<Widget> _pages = [
     AccueilPage(), // Page d'accueil
-    FavorisPage(), // Page des produits (anciennement favoris)
+    FavorisPage(), // Page des produits (ancien comportement)
     CommandesPage(), // Page des commandes
     ProfilPage(), // Page de profil
   ];
@@ -83,8 +83,8 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 // Bouton Produits
                 _buildNavItem(
-                  icon: Icons.inventory_2_outlined,
-                  label: 'Produits',
+                  icon: Icons.favorite_border,
+                  label: 'Favoris',
                   index: 1,
                 ),
                 // Bouton Commandes

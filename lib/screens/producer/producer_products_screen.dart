@@ -39,7 +39,15 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       Uri imageUri = Uri.parse(url);
       if (base != null) {
         final baseUri = Uri.parse(base);
+        // Appliquer scheme/host/port
         imageUri = imageUri.replace(scheme: baseUri.scheme, host: baseUri.host, port: baseUri.port);
+        // Si la base a un contextPath (ex: /suguconnect) et que le chemin image est absolu (/uploads/..),
+        // préfixer le contextPath pour obtenir <basePath>/uploads/..
+        final basePath = baseUri.path; // ex: /suguconnect
+        if (basePath.isNotEmpty && basePath != '/' && imageUri.path.startsWith('/')) {
+          final mergedPath = basePath.replaceAll(RegExp(r'/+$'), '') + imageUri.path;
+          imageUri = imageUri.replace(path: mergedPath);
+        }
       }
 
       final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -401,8 +409,7 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
       );
     }
     // Asset
-    return Image.network(
-      imagePath,
+    return Image.network("http://10.175.47.38:8080/suguconnect/uploads/$imagePath",
       fit: BoxFit.cover,
       errorBuilder: (context, error, stackTrace) => const Icon(Icons.image, size: 40),
     );
