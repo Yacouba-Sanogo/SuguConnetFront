@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'login_screen.dart';
+import 'package:suguconnect_mobile/screens/consommateur/accueil.dart';
 import 'consumer_login_screen.dart';
-import '../consumer/main_screen.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
 
@@ -98,7 +97,7 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> with Si
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MainScreen(),
+            builder: (context) => const AccueilPage(),
           ),
         );
       }
