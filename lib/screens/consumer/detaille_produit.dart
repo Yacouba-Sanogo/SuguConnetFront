@@ -5,6 +5,8 @@ import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
 import 'package:suguconnect_mobile/screens/consumer/chat_page_simple.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
+import 'package:suguconnect_mobile/services/api_service.dart';
+import 'package:dio/dio.dart'; // Ajout de l'import Dio
 import 'dart:async';
 
 // La page de détails du produit
@@ -17,19 +19,48 @@ class ProductDetailsPage extends StatefulWidget {
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
+class _ProductDetailsPageState extends State<ProductDetailsPage>
+    with SingleTickerProviderStateMixin {
   int _quantity = 1;
   late double _price;
   bool _isFavorite = false;
   int _currentPage = 0;
   final PageController _pageController = PageController();
+  final ApiService _apiService = ApiService();
+
+  // Animation pour l'image unique
+  late AnimationController _animationController;
+  late Animation<double> _scaleAnimation;
 
   // Liste d'images pour le carrousel
   late List<String> _productImages;
+  bool _imagesLoading = true;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialisation de l'animation
+    _animationController = AnimationController(
+      duration: const Duration(seconds: 20),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.05,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Répéter l'animation en boucle
+    _animationController.repeat(reverse: true);
+
+    // Initialisation avec des placeholders pendant le chargement
+    _productImages = [
+      'https://placehold.co/600x400/FFA726/FFFFFF?text=Chargement...',
+    ];
 
     // Utiliser les données du produit ou des valeurs par défaut
     if (widget.product != null) {
@@ -48,22 +79,32 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       _price = double.tryParse(cleanedPriceString) ?? 0.0;
       print('Parsed price: $_price');
 
-      _productImages = [
-        widget.product!['image']!,
-        'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
-      ];
+      // Construire les URLs d'images
+      _buildImageUrls();
     } else {
       _price = 40000.0;
+      _imagesLoading = false; // Pas de chargement nécessaire
       _productImages = [
         'https://placehold.co/600x400/FFA726/FFFFFF?text=Orange+1',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=Orange+2',
-        'https://placehold.co/600x400/F57C00/FFFFFF?text=Orange+3',
       ];
     }
 
+    // Démarrer le timer seulement si nous avons plus d'une image
+    _startAutoSlide();
+  }
+
+  // Fonction pour démarrer le défilement automatique
+  void _startAutoSlide() {
+    // Ne pas démarrer le timer si nous n'avons qu'une seule image
+    if (_productImages.length <= 1) return;
+
     // Changement automatique des images (optionnel)
     Timer.periodic(const Duration(seconds: 5), (Timer timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       if (_currentPage < _productImages.length - 1) {
         _currentPage++;
       } else {
@@ -79,18 +120,206 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     });
   }
 
+  // Fonction pour vérifier si une image existe
+  Future<bool> _imageExists(String url) async {
+    try {
+      // Créer une requête HEAD manuellement en utilisant Dio
+      final dio = Dio();
+      final response = await dio.head(url);
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Erreur lors de la vérification de l\'image $url: $e');
+      return false;
+    }
+  }
+
+  // Fonction pour construire les URLs d'images
+  void _buildImageUrls() async {
+    try {
+      final String? mainImage = widget.product!['image'];
+
+      List<String> images = [];
+
+      if (mainImage != null && mainImage.isNotEmpty) {
+        // Utiliser le service API pour construire l'URL complète
+        final String fullImageUrl = await _apiService.buildImageUrl(mainImage);
+        images.add(fullImageUrl);
+      } else {
+        images.add(
+            'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1');
+      }
+
+      // Générer des URLs potentielles pour des images supplémentaires
+      // Par exemple, si l'image principale est "image123.jpg", on peut essayer "image123_2.jpg"
+      if (mainImage != null && mainImage.isNotEmpty) {
+        final String baseName = mainImage.split('.').first;
+        final String extension = mainImage.split('.').last;
+
+        // Vérifier l'existence d'images supplémentaires
+        final potentialImages = [
+          '${baseName}_2.$extension',
+          '${baseName}_3.$extension',
+          '${baseName}2.$extension',
+          '${baseName}3.$extension',
+        ];
+
+        for (final potentialImage in potentialImages) {
+          try {
+            final fullUrl = await _apiService.buildImageUrl(potentialImage);
+            if (await _imageExists(fullUrl)) {
+              images.add(fullUrl);
+            }
+          } catch (e) {
+            print(
+                'Erreur lors de la vérification de l\'image $potentialImage: $e');
+          }
+        }
+      }
+
+      // Ajouter quelques placeholders si nous n'avons toujours qu'une seule image
+      if (images.length == 1) {
+        final String placeholder2 =
+            'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+2';
+        final String placeholder3 =
+            'https://placehold.co/600x400/F57C00/FFFFFF?text=${widget.product!['name']}+3';
+        images.add(placeholder2);
+        images.add(placeholder3);
+      }
+
+      if (mounted) {
+        setState(() {
+          _productImages = images;
+          _imagesLoading = false;
+        });
+
+        // Redémarrer le défilement automatique si nécessaire
+        _startAutoSlide();
+      }
+    } catch (e) {
+      print('Erreur lors de la construction des URLs d\'images: $e');
+      // En cas d'erreur, utiliser une seule image
+      if (mounted) {
+        setState(() {
+          _productImages = [
+            'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
+          ];
+          _imagesLoading = false;
+        });
+
+        // Redémarrer le défilement automatique si nécessaire
+        _startAutoSlide();
+      }
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
+    _animationController.dispose(); // Dispose l'animation controller
     super.dispose();
   }
 
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
+  Widget _buildImageSlider() {
+    return SizedBox(
+      height: 180,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: _productImages.length,
+            onPageChanged: (int page) {
+              setState(() {
+                _currentPage = page;
+              });
+            },
+            itemBuilder: (context, index) {
+              return ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(20)),
+                child: _imagesLoading
+                    ? Container(
+                        color: Colors.grey[200],
+                        child: const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : (_productImages.length == 1
+                        // Animation pour l'image unique
+                        ? ScaleTransition(
+                            scale: _scaleAnimation,
+                            child: Image.network(
+                              _productImages[index],
+                              fit: BoxFit.cover,
+                              loadingBuilder:
+                                  (context, child, loadingProgress) {
+                                if (loadingProgress == null) return child;
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) {
+                                // Image de secours en cas d'erreur
+                                return Container(
+                                  color: Colors.grey[200],
+                                  child: const Icon(Icons.image,
+                                      size: 50, color: Colors.grey),
+                                );
+                              },
+                            ),
+                          )
+                        // Pas d'animation pour plusieurs images
+                        : Image.network(
+                            _productImages[index],
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              // Image de secours en cas d'erreur
+                              return Container(
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.image,
+                                    size: 50, color: Colors.grey),
+                              );
+                            },
+                          )),
+              );
+            },
+          ),
+          // Indicateur de pagination seulement si nous avons plus d'une image
+          if (_productImages.length > 1)
+            Positioned(
+              bottom: 10,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(_productImages.length, (index) {
+                  return Container(
+                    width: 8.0,
+                    height: 8.0,
+                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentPage == index
+                          ? Colors.white
+                          : Colors.white.withOpacity(0.5),
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -146,58 +375,12 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     );
   }
 
-  Widget _buildImageSlider() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _productImages.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                child: _productImages[index].startsWith('http')
-                    ? Image.network(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      ),
-              );
-            },
-          ),
-          Positioned(
-            bottom: 10,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_productImages.length, (index) {
-                return Container(
-                  width: 8.0,
-                  height: 8.0,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
+  void _updateQuantity(int change) {
+    setState(() {
+      if (_quantity + change > 0) {
+        _quantity += change;
+      }
+    });
   }
 
   Widget _buildProductHeader() {
