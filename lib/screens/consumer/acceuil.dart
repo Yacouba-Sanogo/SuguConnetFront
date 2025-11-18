@@ -7,6 +7,9 @@ import 'detaille_produit.dart';
 import '../../models/produit_populaire.dart';
 import '../../services/produit_populaire_service.dart';
 import '../../services/api_service.dart';
+import '../../services/product_service.dart'; // Ajout du service produit
+import '../../models/product.dart'; // Ajout du modèle produit
+import 'category_products_page.dart'; // Ajout de la nouvelle page
 
 // Page d'accueil principale de l'application consommateur
 class AccueilPage extends StatefulWidget {
@@ -19,16 +22,21 @@ class AccueilPage extends StatefulWidget {
 class _AccueilPageState extends State<AccueilPage> {
   late ProduitPopulaireService _produitPopulaireService;
   late ApiService _apiService;
+  late ProductService _productService; // Ajout du service produit
   List<ProduitPopulaire> _produitsPopulaires = [];
+  List<Categorie> _categories = []; // Ajout de la liste des catégories
   bool _isLoading = true;
+  bool _isLoadingCategories = true; // Ajout du chargement des catégories
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _apiService = ApiService();
+    _productService = ProductService(); // Initialisation du service produit
     _produitPopulaireService = ProduitPopulaireService(_apiService);
     _loadProduitsPopulaires();
+    _loadCategories(); // Chargement des catégories
   }
 
   Future<void> _loadProduitsPopulaires() async {
@@ -47,6 +55,48 @@ class _AccueilPageState extends State<AccueilPage> {
       setState(() {
         _errorMessage = 'Erreur de chargement: $e';
         _isLoading = false;
+      });
+    }
+  }
+
+  // Fonction pour charger les catégories depuis le backend
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await _productService.getAllCategories();
+      setState(() {
+        _categories = categories;
+        _isLoadingCategories = false;
+      });
+    } catch (e) {
+      // En cas d'erreur, utiliser des catégories par défaut
+      setState(() {
+        _categories = [
+          Categorie(
+            id: 1,
+            nom: 'Fruits',
+            description: 'Fruits frais',
+            dateCreation: DateTime.now(),
+          ),
+          Categorie(
+            id: 2,
+            nom: 'Légumes',
+            description: 'Légumes frais',
+            dateCreation: DateTime.now(),
+          ),
+          Categorie(
+            id: 3,
+            nom: 'Céréales',
+            description: 'Céréales et grains',
+            dateCreation: DateTime.now(),
+          ),
+          Categorie(
+            id: 4,
+            nom: 'Épices',
+            description: 'Épices et condiments',
+            dateCreation: DateTime.now(),
+          ),
+        ];
+        _isLoadingCategories = false;
       });
     }
   }
@@ -208,49 +258,8 @@ class _AccueilPageState extends State<AccueilPage> {
 
             SizedBox(height: 16),
 
-            // Grille de catégories
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: GridView.count(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                crossAxisCount: 2,
-                childAspectRatio: 1.1,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildCategoryCard(
-                    context,
-                    'Fruits',
-                    // use the SVGs that exist under assets/images in this project
-                    'assets/images/Fruits.svg',
-                    'assets/images/pommes.png',
-                    Colors.deepOrange,
-                  ),
-                  _buildCategoryCard(
-                    context,
-                    'Céréales',
-                    'assets/images/Cereales.svg',
-                    'assets/images/mais.png',
-                    Colors.deepOrange,
-                  ),
-                  _buildCategoryCard(
-                    context,
-                    'Légumes',
-                    'assets/images/Legumes.svg',
-                    'assets/images/carottes.png',
-                    Colors.deepOrange,
-                  ),
-                  _buildCategoryCard(
-                    context,
-                    'Épices',
-                    'assets/images/Epices.svg',
-                    'assets/images/Oignons.png',
-                    Colors.deepOrange,
-                  ),
-                ],
-              ),
-            ),
+            // Grille de catégories dynamiques
+            _buildCategoriesSection(),
 
             SizedBox(height: 20),
 
@@ -284,6 +293,63 @@ class _AccueilPageState extends State<AccueilPage> {
             SizedBox(height: 80), // Espace pour le FAB
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget pour la section des catégories dynamiques
+  Widget _buildCategoriesSection() {
+    if (_isLoadingCategories) {
+      return Container(
+        height: 150,
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // Mapping des catégories avec leurs icônes et images
+    final categoryData = {
+      'Fruits': {
+        'icon': 'assets/images/Fruits.svg',
+        'image': 'assets/images/pommes.png'
+      },
+      'Céréales': {
+        'icon': 'assets/images/Cereales.svg',
+        'image': 'assets/images/mais.png'
+      },
+      'Légumes': {
+        'icon': 'assets/images/Legumes.svg',
+        'image': 'assets/images/carottes.png'
+      },
+      'Épices': {
+        'icon': 'assets/images/Epices.svg',
+        'image': 'assets/images/Oignons.png'
+      },
+    };
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.0),
+      child: GridView.count(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        crossAxisCount: 2,
+        childAspectRatio: 1.1,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        children: _categories.map((categorie) {
+          final data = categoryData[categorie.nom] ??
+              {
+                'icon': 'assets/images/Fruits.svg',
+                'image': 'assets/images/pommes.png'
+              };
+
+          return _buildCategoryCard(
+            context,
+            categorie.nom,
+            data['icon']!,
+            data['image']!,
+            Colors.deepOrange,
+          );
+        }).toList(),
       ),
     );
   }
@@ -488,10 +554,23 @@ class _AccueilPageState extends State<AccueilPage> {
       String headerImage, Color color) {
     return GestureDetector(
       onTap: () {
-        // Navigate to the shared category page with different title and header image
+        // Trouver la catégorie correspondante
+        final categorie = _categories.firstWhere(
+          (cat) => cat.nom == title,
+          orElse: () => Categorie(
+            id: 0,
+            nom: title,
+            dateCreation: DateTime.now(),
+          ),
+        );
+
+        // Navigate to the new category products page
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => FruitPage(title: title, headerImage: headerImage),
+            builder: (_) => CategoryProductsPage(
+              category: categorie,
+              headerImage: headerImage,
+            ),
           ),
         );
       },

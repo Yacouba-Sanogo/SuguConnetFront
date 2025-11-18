@@ -18,10 +18,13 @@ class ApiService {
 
   Future<void> _ensureClient() async {
     if (_dio != null) return;
+    print('=== Résolution de l\'URL de base ===');
     // Resolve base URL dynamically via AuthService (handles 10.0.2.2, LAN IP, etc.)
-    await AuthService.testConnection();
+    await AuthService
+        .testConnection(); // Cela appelle _ensureBaseUrl en interne
     final base =
         AuthService.resolvedBaseUrl ?? 'http://10.0.2.2:8080/suguconnect';
+    print('URL de base résolue: $base');
     _dio = Dio(BaseOptions(
       baseUrl: base,
       connectTimeout: const Duration(seconds: 30),
@@ -33,12 +36,15 @@ class ApiService {
 
     _dio!.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
+        print(
+            'Requête envoyée: ${options.method} ${options.baseUrl}${options.path}');
         if (_token != null) {
           options.headers['Authorization'] = 'Bearer $_token';
         }
         handler.next(options);
       },
       onError: (error, handler) {
+        print('Erreur de requête: ${error.toString()}');
         if (error.response?.statusCode == 401) {
           _clearToken();
         }
@@ -151,6 +157,18 @@ class ApiService {
     // Si l'URL est déjà absolue, la retourner directement
     if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
       return imagePath;
+    }
+
+    // Si le chemin commence par /files/download/, le convertir en /uploads/
+    if (imagePath.startsWith('/files/download/')) {
+      final fileName = imagePath.split('/').last;
+      return '$base/uploads/$fileName';
+    }
+
+    // Si le chemin commence par /suguconnect/files/download/, le convertir en /uploads/
+    if (imagePath.startsWith('/suguconnect/files/download/')) {
+      final fileName = imagePath.split('/').last;
+      return '$base/uploads/$fileName';
     }
 
     // Si le chemin commence par /uploads/, l'utiliser directement

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/api_service.dart';
 
 // Modèle utilisateur simple pour l'authentification
 class User {
@@ -49,7 +50,8 @@ class AuthProvider with ChangeNotifier {
       // Test de connexion à l'API
       final isConnected = await AuthService.testConnection();
       if (!isConnected) {
-        throw Exception('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+        throw Exception(
+            'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
 
       // Appel de l'API de connexion avec le numéro de téléphone
@@ -66,6 +68,11 @@ class AuthProvider with ChangeNotifier {
       );
 
       _token = result['token'];
+
+      // Définir le token dans le service API
+      final apiService = ApiService();
+      await apiService.setAuthToken(_token!);
+
       notifyListeners();
     } catch (e) {
       _setError('Erreur de connexion: $e');
@@ -92,7 +99,8 @@ class AuthProvider with ChangeNotifier {
       // Test de connexion à l'API
       final isConnected = await AuthService.testConnection();
       if (!isConnected) {
-        throw Exception('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+        throw Exception(
+            'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
 
       // Appel de l'API d'inscription producteur (ProducteurRequestDTO)
@@ -108,19 +116,9 @@ class AuthProvider with ChangeNotifier {
         nomFerme: nomEntreprise, // mappe nomEntreprise -> nomFerme
         description: '',
       );
-      
-      // Pour la démo, on simule un utilisateur inscrit
-      _currentUser = User(
-        id: 1,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        telephone: telephone,
-        role: 'PRODUCTEUR',
-      );
-      
-      _token = 'token_simulé';
-      notifyListeners();
+
+      // Après l'inscription, connectons l'utilisateur pour obtenir un vrai token
+      await login(telephone, motDePasse);
     } catch (e) {
       _setError('Erreur d\'inscription: $e');
       rethrow;
@@ -145,7 +143,8 @@ class AuthProvider with ChangeNotifier {
       // Test de connexion à l'API
       final isConnected = await AuthService.testConnection();
       if (!isConnected) {
-        throw Exception('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
+        throw Exception(
+            'Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
 
       // Appel de l'API d'inscription
@@ -157,19 +156,9 @@ class AuthProvider with ChangeNotifier {
         telephone: telephone,
         adresse: adresse,
       );
-      
-      // Pour la démo, on simule un utilisateur inscrit
-      _currentUser = User(
-        id: 1,
-        nom: nom,
-        prenom: prenom,
-        email: email,
-        telephone: telephone,
-        role: 'CONSOMMATEUR',
-      );
-      
-      _token = 'token_simulé';
-      notifyListeners();
+
+      // Après l'inscription, connectons l'utilisateur pour obtenir un vrai token
+      await login(telephone, motDePasse);
     } catch (e) {
       _setError('Erreur d\'inscription: $e');
       rethrow;
@@ -183,6 +172,11 @@ class AuthProvider with ChangeNotifier {
     _currentUser = null;
     _token = null;
     _clearError();
+
+    // Effacer le token du service API
+    final apiService = ApiService();
+    await apiService.clearAuthToken();
+
     notifyListeners();
   }
 

@@ -29,7 +29,8 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
   ];
 
   double get _totalPrice {
-    return _cartItems.fold(0, (sum, item) => sum + (item['price'] * item['quantity']));
+    return _cartItems.fold(
+        0, (sum, item) => sum + (item['price'] * item['quantity']));
   }
 
   void _updateQuantity(int index, int newQuantity) {
@@ -53,7 +54,8 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Panier'),
-        backgroundColor: const Color(0xFFFB662F).withOpacity(0.3), // Couleur FB662F avec 30% d'opacité
+        backgroundColor: const Color(0xFFFB662F)
+            .withOpacity(0.3), // Couleur FB662F avec 30% d'opacité
         foregroundColor: Colors.black,
         elevation: 0,
       ),
@@ -121,9 +123,9 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                   },
                                 ),
                               ),
-                              
+
                               const SizedBox(width: 12),
-                              
+
                               // Informations du produit
                               Expanded(
                                 child: Column(
@@ -156,7 +158,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                   ],
                                 ),
                               ),
-                              
+
                               // Contrôles de quantité
                               Column(
                                 children: [
@@ -164,7 +166,8 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       GestureDetector(
-                                        onTap: () => _updateQuantity(index, item['quantity'] - 1),
+                                        onTap: () => _updateQuantity(
+                                            index, item['quantity'] - 1),
                                         child: Container(
                                           width: 32,
                                           height: 32,
@@ -180,10 +183,13 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                         ),
                                       ),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 6),
                                         decoration: BoxDecoration(
-                                          border: Border.all(color: Colors.grey.shade300),
-                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                              color: Colors.grey.shade300),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           '${item['quantity']}',
@@ -194,7 +200,8 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                                         ),
                                       ),
                                       GestureDetector(
-                                        onTap: () => _updateQuantity(index, item['quantity'] + 1),
+                                        onTap: () => _updateQuantity(
+                                            index, item['quantity'] + 1),
                                         child: Container(
                                           width: 32,
                                           height: 32,
@@ -226,7 +233,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                     },
                   ),
                 ),
-                
+
                 // Résumé et bouton de commande
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -269,15 +276,31 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                         child: ElevatedButton(
                           onPressed: () {
                             // Navigation vers la page de paiement
+                            // Préparer les données de commande
+                            final orderData = {
+                              'orderId': 12345, // ID de commande fictif
+                              'amount': _totalPrice,
+                              'items': _cartItems.map((item) {
+                                return {
+                                  'id': item['id'],
+                                  'name': item['name'],
+                                  'price': item['price'],
+                                  'quantity': item['quantity'],
+                                };
+                              }).toList(),
+                            };
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const PaymentPage(),
+                                builder: (context) =>
+                                    PaymentPage(orderData: orderData),
                               ),
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
+                            backgroundColor:
+                                const Color(0xFFFB662F), // Couleur FB662F
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(25),

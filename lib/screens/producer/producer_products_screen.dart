@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
-import '../../services/api_service.dart';
+import '../../services/api_service.dart'; // Déjà importé
 import '../../theme/app_theme.dart';
 
 class ProducerProductsScreen extends StatefulWidget {
@@ -388,51 +388,30 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
     if (imagePath.isEmpty) {
       return const Icon(Icons.image, size: 40);
     }
-    // Chemin relatif serveur (ex: "/files/..."), traiter comme URL réseau
-    if (imagePath.startsWith('/')) {
-      return FutureBuilder<Widget>(
-        future: _loadNetworkImage(imagePath),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2)));
-          }
-          if (snapshot.hasError) {
-            return const Icon(Icons.broken_image, size: 40);
-          }
-          return snapshot.data ?? const Icon(Icons.broken_image, size: 40);
-        },
-      );
-    }
-    // URL réseau absolue (http/https)
-    if (imagePath.startsWith('http')) {
-      final normalized = _normalizeImagePath(imagePath);
-      return FutureBuilder<Widget>(
-        future: _loadNetworkImage(normalized),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2)));
-          }
-          if (snapshot.hasError) {
-            return const Icon(Icons.broken_image, size: 40);
-          }
-          return snapshot.data ?? const Icon(Icons.broken_image, size: 40);
-        },
-      );
-    }
-    // Asset
-    return Image.network(
-      "$UPLOADS_BASE_URL/$imagePath",
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) =>
-          const Icon(Icons.image, size: 40),
+
+    // Utiliser l'API service pour construire l'URL de l'image
+    return FutureBuilder<String>(
+      future: ApiService().buildImageUrl(imagePath),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2)));
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Icon(Icons.broken_image, size: 40);
+        }
+
+        final imageUrl = snapshot.data!;
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 40),
+        );
+      },
     );
   }
 

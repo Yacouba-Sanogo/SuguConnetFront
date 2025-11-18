@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:suguconnect_mobile/services/payment_service.dart';
+import 'package:suguconnect_mobile/providers/auth_provider.dart';
+import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
+import 'package:suguconnect_mobile/services/order_service.dart';
 
 // La page de paiement
 class PaymentPage extends StatefulWidget {
-  const PaymentPage({super.key});
+  final Map<String, dynamic> orderData;
+
+  const PaymentPage({super.key, required this.orderData});
 
   @override
   State<PaymentPage> createState() => _PaymentPageState();
@@ -15,9 +22,31 @@ class _PaymentPageState extends State<PaymentPage> {
   PaymentMethod _selectedMethod = PaymentMethod.mobile;
   String? _selectedOperator = 'Orange money';
   final List<String> _operators = ['Orange money', 'Moov money', 'Wave'];
+  final TextEditingController _phoneController = TextEditingController();
+  final PaymentService _paymentService = PaymentService();
+  bool _isProcessing = false;
 
   @override
   Widget build(BuildContext context) {
+    // Vérifier si l'utilisateur est authentifié
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (!authProvider.isAuthenticated) {
+      // Rediriger vers l'écran de connexion si l'utilisateur n'est pas authentifié
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+      });
+
+      // Afficher un indicateur de chargement pendant la redirection
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: _buildAppBar(context),
@@ -34,7 +63,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   fontSize: 16),
             ),
             const SizedBox(height: 12),
-            _buildBeneficiaryCard(),
+            _buildOrderSummary(),
             const SizedBox(height: 24),
             _buildPaymentMethodSelector(),
             const SizedBox(height: 24),
@@ -73,8 +102,16 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // Widget pour la carte des produits commandés
-  Widget _buildBeneficiaryCard() {
+  // Widget pour le résumé de la commande
+  Widget _buildOrderSummary() {
+    // S'assurer que orderAmount est un nombre
+    final orderAmountValue = widget.orderData['amount'] is num
+        ? widget.orderData['amount']
+        : double.tryParse(widget.orderData['amount']?.toString() ?? '0.0') ??
+            0.0;
+
+    final orderItems = widget.orderData['items'] as List<dynamic>? ?? [];
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -98,7 +135,8 @@ class _PaymentPageState extends State<PaymentPage> {
                   children: [
                     Text('Voir tout', style: TextStyle(color: Colors.grey)),
                     SizedBox(width: 4),
-                    Icon(Icons.keyboard_arrow_down, color: Colors.grey, size: 16),
+                    Icon(Icons.keyboard_arrow_down,
+                        color: Colors.grey, size: 16),
                   ],
                 ),
               ),
@@ -106,91 +144,15 @@ class _PaymentPageState extends State<PaymentPage> {
           ),
           const SizedBox(height: 16),
           // Affichage des produits
-          Row(
-            children: [
-              // Carottes
-              Expanded(
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/images/carottes.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                      ),
-                    ),
-                    child: const Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'Carottes\n2.500 FCFA',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Oignons
-              Expanded(
-                child: Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    image: const DecorationImage(
-                      image: AssetImage('assets/images/Oignons.png'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                      ),
-                    ),
-                    child: const Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: Text(
-                          'Oignons\n1.800 FCFA',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          if (orderItems.isNotEmpty) ...[
+            Column(
+              children: orderItems.map((item) {
+                return _buildOrderItem(item);
+              }).toList(),
+            )
+          ] else ...[
+            const Text('Aucun produit dans la commande'),
+          ],
           const SizedBox(height: 12),
           // Total de la commande
           Container(
@@ -209,9 +171,9 @@ class _PaymentPageState extends State<PaymentPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Text(
-                  '4.300 FCFA',
-                  style: TextStyle(
+                Text(
+                  '${orderAmountValue.toStringAsFixed(0)} FCFA',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFFFB662F),
@@ -220,6 +182,60 @@ class _PaymentPageState extends State<PaymentPage> {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  // Widget pour un élément de commande
+  Widget _buildOrderItem(dynamic item) {
+    final itemName = item['name'] ?? 'Produit';
+    // S'assurer que itemPrice est un nombre
+    final itemPriceValue = item['price'] is num
+        ? item['price']
+        : double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0;
+    final itemQuantity = item['quantity'] ?? 1;
+    // Récupérer l'URL de l'image du produit
+    final itemImage = item['image'] ?? '';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
+      child: Row(
+        children: [
+          // Image du produit
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              image: itemImage.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(itemImage),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+              color: Colors.grey.shade200,
+            ),
+            child: itemImage.isEmpty
+                ? const Icon(Icons.image, size: 20, color: Colors.grey)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          // Détails du produit
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  itemName,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                    '${itemPriceValue.toStringAsFixed(0)} FCFA x $itemQuantity'),
+              ],
+            ),
+          ),
+          Text('${(itemPriceValue * itemQuantity).toStringAsFixed(0)} FCFA'),
         ],
       ),
     );
@@ -237,7 +253,7 @@ class _PaymentPageState extends State<PaymentPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Choisir la methode de paiement',
+          const Text('Choisir la méthode de paiement',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(height: 12),
           Row(
@@ -344,9 +360,9 @@ class _PaymentPageState extends State<PaymentPage> {
             const SizedBox(height: 8),
             _buildPhoneNumberInput(),
           ] else if (_selectedMethod == PaymentMethod.card) ...[
-            const Center(child: Text("Formulaire de carte bancaire à implémenter"))
-          ] else ...[
-             const Center(child: Text("Formulaire Paypal à implémenter"))
+            const Center(child: Text("Paiement par carte bancaire")),
+          ] else if (_selectedMethod == PaymentMethod.paypal) ...[
+            const Center(child: Text("Paiement par PayPal")),
           ],
           const SizedBox(height: 20),
           _buildSecurePaymentBanner(),
@@ -412,9 +428,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   topRight: Radius.circular(8),
                   bottomRight: Radius.circular(8)),
             ),
-            child: const TextField(
+            child: TextField(
+              controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: '12345678',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -440,8 +457,8 @@ class _PaymentPageState extends State<PaymentPage> {
           Icon(Icons.shield_outlined, color: Colors.orange),
           SizedBox(width: 8),
           Text('Paiement 100% sécurisé',
-              style: TextStyle(
-                  color: Colors.orange, fontWeight: FontWeight.bold)),
+              style:
+                  TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -449,13 +466,23 @@ class _PaymentPageState extends State<PaymentPage> {
 
   // Widget pour le résumé des coûts
   Widget _buildCostSummary() {
+    // S'assurer que orderAmount est un nombre
+    final orderAmountValue = widget.orderData['amount'] is num
+        ? widget.orderData['amount']
+        : double.tryParse(widget.orderData['amount']?.toString() ?? '0.0') ??
+            0.0;
+    final processingFee = 0.0; // Pour l'instant, pas de frais
+    final totalAmount = orderAmountValue + processingFee;
+
     return Column(
       children: [
-        _buildCostRow('Montant', '30.000 fcfa'),
+        _buildCostRow('Montant', '${orderAmountValue.toStringAsFixed(0)} fcfa'),
         const SizedBox(height: 8),
-        _buildCostRow('Frais de traitement', '0 fcfa'),
+        _buildCostRow(
+            'Frais de traitement', '${processingFee.toStringAsFixed(0)} fcfa'),
         const Divider(height: 24),
-        _buildCostRow('Total', '30.000 fcfa', isTotal: true),
+        _buildCostRow('Total', '${totalAmount.toStringAsFixed(0)} fcfa',
+            isTotal: true),
       ],
     );
   }
@@ -482,20 +509,124 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget _buildConfirmButton() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton.icon(
-        onPressed: () {},
-        icon: const Icon(Icons.check_circle, color: Colors.white),
-        label: const Text('Confirmer le paiement',
-            style:
-                TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+      child: ElevatedButton(
+        onPressed: _isProcessing ? null : _processPayment,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.deepOrange,
+          backgroundColor: const Color(0xFFFB662F),
           minimumSize: const Size(double.infinity, 56),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
+        child: _isProcessing
+            ? const CircularProgressIndicator(color: Colors.white)
+            : const Text(
+                'Confirmer le paiement',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+              ),
       ),
     );
+  }
+
+  // Fonction pour traiter le paiement
+  void _processPayment() async {
+    setState(() {
+      _isProcessing = true;
+    });
+
+    try {
+      print('=== _processPayment appelée ===');
+
+      // Valider les champs selon la méthode de paiement
+      if (_selectedMethod == PaymentMethod.mobile &&
+          _phoneController.text.isEmpty) {
+        print('ERREUR: Numéro de téléphone vide');
+        _showError('Veuillez entrer votre numéro de téléphone');
+        return;
+      }
+
+      // Afficher les données de débogage
+      print('=== Début du processus de paiement ===');
+      print('Order ID: ${widget.orderData['orderId']}');
+      print('Montant: ${widget.orderData['amount']}');
+      print('Numéro de téléphone: ${_phoneController.text}');
+      print('Méthode de paiement: ${_getPaymentMethodName()}');
+
+      // Créer un paiement
+      final paymentService = PaymentService();
+      print('Service de paiement instancié');
+
+      // Créer le paiement
+      print('Appel de createPayment...');
+      final paymentData = await paymentService.createPayment(
+        commandeId: widget.orderData['orderId'] ?? 1,
+        methodePaiement: _getPaymentMethodName(),
+        montant: double.tryParse(widget.orderData['amount'].toString()) ?? 0.0,
+        numeroTelephone: _phoneController.text,
+      );
+
+      print('Paiement créé avec succès: $paymentData');
+
+      // Fermer la page de paiement
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Afficher un message de succès
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paiement effectué avec succès !'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('=== ERREUR DE PAIEMENT ===');
+      print('Erreur: ${e.toString()}');
+      print('Stack trace: $stackTrace');
+      _showError('Erreur lors du paiement: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isProcessing = false;
+        });
+      }
+    }
+  }
+
+  // Méthode pour afficher les erreurs
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // Méthode pour obtenir le nom de la méthode de paiement
+  String _getPaymentMethodName() {
+    switch (_selectedMethod) {
+      case PaymentMethod.card:
+        return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
+      case PaymentMethod.mobile:
+        return 'ORANGE_MONEY'; // Ou 'MOOV_MONEY' selon l'opérateur sélectionné
+      case PaymentMethod.paypal:
+        return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
+      default:
+        return 'ORANGE_MONEY';
+    }
+  }
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    super.dispose();
   }
 }

@@ -5,10 +5,10 @@ import 'api_service.dart';
 class ProductService {
   final ApiService _apiService = ApiService();
 
-  /// Récupérer tous les produits
+  /// Récupérer tous les produits (endpoint public consommateur)
   Future<List<Produit>> getAllProducts() async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/produits');
+      final response = await _apiService.get<List<dynamic>>('/consommateur/produits');
       
       if (response.statusCode == 200) {
         return response.data!

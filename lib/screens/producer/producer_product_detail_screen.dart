@@ -7,6 +7,7 @@ import 'dart:io';
 import '../../models/product.dart';
 import '../../services/product_service.dart';
 import '../../services/auth_service.dart';
+import '../../services/api_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 
@@ -19,10 +20,12 @@ class ProducerProductDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<ProducerProductDetailScreen> createState() => _ProducerProductDetailScreenState();
+  State<ProducerProductDetailScreen> createState() =>
+      _ProducerProductDetailScreenState();
 }
 
-class _ProducerProductDetailScreenState extends State<ProducerProductDetailScreen> {
+class _ProducerProductDetailScreenState
+    extends State<ProducerProductDetailScreen> {
   final ProductService _productService = ProductService();
   Produit? _currentProduct;
   bool _isLoading = false;
@@ -42,7 +45,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
       Uri imageUri = Uri.parse(url);
       if (base != null) {
         final baseUri = Uri.parse(base);
-        imageUri = imageUri.replace(scheme: baseUri.scheme, host: baseUri.host, port: baseUri.port);
+        imageUri = imageUri.replace(
+            scheme: baseUri.scheme, host: baseUri.host, port: baseUri.port);
       }
 
       final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -65,47 +69,41 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
 
   Widget _buildImageWidget(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return const Center(child: Icon(Icons.image, size: 64, color: Colors.grey));
+      return const Center(
+          child: Icon(Icons.image, size: 64, color: Colors.grey));
     }
-    if (imageUrl.startsWith('/')) {
-      return FutureBuilder<Widget>(
-        future: _loadNetworkImageWithAuth(imageUrl),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)));
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Icon(Icons.broken_image, size: 64, color: Colors.grey));
-          }
-          return snapshot.data ?? const Center(child: Icon(Icons.broken_image, size: 64, color: Colors.grey));
-        },
-      );
-    }
-    if (imageUrl.startsWith('http')) {
-      return FutureBuilder<Widget>(
-        future: _loadNetworkImageWithAuth(imageUrl),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2)));
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Icon(Icons.broken_image, size: 64, color: Colors.grey));
-          }
-          return snapshot.data ?? const Center(child: Icon(Icons.broken_image, size: 64, color: Colors.grey));
-        },
-      );
-    }
-    // Asset local
-    return Image.asset(
-      imageUrl,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image, size: 64, color: Colors.grey)),
+
+    // Utiliser l'API service pour construire l'URL de l'image
+    return FutureBuilder<String>(
+      future: ApiService().buildImageUrl(imageUrl),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+              child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2)));
+        }
+        if (snapshot.hasError || !snapshot.hasData) {
+          return const Center(
+              child: Icon(Icons.broken_image, size: 64, color: Colors.grey));
+        }
+
+        final fullImageUrl = snapshot.data!;
+        return Image.network(
+          fullImageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => const Center(
+              child: Icon(Icons.broken_image, size: 64, color: Colors.grey)),
+        );
+      },
     );
   }
 
   Future<void> _refreshProduct() async {
     try {
-      final updatedProduct = await _productService.getProductById(_currentProduct!.id);
+      final updatedProduct =
+          await _productService.getProductById(_currentProduct!.id);
       setState(() {
         _currentProduct = updatedProduct;
       });
@@ -129,9 +127,10 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
         onSave: (updatedProduct) async {
           try {
             setState(() => _isLoading = true);
-            await _productService.updateProduct(_currentProduct!.id, updatedProduct);
+            await _productService.updateProduct(
+                _currentProduct!.id, updatedProduct);
             await _refreshProduct();
-            
+
             if (mounted) {
               Navigator.of(context).pop();
               ScaffoldMessenger.of(context).showSnackBar(
@@ -241,7 +240,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(20),
@@ -259,7 +259,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                       if (_currentProduct!.bio) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.green.shade50,
                             borderRadius: BorderRadius.circular(20),
@@ -268,7 +269,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.eco, color: Colors.green.shade700, size: 16),
+                              Icon(Icons.eco,
+                                  color: Colors.green.shade700, size: 16),
                               const SizedBox(width: 4),
                               Text(
                                 'BIO',
@@ -291,7 +293,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                   _InfoCard(
                     icon: Icons.inventory_2,
                     title: 'Stock disponible',
-                    value: '${_currentProduct!.quantiteStock} ${_currentProduct!.uniteMesure ?? 'unités'}',
+                    value:
+                        '${_currentProduct!.quantiteStock} ${_currentProduct!.uniteMesure ?? 'unités'}',
                     color: _currentProduct!.enStock ? Colors.green : Colors.red,
                   ),
 
@@ -306,7 +309,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                       color: Colors.blue,
                     ),
 
-                  if (_currentProduct!.uniteMesure != null) const SizedBox(height: 16),
+                  if (_currentProduct!.uniteMesure != null)
+                    const SizedBox(height: 16),
 
                   // Description
                   Container(
@@ -327,7 +331,8 @@ class _ProducerProductDetailScreenState extends State<ProducerProductDetailScree
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.description, color: AppTheme.primaryColor, size: 20),
+                            Icon(Icons.description,
+                                color: AppTheme.primaryColor, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               'Description',
@@ -548,7 +553,7 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
   final _prixController = TextEditingController();
   final _quantiteController = TextEditingController();
   final _categorieController = TextEditingController();
-  
+
   String _selectedUnite = 'KILOGRAMME';
   bool _bio = false;
   bool _isLoading = false;
@@ -614,7 +619,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                   color: AppTheme.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+                child: const Icon(Icons.photo_library,
+                    color: AppTheme.primaryColor),
               ),
               title: const Text('Galerie'),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
@@ -626,7 +632,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                   color: AppTheme.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
+                child:
+                    const Icon(Icons.camera_alt, color: AppTheme.primaryColor),
               ),
               title: const Text('Appareil photo'),
               onTap: () => Navigator.pop(context, ImageSource.camera),
@@ -644,11 +651,12 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
           maxHeight: 1200,
           imageQuality: 85,
         );
-        
+
         if (image != null) {
           setState(() {
             _selectedImage = File(image.path);
-            _imageUrl = null; // Réinitialiser l'URL si on sélectionne une nouvelle image
+            _imageUrl =
+                null; // Réinitialiser l'URL si on sélectionne une nouvelle image
           });
         }
       } catch (e) {
@@ -673,7 +681,7 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.9,
+          maxHeight: MediaQuery.of(context).size.height * 00.9,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -683,7 +691,10 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppTheme.primaryColor, AppTheme.primaryColor.withOpacity(0.8)],
+                  colors: [
+                    AppTheme.primaryColor,
+                    AppTheme.primaryColor.withOpacity(0.8)
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -700,7 +711,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
+                    child: const Icon(Icons.edit_rounded,
+                        color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -720,9 +732,11 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                      child: const Icon(Icons.close_rounded,
+                          color: Colors.white, size: 20),
                     ),
-                    onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                    onPressed:
+                        _isLoading ? null : () => Navigator.of(context).pop(),
                   ),
                 ],
               ),
@@ -739,9 +753,9 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                     children: [
                       // Section Photo
                       _buildPhotoSection(),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Nom du produit
                       _buildModernTextField(
                         controller: _nomController,
@@ -754,9 +768,9 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                           return null;
                         },
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Description
                       _buildModernTextField(
                         controller: _descriptionController,
@@ -770,9 +784,9 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                           return null;
                         },
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Prix et Quantité
                       Row(
                         children: [
@@ -813,9 +827,9 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Catégorie et Unité
                       Row(
                         children: [
@@ -838,9 +852,9 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Option Bio
                       _buildBioSwitch(),
                     ],
@@ -863,7 +877,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                      onPressed:
+                          _isLoading ? null : () => Navigator.of(context).pop(),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
@@ -901,13 +916,15 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                               height: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(Icons.check_circle_rounded, size: 20),
+                                const Icon(Icons.check_circle_rounded,
+                                    size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Enregistrer',
@@ -977,7 +994,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                             color: Colors.black.withOpacity(0.6),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                          child: const Icon(Icons.edit,
+                              color: Colors.white, size: 20),
                         ),
                       ),
                     ],
@@ -1006,7 +1024,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
                                 color: Colors.black.withOpacity(0.6),
                                 borderRadius: BorderRadius.circular(8),
                               ),
-                              child: const Icon(Icons.edit, color: Colors.white, size: 20),
+                              child: const Icon(Icons.edit,
+                                  color: Colors.white, size: 20),
                             ),
                           ),
                         ],
@@ -1078,7 +1097,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
@@ -1096,7 +1116,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
             color: AppTheme.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Icon(Icons.straighten_rounded, color: AppTheme.primaryColor, size: 20),
+          child: const Icon(Icons.straighten_rounded,
+              color: AppTheme.primaryColor, size: 20),
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -1112,7 +1133,8 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
         ),
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
       items: _unites.map((unite) {
         return DropdownMenuItem(
@@ -1250,4 +1272,3 @@ class _ProductEditDialogState extends State<ProductEditDialog> {
     }
   }
 }
-
