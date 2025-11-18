@@ -6,7 +6,6 @@ import 'package:suguconnect_mobile/models/detail_commande.dart';
 import 'package:suguconnect_mobile/widgets/bouton_principale.dart';
 import 'package:suguconnect_mobile/widgets/entete_detailCommande.dart';
 
-const Color orangePrincipal = Color(0xFFFB662F);
 const Color couleurFondTimeline = Color(0x33FB662F);
 
 class DetailsCommandePage extends StatelessWidget {

@@ -14,30 +14,65 @@ class EnteteCategorie extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: double.infinity,
-      height: 110,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      margin: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(5),
-        image: DecorationImage(
-          image: AssetImage(imagePath),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(
-            Colors.black.withValues(alpha: 0.3),
-            BlendMode.darken,
-          ),
-        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: const Offset(0, 3),
+          ), 
+        ],
       ),
-      child: Center(
-        child: Text(
-          titre,
-          style: GoogleFonts.jaldi(
-            fontSize: 59,
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-            height: 1.0,
+      child: Stack(
+        children: [
+          // Image d'en-tête
+          Container(
+            height: 200,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              image: DecorationImage(
+                image: AssetImage(imagePath),
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
+
+          // Dégradé sombre pour lisibilité
+          Container(
+            height: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.bottomCenter,
+                end: Alignment.topCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.5),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+
+          // Titre centré
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: Text(
+              titre,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.itim(
+                fontSize: 32,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

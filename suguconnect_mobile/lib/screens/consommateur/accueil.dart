@@ -16,20 +16,38 @@ class AccueilPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // --- Liste des catégories ---
     final List<Categorie> categories = [
-       Categorie('Légumes', 'assets/icons/legumes.png', Color(0x4D8FA31E)),
-       Categorie(
-        'Céréales',
-        'assets/icons/cereales.png',
-        Color(0x33FFFF00),
-      ),
-       Categorie(
-        'Liquides',
-        'assets/icons/liquides.png',
-        Color(0x4D640D5F),
-      ),
-      Categorie('Épices', 'assets/icons/epices.png', Color(0x4CDC143C)),
-      Categorie('Graines', 'assets/icons/graines.png', Color(0x4DB6771D)),
-    ];
+  Categorie(
+    'Légumes',
+    'assets/icons/legumes.png',
+    const Color(0x4D8FA31E),
+    'assets/images/legumes_header.jpg',
+  ),
+  Categorie(
+    'Céréales',
+    'assets/icons/cereales.png',
+    const Color(0x33FFFF00),
+    'assets/images/cereales_header.jpg',
+  ),
+  Categorie(
+    'Liquides',
+    'assets/icons/liquides.png',
+    const Color(0x4D640D5F),
+    'assets/images/liquides_header.jpg',
+  ),
+  Categorie(
+    'Épices',
+    'assets/icons/epices.png',
+    const Color(0x4CDC143C),
+    'assets/images/epices_header.jpg',
+  ),
+  Categorie(
+    'Graines',
+    'assets/icons/graines.png',
+    const Color(0x4DB6771D),
+    'assets/images/graines_header.jpg',
+  ),
+];
+
     // --- Liste des produits ---
     final List<Produit> produits = [
       Produit(
