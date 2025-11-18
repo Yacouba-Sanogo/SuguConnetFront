@@ -436,38 +436,52 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
     );
   }
 
-  Future<void> _addToCart(_ConsumerProduct product) async {
+  // Fonction pour ajouter un produit au panier
+  void _addToCart(_ConsumerProduct product) async {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
+
       if (userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Veuillez vous connecter pour ajouter au panier'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter pour ajouter au panier'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
         return;
       }
 
-      await _apiService.post<String>(
+      // Ajouter le produit au panier avec une quantité de 1
+      final response = await _apiService.post(
         '/consommateur/$userId/panier/ajouter/${product.id}',
         queryParameters: {'quantite': 1},
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${product.name} a été ajouté au panier'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${product.name} ajouté au panier'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception(
+            'Erreur lors de l\'ajout au panier: ${response.statusCode}');
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de l\'ajout au panier: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

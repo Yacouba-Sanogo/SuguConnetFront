@@ -27,6 +27,13 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     _loadCart();
   }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Recharger le panier chaque fois que la page devient active
+    _loadCart();
+  }
 
   // Calcule le total des articles sélectionnés
   double _calculateTotal() {
@@ -45,6 +52,47 @@ class _CartPageState extends State<CartPage> {
         _cartItems[index]['quantity'] += change;
       }
     });
+
+    // Mettre à jour la quantité dans le backend
+    _updateQuantityInBackend(index, change);
+  }
+
+  Future<void> _updateQuantityInBackend(int index, int change) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+      if (userId == null) return;
+
+      final productId = _cartItems[index]['id'];
+      final newQuantity = _cartItems[index]['quantity'] + change;
+
+      if (newQuantity > 0) {
+        // Mettre à jour la quantité du produit dans le panier
+        await _apiService.put(
+          '/consommateur/$userId/panier/ajouter/$productId',
+          queryParameters: {'quantite': newQuantity},
+        );
+      } else {
+        // Retirer le produit du panier si la quantité est 0
+        await _apiService.delete(
+          '/consommateur/$userId/panier/retirer/$productId',
+        );
+      }
+    } catch (e) {
+      // En cas d'erreur, revenir à l'état précédent
+      setState(() {
+        _cartItems[index]['quantity'] -= change;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la mise à jour: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _toggleSelection(int index) {
@@ -137,10 +185,12 @@ class _CartPageState extends State<CartPage> {
       final items = panierProduits.map<Map<String, dynamic>>((raw) {
         final pp = raw as Map<String, dynamic>;
         final produit = (pp['produit'] ?? {}) as Map<String, dynamic>;
-        final producteur = (produit['producteur'] ?? {}) as Map<String, dynamic>;
+        final producteur =
+            (produit['producteur'] ?? {}) as Map<String, dynamic>;
 
         // Normaliser prix et quantite (peuvent arriver en String ou num)
-        final dynamic rawPrix = pp['prixUnitaire'] ?? produit['prixUnitaire'] ?? 0;
+        final dynamic rawPrix =
+            pp['prixUnitaire'] ?? produit['prixUnitaire'] ?? 0;
         double price;
         if (rawPrix is num) {
           price = rawPrix.toDouble();
@@ -156,13 +206,42 @@ class _CartPageState extends State<CartPage> {
           quantity = int.tryParse(rawQuantite.toString()) ?? 1;
         }
 
+        // Extraction améliorée de l'URL de l'image
+        String imageUrl = '';
+        // Vérifier d'abord le tableau photos
+        final photos = produit['photos'] as List?;
+        if (photos != null && photos.isNotEmpty) {
+          final firstPhoto = photos.first;
+          if (firstPhoto is String) {
+            imageUrl = firstPhoto;
+          } else if (firstPhoto is Map<String, dynamic>) {
+            imageUrl =
+                (firstPhoto['url'] ?? firstPhoto['lien'] ?? '').toString();
+          }
+        }
+        // Sinon vérifier les autres champs
+        else {
+          final imageField = produit['imageUrl'] ??
+              produit['image'] ??
+              produit['photoUrl'] ??
+              produit['photo'];
+          if (imageField != null) {
+            if (imageField is String) {
+              imageUrl = imageField;
+            } else if (imageField is Map<String, dynamic>) {
+              imageUrl =
+                  (imageField['url'] ?? imageField['lien'] ?? '').toString();
+            }
+          }
+        }
+
         return <String, dynamic>{
           'id': produit['id'] ?? pp['id'] ?? 0,
           'name': produit['nom'] ?? 'Produit',
           'producer': producteur['nomEntreprise'] ??
               ((producteur['prenom'] ?? '') + ' ' + (producteur['nom'] ?? '')),
           'price': price,
-          'image': produit['imageUrl'] ?? produit['image'] ?? '',
+          'image': imageUrl,
           'quantity': quantity,
           'isSelected': true,
         };
@@ -220,7 +299,10 @@ class _CartPageState extends State<CartPage> {
               SizedBox(height: 16),
               Text(
                 'Votre panier est vide',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey),
               ),
             ],
           ),
@@ -276,12 +358,7 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(width: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              item['image'],
-              width: 48,
-              height: 48,
-              fit: BoxFit.cover,
-            ),
+            child: _buildProductImage(item['image']),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -294,7 +371,8 @@ class _CartPageState extends State<CartPage> {
                 Text('Producteur : ${item['producer']}',
                     style: const TextStyle(color: Colors.grey, fontSize: 12)),
                 const SizedBox(height: 4),
-                Text('${(item['price'] as num).toDouble().toStringAsFixed(0)} fcfa',
+                Text(
+                    '${(item['price'] as num).toDouble().toStringAsFixed(0)} fcfa',
                     style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
@@ -302,6 +380,64 @@ class _CartPageState extends State<CartPage> {
           _buildQuantityControl(index),
         ],
       ),
+    );
+  }
+
+  // Widget pour afficher l'image du produit
+  Widget _buildProductImage(String? imageUrl) {
+    // Si l'URL est vide ou null, afficher une image par défaut
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        width: 48,
+        height: 48,
+        color: Colors.grey.shade200,
+        child: const Icon(Icons.image, size: 24, color: Colors.grey),
+      );
+    }
+
+    // Utiliser l'API service pour construire l'URL complète de l'image
+    return FutureBuilder<String>(
+      future: _apiService.buildImageUrl(imageUrl),
+      builder: (context, snapshot) {
+        // En cas d'erreur ou d'URL non disponible, afficher une image par défaut
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            width: 48,
+            height: 48,
+            color: Colors.grey.shade200,
+            child: const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.hasError || !snapshot.hasData) {
+          return Container(
+            width: 48,
+            height: 48,
+            color: Colors.grey.shade200,
+            child: const Icon(Icons.image, size: 24, color: Colors.grey),
+          );
+        }
+
+        final url = snapshot.data!;
+        return Image.network(
+          url,
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            width: 48,
+            height: 48,
+            color: Colors.grey.shade200,
+            child: const Icon(Icons.image, size: 24, color: Colors.grey),
+          ),
+        );
+      },
     );
   }
 
@@ -414,5 +550,4 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
-
 }
