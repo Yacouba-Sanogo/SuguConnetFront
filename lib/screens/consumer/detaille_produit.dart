@@ -3,15 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
-<<<<<<< HEAD
 import 'package:suguconnect_mobile/screens/consumer/chat_page.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
 import 'package:dio/dio.dart';
-=======
-import 'package:suguconnect_mobile/screens/consumer/chat_page_simple.dart';
-import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
->>>>>>> f8cdcc2 (commit pour le premier)
 import 'dart:async';
 
 // La page de détails du produit
@@ -24,18 +19,13 @@ class ProductDetailsPage extends StatefulWidget {
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
-<<<<<<< HEAD
 class _ProductDetailsPageState extends State<ProductDetailsPage>
     with SingleTickerProviderStateMixin {
-=======
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
->>>>>>> f8cdcc2 (commit pour le premier)
   int _quantity = 1;
   late double _price;
   bool _isFavorite = false;
   int _currentPage = 0;
   final PageController _pageController = PageController();
-<<<<<<< HEAD
   final ApiService _apiService = ApiService();
 
   // Animation pour l'image unique
@@ -45,17 +35,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
   // Liste d'images pour le carrousel
   late List<String> _productImages;
   bool _imagesLoading = true;
-=======
-
-  // Liste d'images pour le carrousel
-  late List<String> _productImages;
->>>>>>> f8cdcc2 (commit pour le premier)
 
   @override
   void initState() {
     super.initState();
 
-<<<<<<< HEAD
     // Initialisation de l'animation
     _animationController = AnimationController(
       duration: const Duration(seconds: 20),
@@ -78,8 +62,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       'https://placehold.co/600x400/FFA726/FFFFFF?text=Chargement...',
     ];
 
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
     // Utiliser les données du produit ou des valeurs par défaut
     if (widget.product != null) {
       // Afficher les données du produit pour le débogage
@@ -97,7 +79,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
       _price = double.tryParse(cleanedPriceString) ?? 0.0;
       print('Parsed price: $_price');
 
-<<<<<<< HEAD
       // Construire les URLs d'images
       _buildImageUrls();
     } else {
@@ -124,24 +105,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
         return;
       }
 
-=======
-      _productImages = [
-        widget.product!['image']!,
-        'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
-      ];
-    } else {
-      _price = 40000.0;
-      _productImages = [
-        'https://placehold.co/600x400/FFA726/FFFFFF?text=Orange+1',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=Orange+2',
-        'https://placehold.co/600x400/F57C00/FFFFFF?text=Orange+3',
-      ];
-    }
-
-    // Changement automatique des images (optionnel)
-    Timer.periodic(const Duration(seconds: 5), (Timer timer) {
->>>>>>> f8cdcc2 (commit pour le premier)
       if (_currentPage < _productImages.length - 1) {
         _currentPage++;
       } else {
@@ -157,7 +120,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
     });
   }
 
-<<<<<<< HEAD
   // Fonction pour vérifier si une image existe
   Future<bool> _imageExists(String url) async {
     try {
@@ -198,701 +160,533 @@ class _ProductDetailsPageState extends State<ProductDetailsPage> {
           '${baseName}_2.$extension',
           '${baseName}_3.$extension',
           '${baseName}2.$extension',
-          '${baseName}3.$extension',
         ];
 
         for (final potentialImage in potentialImages) {
-          try {
-            final fullUrl = await _apiService.buildImageUrl(potentialImage);
-            if (await _imageExists(fullUrl)) {
-              images.add(fullUrl);
-            }
-          } catch (e) {
-            print(
-                'Erreur lors de la vérification de l\'image $potentialImage: $e');
+          final fullUrl = await _apiService.buildImageUrl(potentialImage);
+          if (await _imageExists(fullUrl)) {
+            images.add(fullUrl);
           }
         }
       }
 
-      // Ajouter quelques placeholders si nous n'avons toujours qu'une seule image
+      // Si aucune image supplémentaire n'a été trouvée, ajouter des placeholders
       if (images.length == 1) {
-        final String placeholder2 =
-            'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+2';
-        final String placeholder3 =
-            'https://placehold.co/600x400/F57C00/FFFFFF?text=${widget.product!['name']}+3';
-        images.add(placeholder2);
-        images.add(placeholder3);
+        images.addAll([
+          'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
+          'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
+        ]);
       }
 
-      if (mounted) {
-        setState(() {
-          _productImages = images;
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      setState(() {
+        _productImages = images;
+        _imagesLoading = false;
+      });
     } catch (e) {
-      print('Erreur lors de la construction des URLs d\'images: $e');
-      // En cas d'erreur, utiliser une seule image
-      if (mounted) {
-        setState(() {
-          _productImages = [
-            'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
-          ];
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      print('Erreur lors du chargement des images: $e');
+      // En cas d'erreur, utiliser des placeholders
+      setState(() {
+        _productImages = [
+          'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
+          'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
+          'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
+        ];
+        _imagesLoading = false;
+      });
     }
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     _pageController.dispose();
-    _animationController.dispose(); // Dispose l'animation controller
     super.dispose();
   }
 
-  Widget _buildImageSlider() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _productImages.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                child: _imagesLoading
-                    ? Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : (_productImages.length == 1
-                        // Animation pour l'image unique
-                        ? ScaleTransition(
-                            scale: _scaleAnimation,
-                            child: Image.network(
-                              _productImages[index],
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                // Image de secours en cas d'erreur
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.image,
-                                      size: 50, color: Colors.grey),
-                                );
-                              },
-                            ),
-                          )
-                        // Pas d'animation pour plusieurs images
-                        : Image.network(
-                            _productImages[index],
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              // Image de secours en cas d'erreur
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.image,
-                                    size: 50, color: Colors.grey),
-                              );
-                            },
-                          )),
-              );
-            },
+  // Fonction pour incrémenter la quantité
+  void _incrementQuantity() {
+    setState(() {
+      _quantity++;
+    });
+  }
+
+  // Fonction pour décrémenter la quantité
+  void _decrementQuantity() {
+    if (_quantity > 1) {
+      setState(() {
+        _quantity--;
+      });
+    }
+  }
+
+  // Fonction pour ajouter au panier
+  Future<void> _addToCart() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      
+      // Vérifier si l'utilisateur est connecté
+      if (!authProvider.isAuthenticated) {
+        // Rediriger vers la page de connexion
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        return;
+      }
+
+      // Obtenir l'ID de l'utilisateur
+      final userId = authProvider.currentUser?.id;
+      if (userId == null) {
+        throw Exception('Impossible d\'obtenir l\'ID de l\'utilisateur');
+      }
+
+      // Obtenir l'ID du produit
+      final productId = int.tryParse(widget.product?['id'] ?? '') ?? 0;
+      if (productId == 0) {
+        throw Exception('ID du produit invalide');
+      }
+
+      // Appeler le service pour ajouter au panier
+      // Note: This needs to be implemented in OrderService
+      // For now, we'll show a placeholder message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Fonctionnalité d\'ajout au panier à implémenter'),
+            backgroundColor: Colors.orange,
           ),
-          // Indicateur de pagination seulement si nous avons plus d'une image
-          if (_productImages.length > 1)
-            Positioned(
-              bottom: 10,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_productImages.length, (index) {
-                  return Container(
-                    width: 8.0,
-                    height: 8.0,
-                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentPage == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.5),
-                    ),
-                  );
-                }),
-              ),
-            ),
-        ],
+        );
+      }
+    } catch (e) {
+      // Afficher un message d'erreur
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'ajout au panier: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Fonction pour acheter maintenant
+  void _buyNow() {
+    // Créer les données de commande
+    final orderData = {
+      'amount': _price * _quantity,
+      'items': [
+        {
+          'id': widget.product?['id'] ?? '',
+          'name': widget.product?['name'] ?? 'Produit',
+          'quantity': _quantity,
+          'price': _price,
+          'total': _price * _quantity,
+        }
+      ],
+    };
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentPage(orderData: orderData),
       ),
     );
-=======
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
   }
 
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
->>>>>>> f8cdcc2 (commit pour le premier)
+  // Fonction pour contacter le producteur
+  void _contactProducer() {
+    // Obtenir l'ID du producteur à partir des données du produit
+    final producerId = int.tryParse(widget.product?['producerId'] ?? '0') ?? 0;
+    final producerName = widget.product?['producerName'] ?? 'Producteur';
+    final producerAvatar = widget.product?['producerAvatar'] ?? '';
+
+    if (producerId > 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ChatPage(
+            producerId: producerId,
+            producerName: producerName,
+            producerAvatar: producerAvatar,
+          ),
+        ),
+      );
+    } else {
+      // Afficher un message d'erreur si l'ID du producteur n'est pas disponible
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible de contacter le producteur pour le moment'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: _buildAppBar(context),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildImageSlider(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildProductHeader(),
-                  const SizedBox(height: 12),
-                  _buildProducerInfo(),
-                  const SizedBox(height: 12),
-                  _buildPriceInfo(),
-                  const SizedBox(height: 16),
-                  _buildQuantitySelector(),
-                  const SizedBox(height: 8),
-                  _buildTotalPrice(),
-                  const SizedBox(height: 12),
-                  _buildDescription(),
-                  const Spacer(),
-                ],
-              ),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: _isFavorite ? Colors.red : Colors.black,
             ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: _buildAddToCartButton(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: const Text(
-        'Détails produit',
-        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
-      ),
-      centerTitle: true,
-    );
-  }
-
-<<<<<<< HEAD
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
-=======
-  Widget _buildImageSlider() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _productImages.length,
-            onPageChanged: (int page) {
+            onPressed: () {
               setState(() {
-                _currentPage = page;
+                _isFavorite = !_isFavorite;
               });
             },
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                child: _productImages[index].startsWith('http')
-                    ? Image.network(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      ),
-              );
-            },
           ),
-          Positioned(
-            bottom: 10,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_productImages.length, (index) {
-                return Container(
-                  width: 8.0,
-                  height: 8.0,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Carrousel d'images
+            _buildImageCarousel(),
+
+            // Informations du produit
+            _buildProductInfo(),
+
+            // Description du produit
+            _buildProductDescription(),
+
+            // Informations supplémentaires
+            _buildAdditionalInfo(),
+          ],
+        ),
+      ),
+      bottomNavigationBar: _buildBottomBar(),
+    );
+  }
+
+  // Construire le carrousel d'images
+  Widget _buildImageCarousel() {
+    return Container(
+      height: 300,
+      color: Colors.grey[200],
+      child: _imagesLoading
+          ? const Center(child: CircularProgressIndicator())
+          : PageView.builder(
+              controller: _pageController,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentPage = index;
+                });
+              },
+              itemCount: _productImages.length,
+              itemBuilder: (context, index) {
+                return AnimatedBuilder(
+                  animation: _scaleAnimation,
+                  builder: (context, child) {
+                    return Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: child,
+                    );
+                  },
+                  child: Image.network(
+                    _productImages[index],
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.network(
+                        'https://placehold.co/600x400/FFA726/FFFFFF?text=Image+non+disponible',
+                        fit: BoxFit.cover,
+                      );
+                    },
                   ),
                 );
-              }),
+              },
             ),
-          ),
-        ],
-      ),
-    );
->>>>>>> f8cdcc2 (commit pour le premier)
-  }
-
-  Widget _buildProductHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          widget.product?['name'] ?? 'Orange du Maroc',
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        IconButton(
-          icon: Icon(
-            _isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: _isFavorite ? Colors.red : Colors.grey,
-            size: 28,
-          ),
-          onPressed: () {
-            setState(() {
-              _isFavorite = !_isFavorite;
-            });
-          },
-        ),
-      ],
     );
   }
 
-  Widget _buildProducerInfo() {
-    final producerName = widget.product?['producerName'] ?? 'Sory Coulibaly';
-    final producerAvatar =
-        widget.product?['producerAvatar'] ?? 'assets/images/improfil.png';
-    final producerLocation = widget.product?['location'] ?? 'Bamako';
-
-    ImageProvider avatarProvider;
-    if (producerAvatar.startsWith('http')) {
-      avatarProvider = NetworkImage(producerAvatar);
-    } else {
-      avatarProvider = AssetImage(producerAvatar);
-    }
-
+  // Construire les indicateurs de page
+  Widget _buildPageIndicators() {
     return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(8),
-      ),
+      padding: const EdgeInsets.all(16),
       child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: avatarProvider,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Producteur : $producerName',
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12),
-                ),
-                const SizedBox(height: 2),
-                Text('Localisation : $producerLocation',
-                    style: const TextStyle(color: Colors.grey, fontSize: 10)),
-                const SizedBox(height: 2),
-                const Text('Producteur local, 100% bio et équitable.',
-                    style: TextStyle(color: Colors.grey, fontSize: 10)),
-              ],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_productImages.length, (index) {
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: _currentPage == index ? 12 : 8,
+            height: _currentPage == index ? 12 : 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _currentPage == index
+                  ? const Color(0xFFFF6B35)
+                  : Colors.grey[300],
             ),
-          )
-        ],
+          );
+        }),
       ),
     );
   }
 
-  Widget _buildPriceInfo() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '100% naturelle, sans engrais chimiques',
-          style: TextStyle(color: Colors.orange, fontSize: 12),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Prix : ${widget.product?['price'] ?? '${_price.toStringAsFixed(0)} fcfa'}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-            _buildTag(widget.product?['weight'] ?? '20 kg', Colors.pink.shade50,
-                Colors.pink.shade400),
-            const SizedBox(width: 8),
-            _buildTag(
-                'Disponible', Colors.green.shade50, Colors.green.shade600),
-          ],
-        )
-      ],
-    );
-  }
-
-  Widget _buildTag(String text, Color bgColor, Color textColor) {
+  // Construire les informations du produit
+  Widget _buildProductInfo() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(text,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
-    );
-  }
-
-  Widget _buildQuantitySelector() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('Quantité',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade200,
-            borderRadius: BorderRadius.circular(6),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nom du produit
+          Text(
+            widget.product?['name'] ?? 'Orange de qualité supérieure',
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
+          const SizedBox(height: 8),
+
+          // Localisation et poids
+          Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.remove, size: 16),
-                onPressed: () => _updateQuantity(-1),
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              Icon(Icons.location_on, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(
+                widget.product?['location'] ?? 'Abidjan, Cocody',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
               ),
-              Text('$_quantity',
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-              IconButton(
-                icon: const Icon(Icons.add, size: 16),
-                onPressed: () => _updateQuantity(1),
-                padding: const EdgeInsets.all(4),
-                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+              const SizedBox(width: 16),
+              Icon(Icons.scale, size: 16, color: Colors.grey[600]),
+              const SizedBox(width: 4),
+              Text(
+                widget.product?['weight'] ?? '1 kg',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
               ),
             ],
           ),
-        )
-      ],
+          const SizedBox(height: 16),
+
+          // Prix
+          Row(
+            children: [
+              Text(
+                '${_price.toStringAsFixed(0)} fcfa',
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFF6B35),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '50 000 fcfa',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Quantité
+          Row(
+            children: [
+              const Text(
+                'Quantité:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.remove),
+                      onPressed: _decrementQuantity,
+                    ),
+                    Text(
+                      '$_quantity',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: _incrementQuantity,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildTotalPrice() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('Prix total :',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        Text(
-          '${(_price * _quantity).toStringAsFixed(0)} fcfa',
-          style: const TextStyle(
+  // Construire la description du produit
+  Widget _buildProductDescription() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Description',
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.deepOrange),
-        )
-      ],
-    );
-  }
-
-  Widget _buildDescription() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Description',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Produit frais et naturel, cultivé localement sans engrais chimiques. Idéal pour une alimentation saine et équilibrée.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-            height: 1.3,
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            widget.product?['description'] ??
+                'Découvrez nos oranges de première qualité, cultivées dans les meilleures conditions. Ces oranges sont riches en vitamine C et parfaites pour une consommation fraîche ou pour la préparation de jus. Cueillies à la main par nos agriculteurs locaux, elles garantissent un goût exceptionnel et une fraîcheur optimale.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[700],
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildAddToCartButton() {
+  // Construire les informations supplémentaires
+  Widget _buildAdditionalInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Informations supplémentaires',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildInfoRow('Producteur', widget.product?['producerName'] ?? 'M. Kouassi'),
+          _buildInfoRow('Origine', 'Côte d\'Ivoire'),
+          _buildInfoRow('Variété', 'Orange douce'),
+          _buildInfoRow('Conditionnement', 'Filet de 1 kg'),
+          _buildInfoRow('Disponibilité', 'En stock'),
+          _buildInfoRow('Date de récolte', '15 Juin 2024'),
+        ],
+      ),
+    );
+  }
+
+  // Construire une ligne d'information
+  Widget _buildInfoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-<<<<<<< HEAD
-                    builder: (_) => ChatPage(
-                      producerId:
-                          int.tryParse(widget.product?['producerId'] ?? '1') ??
-                              1,
-=======
-                    builder: (_) => ChatPageSimple(
->>>>>>> f8cdcc2 (commit pour le premier)
-                      producerName:
-                          widget.product?['producerName'] ?? 'Producteur local',
-                      producerAvatar: widget.product?['producerAvatar'] ??
-                          'assets/images/improfil.png',
-                    ),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFB662F),
-                side: const BorderSide(color: Color(0xFFFB662F), width: 2),
-                minimumSize: const Size(0, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Discuter',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            flex: 1,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          Expanded(
+            flex: 2,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Construire la barre du bas
+  Widget _buildBottomBar() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.3),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
           Expanded(
             child: ElevatedButton(
-              onPressed: () {
-                // Vérifier si l'utilisateur est authentifié
-                final authProvider =
-                    Provider.of<AuthProvider>(context, listen: false);
-                if (!authProvider.isAuthenticated) {
-                  // Rediriger vers l'écran de connexion si l'utilisateur n'est pas authentifié
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
-                  );
-                  return;
-                }
-
-                // Passer la commande directement
-                _placeDirectOrder();
-              },
+              onPressed: _contactProducer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFB662F),
-                minimumSize: const Size(0, 56),
+                backgroundColor: Colors.white,
+                side: const BorderSide(color: Color(0xFFFF6B35)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
               ),
               child: const Text(
-                'Acheter',
+                'Contacter',
                 style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  color: Color(0xFFFF6B35),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 2,
+            child: ElevatedButton(
+              onPressed: _buyNow,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6B35),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Acheter maintenant',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
         ],
       ),
     );
-  }
-
-<<<<<<< HEAD
-  // Widget pour le bouton de chat avec le producteur
-  Widget _buildChatButton() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ElevatedButton.icon(
-        onPressed: () {
-          // Navigation vers la page de chat
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => ChatPage(
-                producerId:
-                    int.tryParse(widget.product!['producerId'] ?? '1') ?? 1,
-                producerName: widget.product!['producerName'] ?? 'Producteur',
-                producerAvatar: widget.product!['producerAvatar'] ??
-                    'assets/images/improfil.png',
-              ),
-            ),
-          );
-        },
-        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-        label: const Text(
-          'Contacter le producteur',
-          style: TextStyle(color: Colors.white),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFB662F),
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      ),
-    );
-  }
-
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
-  // Fonction pour passer une commande directe
-  void _placeDirectOrder() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final orderService = OrderService();
-
-      // Afficher les informations de débogage
-      print('Consumer ID: ${authProvider.currentUser?.id}');
-      print('Product data: ${widget.product}');
-      print('Product ID: ${widget.product?['id']}');
-      print('Quantity: $_quantity');
-      print('Price: $_price');
-      print('Token: ${authProvider.token}');
-
-      // Vérifier si l'utilisateur est authentifié
-      if (authProvider.currentUser?.id == null) {
-        throw Exception('Utilisateur non authentifié');
-      }
-
-      // Vérifier que les données du produit sont valides
-      if (widget.product == null || widget.product?['id'] == null) {
-        throw Exception('Données du produit invalides');
-      }
-
-      // Préparer les données de la commande
-      final products = [
-        {
-          'produitId': widget.product!['id'],
-          'quantite': _quantity,
-        }
-      ];
-
-      print('Products data to send: $products');
-
-      // Passer la commande
-      final orderData = await orderService.placeDirectOrder(
-        consumerId: authProvider.currentUser!.id!,
-        products: products,
-        paymentMethod: 'ORANGE_MONEY',
-      );
-
-      // Afficher les données de réponse pour le débogage
-      print('Order response data: $orderData');
-
-      // Calculer le montant en s'assurant que nous travaillons avec des nombres
-      final priceValue =
-          _price is double ? _price : double.tryParse(_price.toString()) ?? 0.0;
-      final amount = priceValue * _quantity;
-
-      // Préparer les données pour la page de paiement avec des conversions sécurisées
-      final paymentOrderData = {
-        'orderId': int.tryParse(orderData['idCommande'].toString()) ?? 1,
-        'productId': widget.product!['id'],
-        'productName': widget.product!['name'] ?? 'Produit',
-        'quantity': _quantity,
-        'amount': amount.toStringAsFixed(0),
-        'consumerId': authProvider.currentUser!.id!,
-        // Ajouter les éléments de la commande
-        'items': [
-          {
-            'name': widget.product!['name'] ?? 'Produit',
-            'price': _price,
-            'quantity': _quantity,
-            'productId': widget.product!['id'],
-            'image': widget.product!['image'] ?? '', // Ajouter l'URL de l'image
-          }
-        ],
-      };
-
-      // Afficher les données de paiement pour le débogage
-      print('Payment order data: $paymentOrderData');
-      print('Order ID type: ${paymentOrderData['orderId'].runtimeType}');
-      print('Amount type: ${paymentOrderData['amount'].runtimeType}');
-
-      // Rediriger vers la page de paiement avec les données de la commande
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PaymentPage(orderData: paymentOrderData),
-        ),
-      );
-    } catch (e) {
-      // Afficher un message d'erreur
-      print('Erreur lors de la redirection vers le paiement: ${e.toString()}');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Erreur lors de la redirection vers le paiement: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }

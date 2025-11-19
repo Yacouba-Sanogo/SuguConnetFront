@@ -10,12 +10,7 @@ class ProducerDashboardScreen extends StatefulWidget {
   const ProducerDashboardScreen({super.key});
 
   @override
-<<<<<<< HEAD
-  State<ProducerDashboardScreen> createState() =>
-      _ProducerDashboardScreenState();
-=======
   State<ProducerDashboardScreen> createState() => _ProducerDashboardScreenState();
->>>>>>> f8cdcc2 (commit pour le premier)
 }
 
 class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
@@ -45,15 +40,9 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
             Text(
               'SuguConnect',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-<<<<<<< HEAD
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
-                  ),
-=======
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
->>>>>>> f8cdcc2 (commit pour le premier)
             ),
           ],
         ),
@@ -118,25 +107,14 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                 'Bienvenue Producteur',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-<<<<<<< HEAD
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-=======
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
->>>>>>> f8cdcc2 (commit pour le premier)
+
             // Statistiques avec design moderne
             Row(
               children: [
@@ -171,76 +149,65 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                 ),
               ],
             ),
-<<<<<<< HEAD
 
             const SizedBox(height: 16),
 
-=======
-            
-            const SizedBox(height: 16),
-            
->>>>>>> f8cdcc2 (commit pour le premier)
             // Actions rapides avec design moderne
             Text(
               'Actions rapides',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-<<<<<<< HEAD
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-            ),
-
-            const SizedBox(height: 12),
-
-=======
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
->>>>>>> f8cdcc2 (commit pour le premier)
-            // Boutons d'action modernes
-            Row(
-              children: [
-                Expanded(
-                  child: _ModernActionButton(
-                    icon: Icons.add_shopping_cart,
-                    label: 'Ajouter un produit',
+
+            // Grille d'actions rapides
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildActionCard(
+                    title: 'Ajouter un produit',
+                    icon: Icons.add_box,
                     color: const Color(0xFF4CAF50),
-                    onTap: () async {
-<<<<<<< HEAD
-                      final product =
-                          await ProducerProductFormScreen.show(context);
-                      if (product != null && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
-                            backgroundColor: product['isBio']
-                                ? Colors.green
-                                : AppTheme.primaryColor,
-=======
-                      final product = await ProducerProductFormScreen.show(context);
-                      if (product != null && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
-                            backgroundColor: product['isBio'] ? Colors.green : AppTheme.primaryColor,
->>>>>>> f8cdcc2 (commit pour le premier)
-                          ),
-                        );
-                      }
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ProducerProductFormScreen(),
+                        ),
+                      );
                     },
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _ModernActionButton(
-                    icon: Icons.local_shipping,
-                    label: 'Livreurs',
+                  _buildActionCard(
+                    title: 'Gérer le stock',
+                    icon: Icons.inventory,
                     color: const Color(0xFF2196F3),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const StockManagementScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  _buildActionCard(
+                    title: 'Voir les commandes',
+                    icon: Icons.shopping_cart,
+                    color: const Color(0xFFFF9800),
+                    onTap: () {
+                      // TODO: Naviguer vers la page des commandes
+                    },
+                  ),
+                  _buildActionCard(
+                    title: 'Gérer les livreurs',
+                    icon: Icons.local_shipping,
+                    color: const Color(0xFF9C27B0),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -250,76 +217,81 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                       );
                     },
                   ),
-                ),
-              ],
-            ),
-<<<<<<< HEAD
-
-            const SizedBox(height: 16),
-
-=======
-            
-            const SizedBox(height: 16),
-            
->>>>>>> f8cdcc2 (commit pour le premier)
-            // Bouton Messages avec effet de soulèvement
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MessagingPage(),
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 100,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.message_outlined,
-                        color: Color(0xFFFB662F),
-                        size: 24,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Messages',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-<<<<<<< HEAD
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),
-=======
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
+                  _buildActionCard(
+                    title: 'Messages',
+                    icon: Icons.message,
+                    color: const Color(0xFFE91E63),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MessagingPage(),
                         ),
->>>>>>> f8cdcc2 (commit pour le premier)
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                ),
+                  _buildActionCard(
+                    title: 'Paramètres',
+                    icon: Icons.settings,
+                    color: const Color(0xFF607D8B),
+                    onTap: () {
+                      // TODO: Naviguer vers la page des paramètres
+                    },
+                  ),
+                ],
               ),
             ),
-<<<<<<< HEAD
-=======
-            
->>>>>>> f8cdcc2 (commit pour le premier)
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget pour une carte d'action rapide
+  Widget _buildActionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              ),
+            ),
           ],
         ),
       ),
@@ -327,6 +299,7 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
   }
 }
 
+// Widget pour une carte de statistiques moderne
 class _ModernStatCard extends StatelessWidget {
   final String title;
   final String value;
@@ -345,144 +318,52 @@ class _ModernStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
+            blurRadius: 4,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const Spacer(),
-            ],
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 24,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
-            value,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-<<<<<<< HEAD
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-=======
-              fontWeight: FontWeight.bold,
-              color: color,
+            title,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
             ),
->>>>>>> f8cdcc2 (commit pour le premier)
           ),
           const SizedBox(height: 4),
           Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-<<<<<<< HEAD
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-=======
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
->>>>>>> f8cdcc2 (commit pour le premier)
           ),
         ],
       ),
     );
   }
 }
-
-class _ModernActionButton extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color? textColor;
-  final Color? borderColor;
-  final VoidCallback onTap;
-
-  const _ModernActionButton({
-    required this.icon,
-    required this.label,
-    required this.color,
-    this.textColor,
-    this.borderColor,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-<<<<<<< HEAD
-            border:
-                borderColor != null ? Border.all(color: borderColor!) : null,
-=======
-            border: borderColor != null ? Border.all(color: borderColor!) : null,
->>>>>>> f8cdcc2 (commit pour le premier)
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (textColor ?? Colors.white).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: textColor ?? Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-<<<<<<< HEAD
-                      color: textColor ?? Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-=======
-                  color: textColor ?? Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
->>>>>>> f8cdcc2 (commit pour le premier)
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-<<<<<<< HEAD
-}
-=======
-}
->>>>>>> f8cdcc2 (commit pour le premier)

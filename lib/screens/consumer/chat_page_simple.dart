@@ -3,31 +3,17 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
-<<<<<<< HEAD
-import 'package:suguconnect_mobile/services/chat_service.dart'; // Ajout de l'import
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
 import 'dart:io';
 
 // Page de chat individuel avec un producteur (version simplifiée)
 class ChatPageSimple extends StatefulWidget {
   final String producerName;
   final String producerAvatar;
-<<<<<<< HEAD
-  final int producerId; // Ajout de l'ID du producteur
-  final int consumerId; // Ajout de l'ID du consommateur
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
 
   const ChatPageSimple({
     super.key,
     required this.producerName,
     required this.producerAvatar,
-<<<<<<< HEAD
-    required this.producerId,
-    required this.consumerId,
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
   });
 
   @override
@@ -37,16 +23,7 @@ class ChatPageSimple extends StatefulWidget {
 class _ChatPageSimpleState extends State<ChatPageSimple> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-<<<<<<< HEAD
-  final ChatService _chatService = ChatService(); // Ajout du service de chat
-  bool _isRecording = false;
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  String? _recordingPath;
-  bool _isLoading = false; // Ajout d'un indicateur de chargement
 
-  // Messages de la conversation
-  final List<Map<String, dynamic>> _messages = [];
-=======
   bool _isRecording = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _recordingPath;
@@ -75,16 +52,11 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       'type': 'text',
     },
   ];
->>>>>>> f8cdcc2 (commit pour le premier)
 
   @override
   void initState() {
     super.initState();
-<<<<<<< HEAD
-    _loadMessages(); // Charger les messages depuis le backend
-=======
     _scrollToBottom();
->>>>>>> f8cdcc2 (commit pour le premier)
   }
 
   @override
@@ -127,12 +99,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       });
       _messageController.clear();
       _scrollToBottom();
-<<<<<<< HEAD
-
-      // Envoyer le message au backend
-      _sendMessageToBackend(_messageController.text.trim());
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
     }
   }
 
@@ -145,16 +111,9 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
           _isRecording = true;
         });
         HapticFeedback.mediumImpact();
-<<<<<<< HEAD
 
-        _recordingPath =
-            '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-=======
-        
         _recordingPath = '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        
->>>>>>> f8cdcc2 (commit pour le premier)
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🎤 Enregistrement en cours...'),
@@ -186,11 +145,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
         _isRecording = false;
       });
       HapticFeedback.mediumImpact();
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> f8cdcc2 (commit pour le premier)
       if (_recordingPath != null) {
         _addVoiceMessage(_recordingPath!);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -199,12 +154,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
             backgroundColor: Color(0xFFFB662F),
           ),
         );
-<<<<<<< HEAD
-
-        // Envoyer le message vocal au backend
-        _sendMessageToBackend(_recordingPath!, type: 'voice');
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -223,11 +172,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       _recordingPath = null;
     });
     HapticFeedback.lightImpact();
-<<<<<<< HEAD
 
-=======
-    
->>>>>>> f8cdcc2 (commit pour le premier)
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('❌ Enregistrement annulé'),
@@ -272,11 +217,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       final XFile? image = await picker.pickImage(
         source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
       );
-<<<<<<< HEAD
 
-=======
-      
->>>>>>> f8cdcc2 (commit pour le premier)
       if (image != null) {
         _addImageMessage(image.path);
       }
@@ -303,12 +244,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       });
     });
     _scrollToBottom();
-<<<<<<< HEAD
-
-    // Envoyer l'image au backend
-    _sendMessageToBackend(path, type: 'image');
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
   }
 
   // Afficher les options d'attachement
@@ -329,12 +264,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
               },
             ),
             ListTile(
-<<<<<<< HEAD
-              leading:
-                  const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
-=======
               leading: const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
->>>>>>> f8cdcc2 (commit pour le premier)
               title: const Text('Galerie'),
               onTap: () {
                 Navigator.pop(context);
@@ -350,12 +280,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
               },
             ),
             ListTile(
-<<<<<<< HEAD
-              leading:
-                  const Icon(Icons.insert_drive_file, color: Color(0xFFFB662F)),
-=======
               leading: const Icon(Icons.insert_drive_file, color: Color(0xFFFB662F)),
->>>>>>> f8cdcc2 (commit pour le premier)
               title: const Text('Document'),
               onTap: () {
                 Navigator.pop(context);
@@ -473,14 +398,9 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-<<<<<<< HEAD
-        mainAxisAlignment:
-            message['isMe'] ? MainAxisAlignment.end : MainAxisAlignment.start,
-=======
-        mainAxisAlignment: message['isMe'] 
-            ? MainAxisAlignment.end 
+        mainAxisAlignment: message['isMe']
+            ? MainAxisAlignment.end
             : MainAxisAlignment.start,
->>>>>>> f8cdcc2 (commit pour le premier)
         children: [
           if (!message['isMe']) ...[
             CircleAvatar(
@@ -493,7 +413,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-<<<<<<< HEAD
                 color: message['isMe']
                     ? const Color(0xFFFB662F).withOpacity(0.9)
                     : Colors.white.withOpacity(0.9),
@@ -503,17 +422,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
                       : const Radius.circular(4),
                   bottomRight: message['isMe']
                       ? const Radius.circular(4)
-=======
-                color: message['isMe'] 
-                    ? const Color(0xFFFB662F).withOpacity(0.9) 
-                    : Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(18).copyWith(
-                  bottomLeft: message['isMe'] 
-                      ? const Radius.circular(18) 
-                      : const Radius.circular(4),
-                  bottomRight: message['isMe'] 
-                      ? const Radius.circular(4) 
->>>>>>> f8cdcc2 (commit pour le premier)
                       : const Radius.circular(18),
                 ),
                 boxShadow: [
@@ -529,10 +437,10 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
           ),
           if (message['isMe']) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
+            const CircleAvatar(
               radius: 16,
-              backgroundColor: const Color(0xFFFB662F),
-              child: const Icon(Icons.person, color: Colors.white, size: 16),
+              backgroundColor: Color(0xFFFB662F),
+              child: Icon(Icons.person, color: Colors.white, size: 16),
             ),
           ],
         ],
@@ -660,12 +568,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
                       padding: const EdgeInsets.all(8),
                       child: Icon(
                         _isRecording ? Icons.stop : Icons.mic,
-<<<<<<< HEAD
-                        color:
-                            _isRecording ? Colors.red : const Color(0xFFFB662F),
-=======
                         color: _isRecording ? Colors.red : const Color(0xFFFB662F),
->>>>>>> f8cdcc2 (commit pour le premier)
                         size: 24,
                       ),
                     ),
@@ -682,56 +585,4 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       ),
     );
   }
-<<<<<<< HEAD
-
-  // Charger les messages depuis le backend
-  Future<void> _loadMessages() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      final messages = await _chatService.getMessages(
-        producerId: widget.producerId,
-        consumerId: widget.consumerId,
-      );
-
-      setState(() {
-        _messages.addAll(messages);
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur de chargement: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  // Envoyer un message au backend
-  Future<void> _sendMessageToBackend(String message,
-      {String type = 'text'}) async {
-    try {
-      await _chatService.sendMessage(
-        producerId: widget.producerId,
-        consumerId: widget.consumerId,
-        message: message,
-        type: type,
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur d\'envoi: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
 }

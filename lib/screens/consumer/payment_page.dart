@@ -4,10 +4,7 @@ import 'package:suguconnect_mobile/services/payment_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
-<<<<<<< HEAD
 import 'package:suguconnect_mobile/services/api_service.dart';
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
 
 // La page de paiement
 class PaymentPage extends StatefulWidget {
@@ -28,10 +25,7 @@ class _PaymentPageState extends State<PaymentPage> {
   final List<String> _operators = ['Orange money', 'Moov money', 'Wave'];
   final TextEditingController _phoneController = TextEditingController();
   final PaymentService _paymentService = PaymentService();
-<<<<<<< HEAD
   final ApiService _apiService = ApiService(); // Ajout du service API
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
   bool _isProcessing = false;
 
   @override
@@ -198,16 +192,17 @@ class _PaymentPageState extends State<PaymentPage> {
   // Widget pour un élément de commande
   Widget _buildOrderItem(dynamic item) {
     final itemName = item['name'] ?? 'Produit';
-    // S'assurer que itemPrice est un nombre
-    final itemPriceValue = item['price'] is num
-        ? item['price']
-        : double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0;
-    final itemQuantity = item['quantity'] ?? 1;
-    // Récupérer l'URL de l'image du produit
     final itemImage = item['image'] ?? '';
+    final itemPrice = item['price'] ?? 0.0;
+    final itemQuantity = item['quantity'] ?? 1;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
+    // S'assurer que itemPrice est un nombre
+    final itemPriceValue = itemPrice is num
+        ? itemPrice
+        : double.tryParse(itemPrice.toString()) ?? 0.0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
           // Image du produit
@@ -216,54 +211,6 @@ class _PaymentPageState extends State<PaymentPage> {
             height: 50,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
-<<<<<<< HEAD
-            ),
-            child: FutureBuilder<String>(
-              future: itemImage.isNotEmpty
-                  ? _apiService.buildImageUrl(itemImage)
-                  : Future.value(''),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Container(
-                    color: Colors.grey.shade200,
-                    child: const Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  );
-                }
-
-                if (snapshot.hasError ||
-                    !snapshot.hasData ||
-                    snapshot.data!.isEmpty) {
-                  return Container(
-                    color: Colors.grey.shade200,
-                    child:
-                        const Icon(Icons.image, size: 20, color: Colors.grey),
-                  );
-                }
-
-                final imageUrl = snapshot.data!;
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey.shade200,
-                        child: const Icon(Icons.image,
-                            size: 20, color: Colors.grey),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-=======
               image: itemImage.isNotEmpty
                   ? DecorationImage(
                       image: NetworkImage(itemImage),
@@ -275,7 +222,6 @@ class _PaymentPageState extends State<PaymentPage> {
             child: itemImage.isEmpty
                 ? const Icon(Icons.image, size: 20, color: Colors.grey)
                 : null,
->>>>>>> f8cdcc2 (commit pour le premier)
           ),
           const SizedBox(width: 12),
           // Détails du produit
@@ -287,8 +233,7 @@ class _PaymentPageState extends State<PaymentPage> {
                   itemName,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                Text(
-                    '${itemPriceValue.toStringAsFixed(0)} FCFA x $itemQuantity'),
+                Text('${itemPriceValue.toStringAsFixed(0)} FCFA x $itemQuantity'),
               ],
             ),
           ),
@@ -412,44 +357,46 @@ class _PaymentPageState extends State<PaymentPage> {
             const SizedBox(height: 8),
             _buildOperatorDropdown(),
             const SizedBox(height: 16),
-            const Text('Votre numéro de téléphone',
+            const Text('Numéro de téléphone',
                 style: TextStyle(color: Colors.grey)),
             const SizedBox(height: 8),
-            _buildPhoneNumberInput(),
+            _buildPhoneInput(),
           ] else if (_selectedMethod == PaymentMethod.card) ...[
-            const Center(child: Text("Paiement par carte bancaire")),
-          ] else if (_selectedMethod == PaymentMethod.paypal) ...[
-            const Center(child: Text("Paiement par PayPal")),
+            const Text('Informations de la carte',
+                style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            _buildCardInputs(),
+          ] else ...[
+            const Text('Compte PayPal',
+                style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            _buildPayPalInput(),
           ],
-          const SizedBox(height: 20),
-          _buildSecurePaymentBanner(),
-          const SizedBox(height: 20),
-          _buildCostSummary(),
         ],
       ),
     );
   }
 
-  // Widget pour le dropdown des opérateurs
+  // Dropdown pour choisir l'opérateur
   Widget _buildOperatorDropdown() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: _selectedOperator,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down),
-          items: _operators.map((String value) {
+          value: _selectedOperator,
+          items: _operators.map((String operator) {
             return DropdownMenuItem<String>(
-              value: value,
-              child: Text(value),
+              value: operator,
+              child: Text(operator),
             );
           }).toList(),
-          onChanged: (newValue) {
+          onChanged: (String? newValue) {
             setState(() {
               _selectedOperator = newValue;
             });
@@ -459,193 +406,209 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  // Widget pour l'input du numéro de téléphone
-  Widget _buildPhoneNumberInput() {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8), bottomLeft: Radius.circular(8)),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: Row(
-            children: const [
-              Text('+223'),
-              Icon(Icons.keyboard_arrow_down),
-            ],
-          ),
+  // Champ pour le numéro de téléphone
+  Widget _buildPhoneInput() {
+    return TextField(
+      controller: _phoneController,
+      keyboardType: TextInputType.phone,
+      decoration: InputDecoration(
+        hintText: 'Entrez votre numéro de téléphone',
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(8),
-                  bottomRight: Radius.circular(8)),
-            ),
-            child: TextField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
-                hintText: '12345678',
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12),
-              ),
-            ),
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.orange),
         ),
-      ],
-    );
-  }
-
-  // Widget pour la bannière de paiement sécurisé
-  Widget _buildSecurePaymentBanner() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.shield_outlined, color: Colors.orange),
-          SizedBox(width: 8),
-          Text('Paiement 100% sécurisé',
-              style:
-                  TextStyle(color: Colors.orange, fontWeight: FontWeight.bold)),
-        ],
       ),
     );
   }
 
-  // Widget pour le résumé des coûts
-  Widget _buildCostSummary() {
-    // S'assurer que orderAmount est un nombre
-    final orderAmountValue = widget.orderData['amount'] is num
-        ? widget.orderData['amount']
-        : double.tryParse(widget.orderData['amount']?.toString() ?? '0.0') ??
-            0.0;
-    final processingFee = 0.0; // Pour l'instant, pas de frais
-    final totalAmount = orderAmountValue + processingFee;
-
+  // Champs pour les informations de carte
+  Widget _buildCardInputs() {
     return Column(
       children: [
-        _buildCostRow('Montant', '${orderAmountValue.toStringAsFixed(0)} fcfa'),
-        const SizedBox(height: 8),
-        _buildCostRow(
-            'Frais de traitement', '${processingFee.toStringAsFixed(0)} fcfa'),
-        const Divider(height: 24),
-        _buildCostRow('Total', '${totalAmount.toStringAsFixed(0)} fcfa',
-            isTotal: true),
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Numéro de carte',
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.orange),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'MM/YY',
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.orange),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'CVV',
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Colors.orange),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          decoration: InputDecoration(
+            hintText: 'Nom du titulaire',
+            filled: true,
+            fillColor: Colors.grey.shade50,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.grey.shade300),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.orange),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  // Widget pour une ligne du résumé des coûts
-  Widget _buildCostRow(String title, String amount, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title,
-            style: TextStyle(
-                color: isTotal ? Colors.black : Colors.grey,
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal)),
-        Text(amount,
-            style: TextStyle(
-                color: Colors.black,
-                fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-                fontSize: isTotal ? 18 : 16)),
-      ],
+  // Champ pour PayPal
+  Widget _buildPayPalInput() {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: 'Adresse e-mail PayPal',
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.orange),
+        ),
+      ),
     );
   }
 
-  // Widget pour le bouton de confirmation
+  // Bouton de confirmation
   Widget _buildConfirmButton() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
+    return Container(
+      padding: const EdgeInsets.all(16),
       child: ElevatedButton(
         onPressed: _isProcessing ? null : _processPayment,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFB662F),
-          minimumSize: const Size(double.infinity, 56),
+          minimumSize: const Size(double.infinity, 50),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
         ),
         child: _isProcessing
-            ? const CircularProgressIndicator(color: Colors.white)
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 2,
+                ),
+              )
             : const Text(
                 'Confirmer le paiement',
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
       ),
     );
   }
 
-  // Fonction pour traiter le paiement
-  void _processPayment() async {
+  // Traitement du paiement
+  Future<void> _processPayment() async {
     setState(() {
       _isProcessing = true;
     });
 
     try {
-      print('=== _processPayment appelée ===');
-
-      // Valider les champs selon la méthode de paiement
-      if (_selectedMethod == PaymentMethod.mobile &&
-          _phoneController.text.isEmpty) {
-        print('ERREUR: Numéro de téléphone vide');
-        _showError('Veuillez entrer votre numéro de téléphone');
-        return;
+      // Vérifier que l'utilisateur est authentifié
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (!authProvider.isAuthenticated) {
+        throw Exception('Utilisateur non authentifié');
       }
 
-      // Afficher les données de débogage
-      print('=== Début du processus de paiement ===');
-      print('Order ID: ${widget.orderData['orderId']}');
-      print('Montant: ${widget.orderData['amount']}');
-      print('Numéro de téléphone: ${_phoneController.text}');
-      print('Méthode de paiement: ${_getPaymentMethodName()}');
-
-      // Créer un paiement
-      final paymentService = PaymentService();
-      print('Service de paiement instancié');
-
-      // Créer le paiement
-      print('Appel de createPayment...');
-      final paymentData = await paymentService.createPayment(
-        commandeId: widget.orderData['orderId'] ?? 1,
-        methodePaiement: _getPaymentMethodName(),
-        montant: double.tryParse(widget.orderData['amount'].toString()) ?? 0.0,
-        numeroTelephone: _phoneController.text,
-      );
-
-      print('Paiement créé avec succès: $paymentData');
-
-      // Fermer la page de paiement
-      if (mounted) {
-        Navigator.pop(context);
+      final userId = authProvider.currentUser?.id;
+      if (userId == null) {
+        throw Exception('ID utilisateur non disponible');
       }
 
-      // Afficher un message de succès
+      // Valider les données selon la méthode de paiement
+      if (_selectedMethod == PaymentMethod.mobile) {
+        if (_phoneController.text.isEmpty) {
+          throw Exception('Veuillez entrer votre numéro de téléphone');
+        }
+      }
+
+      // TODO: Implémenter la logique de paiement réelle
+      // Pour l'instant, on simule un succès
+      await Future.delayed(const Duration(seconds: 2));
+
       if (mounted) {
+        // Afficher un message de succès
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Paiement effectué avec succès !'),
+            content: Text('Paiement effectué avec succès!'),
             backgroundColor: Colors.green,
           ),
         );
+
+        // Rediriger vers la page de confirmation
+        Navigator.pop(context); // Fermer la page de paiement
       }
-    } catch (e, stackTrace) {
-      print('=== ERREUR DE PAIEMENT ===');
-      print('Erreur: ${e.toString()}');
-      print('Stack trace: $stackTrace');
-      _showError('Erreur lors du paiement: ${e.toString()}');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du paiement: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -653,37 +616,5 @@ class _PaymentPageState extends State<PaymentPage> {
         });
       }
     }
-  }
-
-  // Méthode pour afficher les erreurs
-  void _showError(String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // Méthode pour obtenir le nom de la méthode de paiement
-  String _getPaymentMethodName() {
-    switch (_selectedMethod) {
-      case PaymentMethod.card:
-        return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
-      case PaymentMethod.mobile:
-        return 'ORANGE_MONEY'; // Ou 'MOOV_MONEY' selon l'opérateur sélectionné
-      case PaymentMethod.paypal:
-        return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
-      default:
-        return 'ORANGE_MONEY';
-    }
-  }
-
-  @override
-  void dispose() {
-    _phoneController.dispose();
-    super.dispose();
   }
 }

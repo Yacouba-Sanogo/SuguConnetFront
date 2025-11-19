@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/services.dart';
-import 'fruit_page.dart';
-import 'notifications_page.dart';
-import 'detaille_produit.dart';
 import '../../models/produit_populaire.dart';
 import '../../services/produit_populaire_service.dart';
 import '../../services/api_service.dart';
-import '../../services/product_service.dart'; // Ajout du service produit
-import '../../models/product.dart'; // Ajout du modèle produit
-import 'category_products_page.dart'; // Ajout de la nouvelle page
-<<<<<<< HEAD
+import '../../services/product_service.dart';
+import '../../models/product.dart';
+import 'category_products_page.dart';
 import '../consumer/panier.dart';
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
+import 'notifications_page.dart';
 
 // Page d'accueil principale de l'application consommateur
 class AccueilPage extends StatefulWidget {
@@ -26,21 +22,21 @@ class AccueilPage extends StatefulWidget {
 class _AccueilPageState extends State<AccueilPage> {
   late ProduitPopulaireService _produitPopulaireService;
   late ApiService _apiService;
-  late ProductService _productService; // Ajout du service produit
+  late ProductService _productService;
   List<ProduitPopulaire> _produitsPopulaires = [];
-  List<Categorie> _categories = []; // Ajout de la liste des catégories
+  List<Categorie> _categories = [];
   bool _isLoading = true;
-  bool _isLoadingCategories = true; // Ajout du chargement des catégories
+  bool _isLoadingCategories = true;
   String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _apiService = ApiService();
-    _productService = ProductService(); // Initialisation du service produit
+    _productService = ProductService();
     _produitPopulaireService = ProduitPopulaireService(_apiService);
     _loadProduitsPopulaires();
-    _loadCategories(); // Chargement des catégories
+    _loadCategories();
   }
 
   Future<void> _loadProduitsPopulaires() async {
@@ -63,7 +59,6 @@ class _AccueilPageState extends State<AccueilPage> {
     }
   }
 
-  // Fonction pour charger les catégories depuis le backend
   Future<void> _loadCategories() async {
     try {
       final categories = await _productService.getAllCategories();
@@ -118,7 +113,6 @@ class _AccueilPageState extends State<AccueilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-<<<<<<< HEAD
       appBar: AppBar(
         title: const Text(
           'SuguConnect',
@@ -139,65 +133,6 @@ class _AccueilPageState extends State<AccueilPage> {
                 MaterialPageRoute(
                   builder: (context) => const NotificationsPage(),
                 ),
-=======
-      // Barre d'application avec logo et notifications
-      appBar: AppBar(
-        title: Image.asset('assets/images/logo.png',
-            height: 40), // Logo de l'application
-        centerTitle: true, // Centrer le titre
-        backgroundColor: Colors.white, // Fond blanc
-        elevation: 0, // Pas d'ombre
-        actions: [
-          // Bouton de notification avec badge
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.notifications_outlined, color: Colors.black87),
-                onPressed: () {
-                  // Navigation vers la page des notifications
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationsPage(),
-                    ),
-                  );
-                },
-              ),
-              // Badge de notification (point orange)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange, // Couleur du badge
-                    shape: BoxShape.circle, // Forme circulaire
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: 8,
-                    minHeight: 8,
-                  ),
-                  child: Text(
-                    '3', // Nombre de notifications
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          // Bouton de profil utilisateur
-          IconButton(
-            icon: Icon(Icons.person_outline, color: Colors.black87),
-            onPressed: () {
-              // Afficher un message temporaire pour le profil
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Page de profil à venir')),
->>>>>>> f8cdcc2 (commit pour le premier)
               );
             },
           ),
@@ -206,61 +141,36 @@ class _AccueilPageState extends State<AccueilPage> {
       // Corps de la page avec défilement vertical
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Alignement à gauche
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section image principale avec texte en overlay
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0), // Marges latérales
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20), // Coins arrondis
-                child: Stack(
+            // Bannière promotionnelle
+            Container(
+              height: 150,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF4CAF50), Color(0xFF8BC34A)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Image de fond de la page d'accueil
-                    SizedBox(
-                      width: double.infinity, // Largeur complète
-                      height: 200, // Hauteur fixe
-                      child: Image.asset(
-                        'assets/images/imagedelapagecusumerhome.png',
-                        fit: BoxFit.cover, // Couvrir tout l'espace
+                    const Text(
+                      'Livraison gratuite dès 10 000 FCFA',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.35),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            'Découvrez nos produits frais',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Commandez vos produits locaux',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 14,
                       ),
                     ),
                   ],
@@ -268,404 +178,124 @@ class _AccueilPageState extends State<AccueilPage> {
               ),
             ),
 
-            SizedBox(height: 20),
-
-            // Titre de section
+            // Section des catégories
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Découvrir par catégorie',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 16),
-
-            // Grille de catégories dynamiques
-            _buildCategoriesSection(),
-
-            SizedBox(height: 20),
-
-            // Section produits populaires
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Produits populaires',
+                  const Text(
+                    'Catégories',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.orange,
                     ),
                   ),
-                  TextButton(
-                    onPressed: _loadProduitsPopulaires,
-                    child: Text('Actualiser'),
-                  ),
+                  const SizedBox(height: 16),
+                  _isLoadingCategories
+                      ? const Center(child: CircularProgressIndicator())
+                      : GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            childAspectRatio: 1.5,
+                          ),
+                          itemCount: _categories.length,
+                          itemBuilder: (context, index) {
+                            final categorie = _categories[index];
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CategoryProductsPage(
+                                      category: categorie,
+                                      headerImage: 'assets/images/logo.png',
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      spreadRadius: 1,
+                                      blurRadius: 5,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    categorie.nom,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                 ],
               ),
             ),
 
-            SizedBox(height: 16),
-
-            // Liste de produits populaires
-            _buildPopularProductsSection(),
-
-            SizedBox(height: 80), // Espace pour le FAB
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget pour la section des catégories dynamiques
-  Widget _buildCategoriesSection() {
-    if (_isLoadingCategories) {
-      return Container(
-        height: 150,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    // Mapping des catégories avec leurs icônes et images
-    final categoryData = {
-      'Fruits': {
-        'icon': 'assets/images/Fruits.svg',
-        'image': 'assets/images/pommes.png'
-      },
-      'Céréales': {
-        'icon': 'assets/images/Cereales.svg',
-        'image': 'assets/images/mais.png'
-      },
-      'Légumes': {
-        'icon': 'assets/images/Legumes.svg',
-        'image': 'assets/images/carottes.png'
-      },
-      'Épices': {
-        'icon': 'assets/images/Epices.svg',
-        'image': 'assets/images/Oignons.png'
-      },
-    };
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16.0),
-      child: GridView.count(
-        shrinkWrap: true,
-        physics: NeverScrollableScrollPhysics(),
-        crossAxisCount: 2,
-        childAspectRatio: 1.1,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        children: _categories.map((categorie) {
-          final data = categoryData[categorie.nom] ??
-              {
-                'icon': 'assets/images/Fruits.svg',
-                'image': 'assets/images/pommes.png'
-              };
-
-          return _buildCategoryCard(
-            context,
-            categorie.nom,
-            data['icon']!,
-            data['image']!,
-            Colors.deepOrange,
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildPopularProductsSection() {
-    if (_isLoading) {
-      return Container(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_errorMessage != null) {
-      return Container(
-        height: 200,
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(_errorMessage!),
-              SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: _loadProduitsPopulaires,
-                child: Text('Réessayer'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_produitsPopulaires.isEmpty) {
-      return Container(
-        height: 200,
-        child: Center(child: Text('Aucun produit populaire trouvé')),
-      );
-    }
-
-    return FutureBuilder<String>(
-      future: _apiService.getBaseUrl(),
-      builder: (context, snapshot) {
-        final baseUrl = snapshot.data ?? 'http://10.0.2.2:8080';
-        return Container(
-          height: 190,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            itemCount: _produitsPopulaires.length,
-            itemBuilder: (context, index) {
-              final produit = _produitsPopulaires[index];
-
-              // Créer une structure de données compatible avec ProductDetailsPage
-              final productData = <String, String>{
-                'id': produit.produitId.toString(),
-                'name': produit.nomProduit,
-                'price': '${produit.prixUnitaire.toStringAsFixed(0)} fcfa',
-                'weight': '${produit.unite}',
-                'location': 'Local',
-                'image': produit.photoUrl,
-                'producerName': produit.nomProducteur,
-<<<<<<< HEAD
-                'producerId': produit.producteurId
-                    .toString(), // Ajout de l'ID du producteur
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
-                'producerAvatar': 'assets/images/improfil.png',
-                'description': produit.description,
-              };
-
-              return GestureDetector(
-                onTap: () {
-                  // Naviguer vers la page de détail du produit
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProductDetailsPage(product: productData),
+            // Section des produits populaires
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Produits Populaires',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
-                  );
-                },
-                child: Container(
-                  width: 150,
-                  margin: EdgeInsets.only(right: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        height: 90,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(12)),
-                        ),
-                        child: Center(
-                          child: produit.photoUrl.isNotEmpty
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(12)),
-                                  child: _buildProductImage(
-                                      produit.photoUrl, baseUrl),
+                  const SizedBox(height: 16),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : _errorMessage != null
+                          ? Center(
+                              child: Column(
+                                children: [
+                                  Text(_errorMessage!),
+                                  ElevatedButton(
+                                    onPressed: _loadProduitsPopulaires,
+                                    child: const Text('Réessayer'),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : _produitsPopulaires.isEmpty
+                              ? const Center(
+                                  child: Text('Aucun produit disponible'),
                                 )
-                              : Icon(Icons.image, size: 50, color: Colors.grey),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              produit.nomProduit,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '${produit.prixUnitaire.toStringAsFixed(2)} FCFA',
-                              style: TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              '${produit.unite}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildProductImage(String photoUrl, String baseUrl) {
-    // Utiliser le service API pour construire l'URL de l'image
-    return FutureBuilder<String>(
-      future: _apiService.buildImageUrl(photoUrl),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          final fullUrl = snapshot.data!;
-          return Image.network(
-            fullUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Center(
-                  child: Icon(Icons.image, size: 50, color: Colors.grey));
-            },
-          );
-        } else {
-          // En attendant, utiliser l'ancienne méthode
-          if (photoUrl.startsWith('http://') ||
-              photoUrl.startsWith('https://')) {
-            return Image.network(
-              photoUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Center(
-                    child: Icon(Icons.image, size: 50, color: Colors.grey));
-              },
-            );
-          }
-
-          // Sinon, construire l'URL complète
-          final fullUrl = '$baseUrl/uploads/$photoUrl';
-          return Image.network(
-            fullUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return Center(
-                  child: Icon(Icons.image, size: 50, color: Colors.grey));
-            },
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildCategoryCard(BuildContext context, String title, String iconPath,
-      String headerImage, Color color) {
-    return GestureDetector(
-      onTap: () {
-        // Trouver la catégorie correspondante
-        final categorie = _categories.firstWhere(
-          (cat) => cat.nom == title,
-          orElse: () => Categorie(
-            id: 0,
-            nom: title,
-            dateCreation: DateTime.now(),
-          ),
-        );
-
-        // Navigate to the new category products page
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => CategoryProductsPage(
-              category: categorie,
-              headerImage: headerImage,
-            ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.9), width: 1.2),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              spreadRadius: 1,
-              blurRadius: 6,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: FutureBuilder<bool>(
-                  future: _assetExists(iconPath),
-                  builder: (context, snapshot) {
-                    final exists = snapshot.data ?? false;
-                    if (iconPath.toLowerCase().endsWith('.svg') && exists) {
-                      return SvgPicture.asset(
-                        iconPath,
-                        width: 34,
-                        height: 34,
-                        color: color,
-                      );
-                    }
-                    // fallback to headerImage (raster) or to a placeholder
-                    if (headerImage.isNotEmpty) {
-                      return Image.asset(
-                        headerImage,
-                        width: 34,
-                        height: 34,
-                        color: color,
-                        fit: BoxFit.contain,
-                      );
-                    }
-                    return Icon(Icons.image, color: color, size: 34);
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+                              : CarouselSlider.builder(
+                                  itemCount: _produitsPopulaires.length,
+                                  itemBuilder: (context, index, realIndex) {
+                                    final produit = _produitsPopulaires[index];
+                                    return _ProduitPopulaireCard(produit: produit);
+                                  },
+                                  options: CarouselOptions(
+                                    height: 200,
+                                    autoPlay: true,
+                                    enlargeCenterPage: true,
+                                    aspectRatio: 16 / 9,
+                                  ),
+                                ),
+                ],
               ),
             ),
           ],
@@ -673,24 +303,64 @@ class _AccueilPageState extends State<AccueilPage> {
       ),
     );
   }
+}
 
-  Widget _buildBottomItem(
-      BuildContext context, IconData icon, String label, bool active) {
-    final color = active ? Colors.orange : Colors.black54;
-    return GestureDetector(
-      onTap: () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$label - à implémenter')),
-        );
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: color, fontSize: 12)),
-        ],
+// Widget pour afficher une carte de produit populaire
+class _ProduitPopulaireCard extends StatelessWidget {
+  final ProduitPopulaire produit;
+
+  const _ProduitPopulaireCard({required this.produit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image du produit
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: CachedNetworkImage(
+                  imageUrl: produit.photoUrl ?? '',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  placeholder: (context, url) => const Center(
+                    child: CircularProgressIndicator(),
+                  ),
+                  errorWidget: (context, url, error) => const Icon(Icons.error),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // Nom du produit
+            Text(
+              produit.nomProduit,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            // Prix du produit
+            Text(
+              '${produit.prixUnitaire.toStringAsFixed(2)} FCFA',
+              style: const TextStyle(
+                color: Colors.green,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

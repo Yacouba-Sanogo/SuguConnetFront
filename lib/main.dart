@@ -14,7 +14,7 @@ import 'screens/auth/register_screen.dart';
 import 'screens/auth/role_selection_screen.dart';
 import 'providers/auth_provider.dart';
 import 'theme/app_theme.dart';
- import 'screens/consumer/acceuil.dart';
+import 'screens/consumer/acceuil.dart';
 
 // Point d'entrée principal de l'application SuguConnect
 void main() {

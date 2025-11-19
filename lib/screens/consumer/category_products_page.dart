@@ -437,35 +437,29 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
   }
 
   // Fonction pour ajouter un produit au panier
-  void _addToCart(_ConsumerProduct product) async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userId = authProvider.currentUser?.id;
-
-      if (userId == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Veuillez vous connecter pour ajouter au panier'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-        }
-        return;
+  Future<void> _addToCart(_ConsumerProduct product) async {
+    final userId = context.read<AuthProvider>().currentUser?.id;
+    if (userId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Vous devez être connecté pour ajouter au panier'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
+      return;
+    }
 
+    try {
       // Ajouter le produit au panier avec une quantité de 1
       final response = await _apiService.post(
         '/consommateur/$userId/panier/ajouter/${product.id}',
         queryParameters: {'quantite': 1},
       );
 
-<<<<<<< HEAD
-      print(
-          'Réponse d\'ajout au panier: ${response.statusCode} - ${response.data}');
+      print('Réponse d\'ajout au panier: ${response.statusCode} - ${response.data}');
 
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -477,16 +471,10 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
         }
       } else {
         throw Exception(
-<<<<<<< HEAD
             'Erreur lors de l\'ajout au panier: ${response.statusCode} - ${response.data}');
       }
     } catch (e) {
       print('Erreur lors de l\'ajout au panier: $e');
-=======
-            'Erreur lors de l\'ajout au panier: ${response.statusCode}');
-      }
-    } catch (e) {
->>>>>>> f8cdcc2 (commit pour le premier)
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

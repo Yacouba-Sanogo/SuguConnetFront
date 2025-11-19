@@ -12,11 +12,7 @@ class AuthService {
 
   // Génère la liste des hôtes candidats selon l'environnement
   static List<String> _candidateHosts() {
-<<<<<<< HEAD
-    const lanIp = '10.175.47.42'; // Utilisation de votre adresse IP réelle
-=======
     const lanIp = '10.175.47.59';
->>>>>>> f8cdcc2 (commit pour le premier)
     const port = 8080;
     const contextPath = 'suguconnect';
 
@@ -77,16 +73,7 @@ class AuthService {
         return jsonDecode(response.body);
       } else {
         final body = response.body.isNotEmpty ? response.body : '';
-<<<<<<< HEAD
-        throw Exception('HTTP ' +
-            response.statusCode.toString() +
-            ' ' +
-            (response.reasonPhrase ?? '') +
-            ' ' +
-            body);
-=======
         throw Exception('HTTP ' + response.statusCode.toString() + ' ' + (response.reasonPhrase ?? '') + ' ' + body);
->>>>>>> f8cdcc2 (commit pour le premier)
       }
     } catch (e) {
       throw Exception('Erreur réseau: ' + e.toString());
@@ -95,22 +82,12 @@ class AuthService {
 
   // Headers communs pour toutes les requêtes
   static Map<String, String> get _headers => {
-<<<<<<< HEAD
-        'Content-Type': 'application/json', // Type de contenu JSON
-        'Accept': 'application/json', // Acceptation du JSON
-      };
-
-  // Méthode de connexion utilisateur (avec numéro de téléphone)
-  static Future<Map<String, dynamic>> login(
-      String telephone, String password) async {
-=======
     'Content-Type': 'application/json', // Type de contenu JSON
     'Accept': 'application/json', // Acceptation du JSON
   };
 
   // Méthode de connexion utilisateur (avec numéro de téléphone)
   static Future<Map<String, dynamic>> login(String telephone, String password) async {
->>>>>>> f8cdcc2 (commit pour le premier)
     try {
       await _ensureBaseUrl();
       // Envoi de la requête POST vers l'endpoint de connexion
@@ -128,13 +105,7 @@ class AuthService {
         return jsonDecode(response.body); // Retour des données JSON
       } else {
         final body = response.body.isNotEmpty ? response.body : '';
-<<<<<<< HEAD
-        throw Exception(
-            'HTTP ${response.statusCode} ${response.reasonPhrase ?? ''} ${body}'
-                .trim());
-=======
         throw Exception('HTTP ${response.statusCode} ${response.reasonPhrase ?? ''} ${body}'.trim());
->>>>>>> f8cdcc2 (commit pour le premier)
       }
     } catch (e) {
       throw Exception('Erreur réseau: $e');
@@ -199,7 +170,6 @@ class AuthService {
       await _ensureBaseUrl();
       final uri = Uri.parse('$_baseUrl/producteur/inscription');
       final payload = {
-<<<<<<< HEAD
         'nom': nom,
         'prenom': prenom,
         'telephone': telephone,
@@ -211,19 +181,6 @@ class AuthService {
         'description': description,
         'nomFerme': nomFerme,
       };
-=======
-          'nom': nom,
-          'prenom': prenom,
-          'telephone': telephone,
-          'email': email,
-          'localisation': localisation,
-          'latitude': latitude,
-          'longitude': longitude,
-          'motDePasse': motDePasse,
-          'description': description,
-          'nomFerme': nomFerme,
-        };
->>>>>>> f8cdcc2 (commit pour le premier)
       final headers = {
         ..._headers,
         'Accept': 'application/json,text/plain,*/*',
@@ -231,21 +188,6 @@ class AuthService {
       assert(() {
         // Debug log en mode dev
         // ignore: avoid_print
-<<<<<<< HEAD
-        print('[AuthService] POST ' +
-            uri.toString() +
-            ' payload=' +
-            payload.toString());
-        return true;
-      }());
-      final response =
-          await http.post(uri, headers: headers, body: jsonEncode(payload));
-
-      // Backend renvoie 201 et un texte (pas JSON)
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final msg =
-            response.body.isNotEmpty ? response.body : 'Inscription réussie';
-=======
         print('[AuthService] POST ' + uri.toString() + ' payload=' + payload.toString());
         return true;
       }());
@@ -254,27 +196,13 @@ class AuthService {
       // Backend renvoie 201 et un texte (pas JSON)
       if (response.statusCode == 201 || response.statusCode == 200) {
         final msg = response.body.isNotEmpty ? response.body : 'Inscription réussie';
->>>>>>> f8cdcc2 (commit pour le premier)
         return {'message': msg};
       } else {
         final body = response.body;
         if (response.statusCode == 403) {
-<<<<<<< HEAD
-          throw Exception(
-              'HTTP 403: Accès interdit à /producteur/inscription. Vérifiez la configuration de sécurité backend. Détails: ' +
-                  body);
-        }
-        throw Exception('HTTP ' +
-            response.statusCode.toString() +
-            ' ' +
-            (response.reasonPhrase ?? '') +
-            ' ' +
-            body);
-=======
           throw Exception('HTTP 403: Accès interdit à /producteur/inscription. Vérifiez la configuration de sécurité backend. Détails: ' + body);
         }
         throw Exception('HTTP ' + response.statusCode.toString() + ' ' + (response.reasonPhrase ?? '') + ' ' + body);
->>>>>>> f8cdcc2 (commit pour le premier)
       }
     } catch (e) {
       throw Exception('Erreur réseau: $e');
@@ -294,8 +222,4 @@ class AuthService {
       return false;
     }
   }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f8cdcc2 (commit pour le premier)

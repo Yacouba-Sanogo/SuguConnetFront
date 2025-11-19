@@ -15,8 +15,9 @@ ProduitDetail _$ProduitDetailFromJson(Map<String, dynamic> json) =>
       unite: json['unite'] as String,
       stockDisponible: (json['stockDisponible'] as num).toInt(),
       quantite: (json['quantite'] as num).toInt(),
-      photos:
-          (json['photos'] as List<dynamic>).map((e) => e as String).toList(),
+      photos: (json['photos'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       producteurId: (json['producteurId'] as num).toInt(),
       nomProducteur: json['nomProducteur'] as String,
       prenomProducteur: json['prenomProducteur'] as String,

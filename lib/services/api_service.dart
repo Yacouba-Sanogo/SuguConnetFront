@@ -3,11 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 
 // URL de base de l'API - à modifier selon l'environnement
-<<<<<<< HEAD
-const String BASE_API_URL = 'http://10.175.47.42:8080';
-=======
-const String BASE_API_URL = 'http://10.175.47.34:8080';
->>>>>>> f8cdcc2 (commit pour le premier)
+const String BASE_API_URL = 'http://10.175.47.59:8080';
 
 const String BASE_URL = '$BASE_API_URL/suguconnect';
 
@@ -81,15 +77,12 @@ class ApiService {
   }) async {
     await _ensureClient();
     await _loadToken();
-<<<<<<< HEAD
-
+    
     // Log pour le débogage
     print('=== Requête GET ===');
     print('Path: $path');
     print('Query parameters: $queryParameters');
-
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
+    
     return _dio!.get<T>(
       path,
       queryParameters: queryParameters,
@@ -192,7 +185,6 @@ class ApiService {
     // Sinon, construire l'URL complète
     return '$base/uploads/$imagePath';
   }
-<<<<<<< HEAD
 
   // Méthodes pour récupérer les listes d'utilisateurs
   Future<List<dynamic>> getConsumers() async {
@@ -209,6 +201,4 @@ class ApiService {
     final response = await _dio!.get<List<dynamic>>('/producteur/producteurs');
     return response.data ?? [];
   }
-=======
->>>>>>> f8cdcc2 (commit pour le premier)
 }

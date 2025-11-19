@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
-<<<<<<< HEAD
 import 'chat_page.dart'; // Remplacement de chat_page_simple.dart par chat_page.dart
-=======
-import 'chat_page_simple.dart';
->>>>>>> f8cdcc2 (commit pour le premier)
 import 'notifications_page.dart';
 
 // Page principale de messagerie avec liste des conversations
@@ -17,7 +13,6 @@ class _MessagingPageState extends State<MessagingPage> {
   final TextEditingController _searchController = TextEditingController();
 
   // Liste des conversations
-<<<<<<< HEAD
   final List<Map<String, dynamic>> _contacts = [
     {
       'id': '1',
@@ -54,44 +49,6 @@ class _MessagingPageState extends State<MessagingPage> {
       'avatar': 'assets/images/improfil.png', // Utiliser une image existante
       'isOnline': false,
       'role': 'Producteur',
-=======
-  final List<Map<String, dynamic>> _conversations = [
-    {
-      'id': '1',
-      'name': 'Sory Coulibaly',
-      'lastMessage': 'Lorem ipsum dolor sit amet, elit.',
-      'time': '10:20',
-      'unread': true,
-      'avatar': 'assets/images/producer1.jpg',
-      'isOnline': true,
-    },
-    {
-      'id': '2',
-      'name': 'Aminata Traoré',
-      'lastMessage': 'Merci pour votre commande, elle sera livrée demain.',
-      'time': 'Hier',
-      'unread': true,
-      'avatar': 'assets/images/producer2.jpg',
-      'isOnline': false,
-    },
-    {
-      'id': '3',
-      'name': 'Moussa Diallo',
-      'lastMessage': 'Les légumes sont frais, voulez-vous en commander ?',
-      'time': '10:20',
-      'unread': true,
-      'avatar': 'assets/images/producer3.jpg',
-      'isOnline': true,
-    },
-    {
-      'id': '4',
-      'name': 'Fatouma Keita',
-      'lastMessage': 'Votre commande est prête pour la livraison.',
-      'time': '10:20',
-      'unread': false,
-      'avatar': 'assets/images/producer4.jpg',
-      'isOnline': false,
->>>>>>> f8cdcc2 (commit pour le premier)
     },
   ];
 
@@ -198,25 +155,24 @@ class _MessagingPageState extends State<MessagingPage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
+                  builder: (context) => ChatPage(
+                    producerId: 1,
+                    producerName: 'Test Producteur',
+                    producerAvatar: 'assets/images/improfil.png',
+                  ),
                 ),
               );
             },
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.black54,
-                  size: 20,
-                ),
-                const Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFB662F),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.add,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -257,17 +213,10 @@ class _MessagingPageState extends State<MessagingPage> {
     return Expanded(
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-<<<<<<< HEAD
         itemCount: _contacts.length,
         separatorBuilder: (context, index) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final conversation = _contacts[index];
-=======
-        itemCount: _conversations.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final conversation = _conversations[index];
->>>>>>> f8cdcc2 (commit pour le premier)
           return _buildConversationItem(conversation);
         },
       ),
@@ -287,7 +236,7 @@ class _MessagingPageState extends State<MessagingPage> {
                 ? const Icon(Icons.person, color: Colors.white)
                 : null,
           ),
-          if (conversation['unread'])
+          if (conversation['isOnline'])
             Positioned(
               right: 0,
               bottom: 0,
@@ -346,13 +295,9 @@ class _MessagingPageState extends State<MessagingPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-<<<<<<< HEAD
             builder: (context) => ChatPage(
               producerId: int.tryParse(conversation['id']) ??
                   1, // Conversion de l'ID en int
-=======
-            builder: (context) => ChatPageSimple(
->>>>>>> f8cdcc2 (commit pour le premier)
               producerName: conversation['name'],
               producerAvatar: conversation['avatar'],
             ),
