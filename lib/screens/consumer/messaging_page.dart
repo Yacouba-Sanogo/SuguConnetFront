@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'chat_page_simple.dart';
+=======
+import 'chat_page.dart'; // Remplacement de chat_page_simple.dart par chat_page.dart
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 import 'notifications_page.dart';
 
 // Page principale de messagerie avec liste des conversations
@@ -296,7 +300,13 @@ class _MessagingPageState extends State<MessagingPage> {
         Navigator.push(
           context,
           MaterialPageRoute(
+<<<<<<< HEAD
             builder: (context) => ChatPageSimple(
+=======
+            builder: (context) => ChatPage(
+              producerId: int.tryParse(conversation['id']) ??
+                  1, // Conversion de l'ID en int
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
               producerName: conversation['name'],
               producerAvatar: conversation['avatar'],
             ),

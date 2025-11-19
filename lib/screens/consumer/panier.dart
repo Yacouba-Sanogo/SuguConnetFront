@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+<<<<<<< HEAD
+=======
+import '../../services/order_service.dart'; // Ajout de l'import du service de commande
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'dart:ui';
@@ -27,7 +31,11 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     _loadCart();
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -46,6 +54,7 @@ class _CartPageState extends State<CartPage> {
     return total;
   }
 
+<<<<<<< HEAD
   void _updateQuantity(int index, int change) {
     setState(() {
       if (_cartItems[index]['quantity'] + change > 0) {
@@ -88,6 +97,121 @@ class _CartPageState extends State<CartPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur lors de la mise à jour: $e'),
+=======
+  // Fonction pour mettre à jour la quantité d'un produit dans le panier
+  void _updateQuantity(int index, int change) async {
+    try {
+      final item = _cartItems[index];
+      final newQuantity = item['quantity'] + change;
+
+      // Ne pas permettre une quantité négative ou nulle
+      if (newQuantity <= 0) {
+        // Retirer le produit du panier
+        await _removeFromCart(index);
+        return;
+      }
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Mettre à jour la quantité dans le backend
+      final response = await _apiService.post(
+        '/consommateur/$userId/panier/ajouter/${item['id']}',
+        queryParameters: {'quantite': newQuantity},
+      );
+
+      if (response.statusCode == 200) {
+        // Mettre à jour l'interface utilisateur
+        setState(() {
+          _cartItems[index]['quantity'] = newQuantity;
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Quantité mise à jour'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception(
+            'Erreur lors de la mise à jour: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de la mise à jour de la quantité: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // Fonction pour retirer un produit du panier
+  Future<void> _removeFromCart(int index) async {
+    try {
+      final item = _cartItems[index];
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Retirer le produit du panier dans le backend
+      final response = await _apiService.delete(
+        '/consommateur/$userId/panier/retirer/${item['id']}',
+      );
+
+      if (response.statusCode == 200) {
+        // Mettre à jour l'interface utilisateur
+        setState(() {
+          _cartItems.removeAt(index);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${item['name']} retiré du panier'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Erreur lors du retrait: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors du retrait du produit: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
             backgroundColor: Colors.red,
           ),
         );
@@ -163,7 +287,14 @@ class _CartPageState extends State<CartPage> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
+<<<<<<< HEAD
       if (userId == null) {
+=======
+      print('ID utilisateur: $userId');
+
+      if (userId == null) {
+        print('Utilisateur non connecté');
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         setState(() {
           _cartItems = [];
           _loading = false;
@@ -172,6 +303,7 @@ class _CartPageState extends State<CartPage> {
         return;
       }
 
+<<<<<<< HEAD
       final response = await _apiService.get<Map<String, dynamic>>(
         '/consommateur/$userId/panier',
       );
@@ -187,6 +319,80 @@ class _CartPageState extends State<CartPage> {
         final produit = (pp['produit'] ?? {}) as Map<String, dynamic>;
         final producteur =
             (produit['producteur'] ?? {}) as Map<String, dynamic>;
+=======
+      // Vérifier si le service API a un token
+      final apiService = ApiService();
+      print('API Service authentifié: ${apiService.isAuthenticated}');
+
+      print('Chargement du panier pour l\'utilisateur: $userId');
+
+      final response = await apiService.get<Map<String, dynamic>>(
+        '/consommateur/$userId/panier',
+      );
+
+      print('Réponse du panier - Status: ${response.statusCode}');
+      print('Réponse du panier - Data: ${response.data}');
+      print('Réponse du panier - Type: ${response.data.runtimeType}');
+
+      // Vérifier si la réponse est valide
+      if (response.statusCode != 200 || response.data == null) {
+        print('Réponse invalide du panier - Status: ${response.statusCode}');
+        setState(() {
+          _cartItems = [];
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
+
+      final data = response.data!;
+      print('Données du panier: $data');
+
+      // On s'attend à ce que le panier contienne une liste "panierProduits"
+      final panierProduits = data['panierProduits'];
+      print('PanierProduits: $panierProduits');
+      print('Type de panierProduits: ${panierProduits.runtimeType}');
+
+      if (panierProduits is! List) {
+        print('panierProduits n\'est pas une liste');
+        setState(() {
+          _cartItems = [];
+          _loading = false;
+          _error = null;
+        });
+        return;
+      }
+
+      print('Nombre de produits dans le panier: ${panierProduits.length}');
+
+      // Créer une liste pour stocker les éléments avec images
+      List<Map<String, dynamic>> items = [];
+
+      // Traiter chaque produit du panier
+      for (int i = 0; i < panierProduits.length; i++) {
+        final raw = panierProduits[i];
+        print('Traitement du produit du panier: $raw');
+        print('Type du produit du panier: ${raw.runtimeType}');
+
+        if (raw is! Map<String, dynamic>) {
+          print('Le produit du panier n\'est pas un Map<String, dynamic>');
+          continue;
+        }
+
+        final pp = raw;
+        final produit = (pp['produit'] ?? {}) as Map<String, dynamic>;
+        print('Produit: $produit');
+
+        // Correction: Vérifier le type avant le cast
+        final producteurRaw = produit['producteur'] ?? {};
+        final Map<String, dynamic> producteur =
+            producteurRaw is Map<String, dynamic>
+                ? producteurRaw
+                : (producteurRaw is Map
+                    ? Map<String, dynamic>.from(producteurRaw)
+                    : <String, dynamic>{});
+        print('Producteur: $producteur');
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         // Normaliser prix et quantite (peuvent arriver en String ou num)
         final dynamic rawPrix =
@@ -197,6 +403,10 @@ class _CartPageState extends State<CartPage> {
         } else {
           price = double.tryParse(rawPrix.toString()) ?? 0.0;
         }
+<<<<<<< HEAD
+=======
+        print('Prix: $price');
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         final dynamic rawQuantite = pp['quantite'] ?? 1;
         int quantity;
@@ -205,6 +415,7 @@ class _CartPageState extends State<CartPage> {
         } else {
           quantity = int.tryParse(rawQuantite.toString()) ?? 1;
         }
+<<<<<<< HEAD
 
         // Extraction améliorée de l'URL de l'image
         String imageUrl = '';
@@ -236,6 +447,188 @@ class _CartPageState extends State<CartPage> {
         }
 
         return <String, dynamic>{
+=======
+        print('Quantité: $quantity');
+
+        // Extraction améliorée de l'URL de l'image
+        String imageUrl = '';
+        try {
+          print(
+              'Recherche d\'images pour le produit: ${produit['nom']} (ID: ${produit['id']})');
+
+          // Méthode 1: Vérifier le tableau photos dans le produit
+          final photos = produit['photos'];
+          print('Photos dans produit: $photos');
+
+          if (photos != null) {
+            if (photos is List && photos.isNotEmpty) {
+              final firstPhoto = photos.first;
+              print('Première photo: $firstPhoto');
+
+              if (firstPhoto is String) {
+                imageUrl = firstPhoto;
+              } else if (firstPhoto is Map) {
+                // Essayer différentes clés possibles
+                imageUrl = (firstPhoto['url'] ??
+                        firstPhoto['lien'] ??
+                        firstPhoto['imageUrl'] ??
+                        firstPhoto['image'] ??
+                        '')
+                    .toString();
+              }
+            }
+            // Si photos n'est pas une liste mais une chaîne
+            else if (photos is String) {
+              imageUrl = photos;
+            }
+          }
+
+          // Méthode 2: Vérifier si le produit lui-même contient des champs image
+          if (imageUrl.isEmpty) {
+            print('Recherche d\'images dans les champs du produit');
+            final imageFields = [
+              produit['imageUrl'],
+              produit['image'],
+              produit['photoUrl'],
+              produit['photo']
+            ];
+
+            for (final field in imageFields) {
+              if (field != null) {
+                if (field is String && field.isNotEmpty) {
+                  imageUrl = field;
+                  print('Image trouvée dans champ: $field');
+                  break;
+                } else if (field is Map) {
+                  imageUrl = (field['url'] ?? field['lien'] ?? '').toString();
+                  print('Image trouvée dans map: $imageUrl');
+                  break;
+                }
+              }
+            }
+          }
+
+          // Méthode 3: Vérifier dans les données du panierProduit
+          if (imageUrl.isEmpty) {
+            print('Recherche d\'images dans panierProduit');
+            final ppPhotos = pp['photos'];
+            if (ppPhotos != null && ppPhotos is List && ppPhotos.isNotEmpty) {
+              final firstPhoto = ppPhotos.first;
+              if (firstPhoto is String) {
+                imageUrl = firstPhoto;
+              } else if (firstPhoto is Map) {
+                imageUrl =
+                    (firstPhoto['url'] ?? firstPhoto['lien'] ?? '').toString();
+              }
+            }
+          }
+
+          // Méthode 4: Vérifier les champs image dans panierProduit
+          if (imageUrl.isEmpty) {
+            final ppImageFields = [
+              pp['imageUrl'],
+              pp['image'],
+              pp['photoUrl'],
+              pp['photo']
+            ];
+
+            for (final field in ppImageFields) {
+              if (field != null) {
+                if (field is String && field.isNotEmpty) {
+                  imageUrl = field;
+                  break;
+                } else if (field is Map) {
+                  imageUrl = (field['url'] ?? field['lien'] ?? '').toString();
+                  break;
+                }
+              }
+            }
+          }
+
+          // Méthode 5 (solution de secours): Faire une requête pour obtenir les détails complets du produit
+          if (imageUrl.isEmpty) {
+            print(
+                'Aucune image trouvée, tentative de récupération via API produit');
+            try {
+              final productId = produit['id'] as int?;
+              if (productId != null) {
+                final productResponse =
+                    await apiService.get<Map<String, dynamic>>(
+                  '/api/produits/$productId',
+                );
+
+                if (productResponse.statusCode == 200 &&
+                    productResponse.data != null) {
+                  final productData = productResponse.data!;
+                  print('Détails du produit récupérés: $productData');
+
+                  // Extraire les photos des détails du produit
+                  final productPhotos = productData['photos'];
+                  if (productPhotos != null &&
+                      productPhotos is List &&
+                      productPhotos.isNotEmpty) {
+                    final firstPhoto = productPhotos.first;
+                    if (firstPhoto is String) {
+                      imageUrl = firstPhoto;
+                    } else if (firstPhoto is Map) {
+                      imageUrl = (firstPhoto['url'] ?? firstPhoto['lien'] ?? '')
+                          .toString();
+                    }
+                  }
+
+                  // Si toujours pas d'image, vérifier les autres champs
+                  if (imageUrl.isEmpty) {
+                    final productImageFields = [
+                      productData['imageUrl'],
+                      productData['image'],
+                      productData['photoUrl'],
+                      productData['photo']
+                    ];
+
+                    for (final field in productImageFields) {
+                      if (field != null) {
+                        if (field is String && field.isNotEmpty) {
+                          imageUrl = field;
+                          break;
+                        } else if (field is Map) {
+                          imageUrl =
+                              (field['url'] ?? field['lien'] ?? '').toString();
+                          break;
+                        }
+                      }
+                    }
+                  }
+
+                  // Si toujours pas d'image, essayer de construire à partir du nom du produit
+                  if (imageUrl.isEmpty) {
+                    // Essayer de construire une URL à partir du nom du produit
+                    final productName = productData['nom'] as String?;
+                    if (productName != null) {
+                      // Cette approche dépend de votre structure de stockage d'images
+                      // Vous pouvez adapter cette logique selon votre backend
+                      final sanitizedName = productName
+                          .toLowerCase()
+                          .replaceAll(RegExp(r'[^a-z0-9\s]'), '')
+                          .replaceAll(RegExp(r'\s+'), '_');
+                      imageUrl = '$sanitizedName.jpg';
+                    }
+                  }
+                }
+              }
+            } catch (e) {
+              print(
+                  'Erreur lors de la récupération des détails du produit: $e');
+            }
+          }
+        } catch (e) {
+          print('Erreur lors de l\'extraction de l\'image: $e');
+          imageUrl = '';
+        }
+
+        print('Image URL finale pour ${produit['nom']}: $imageUrl');
+
+        items.add(<String, dynamic>{
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
           'id': produit['id'] ?? pp['id'] ?? 0,
           'name': produit['nom'] ?? 'Produit',
           'producer': producteur['nomEntreprise'] ??
@@ -244,15 +637,29 @@ class _CartPageState extends State<CartPage> {
           'image': imageUrl,
           'quantity': quantity,
           'isSelected': true,
+<<<<<<< HEAD
         };
       }).toList();
+=======
+        });
+      }
+
+      print('Produits transformés: $items');
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
       setState(() {
         _cartItems = items;
         _loading = false;
         _error = null;
       });
+<<<<<<< HEAD
     } catch (e) {
+=======
+    } catch (e, stackTrace) {
+      print('Erreur lors du chargement du panier: $e');
+      print('Stack trace: $stackTrace');
+
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       // Si le backend renvoie 404 "Le panier est vide", on affiche simplement le panier vide
       setState(() {
         _cartItems = [];
@@ -377,7 +784,11 @@ class _CartPageState extends State<CartPage> {
               ],
             ),
           ),
+<<<<<<< HEAD
           _buildQuantityControl(index),
+=======
+          _buildQuantityControl(index), // Utiliser le bon contrôle
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         ],
       ),
     );
@@ -511,6 +922,7 @@ class _CartPageState extends State<CartPage> {
           // Navigation vers la page de paiement
           print('Bouton de paiement cliqué'); // Debug
 
+<<<<<<< HEAD
           // Préparer les données de commande
           final selectedItems =
               _cartItems.where((item) => item['isSelected']).toList();
@@ -533,6 +945,10 @@ class _CartPageState extends State<CartPage> {
               builder: (context) => PaymentPage(orderData: orderData),
             ),
           );
+=======
+          // Créer une vraie commande avant de procéder au paiement
+          _placeOrderAndProceedToPayment();
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
@@ -550,4 +966,105 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
+<<<<<<< HEAD
+=======
+
+  // Fonction pour créer une commande et procéder au paiement
+  Future<void> _placeOrderAndProceedToPayment() async {
+    try {
+      // Vérifier l'authentification
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (!authProvider.isAuthenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter pour passer une commande'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Vérifier qu'il y a des articles sélectionnés
+      final selectedItems =
+          _cartItems.where((item) => item['isSelected']).toList();
+      if (selectedItems.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez sélectionner au moins un article'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Créer la commande
+      final orderService = OrderService();
+
+      // Préparer les données des produits
+      final products = selectedItems.map((item) {
+        return {
+          'produitId': item['id'],
+          'quantite': item['quantity'],
+        };
+      }).toList();
+
+      print('Création de commande avec produits: $products');
+
+      // Passer la commande
+      final orderData = await orderService.placeDirectOrder(
+        consumerId: authProvider.currentUser!.id!,
+        products: products,
+        paymentMethod:
+            'ORANGE_MONEY', // Valeur par défaut, peut être changée dans la page de paiement
+      );
+
+      print('Commande créée avec succès: $orderData');
+
+      // Préparer les données pour la page de paiement
+      final paymentOrderData = {
+        'orderId': int.tryParse(orderData['idCommande'].toString()) ?? 1,
+        'amount': _calculateTotal(),
+        'consumerId': authProvider.currentUser!.id!,
+        'items': selectedItems.map((item) {
+          return {
+            'id': item['id'],
+            'name': item['name'],
+            'price': item['price'],
+            'quantity': item['quantity'],
+            'image': item['image'] ?? '', // Ajouter l'URL de l'image
+          };
+        }).toList(),
+      };
+
+      print('Données de paiement préparées: $paymentOrderData');
+
+      // Naviguer vers la page de paiement
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentPage(orderData: paymentOrderData),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('Erreur lors de la création de la commande: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Erreur lors de la création de la commande: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+>>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 }

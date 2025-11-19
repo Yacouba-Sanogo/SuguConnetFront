@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-import 'register_screen.dart';
 import 'producer_register_screen.dart';
-// Consumer screens removed
 
-// Écran de sélection de rôle (Producteur/Consommateur) avec design moderne
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
@@ -40,7 +37,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Contenu principal
             Padding(
               padding: const EdgeInsets.all(20.0),
@@ -64,16 +61,15 @@ class RoleSelectionScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 80),
-                  
-                  // Bannière de titre
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 20, horizontal: 1),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF5F5DC), // Beige/crème
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(0),
                     ),
                     child: Column(
                       children: [
@@ -99,9 +95,9 @@ class RoleSelectionScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 10),
-                  
+
                   // Options de sélection de rôle
                   Expanded(
                     child: Center(
@@ -117,16 +113,15 @@ class RoleSelectionScreen extends StatelessWidget {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const ProducerRegisterScreen(),
+                                  builder: (context) =>
+                                      const ProducerRegisterScreen(),
                                 ),
                               );
                             },
                           ),
-                          
+
                           const SizedBox(height: 20),
-                          
-                          // Consommateur supprimé
-                          
+
                           // Bouton de connexion
                           GestureDetector(
                             onTap: () {
