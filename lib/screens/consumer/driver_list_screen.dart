@@ -1,56 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
+import '../../models/driver.dart';
+import '../../services/driver_service.dart';
 
 class DriverListScreen extends StatefulWidget {
-  const DriverListScreen({super.key});
+  final bool selectionMode;
+  final Function(Map<String, dynamic>)? onDriverSelected;
+
+  const DriverListScreen(
+      {super.key, this.selectionMode = false, this.onDriverSelected});
 
   @override
   State<DriverListScreen> createState() => _DriverListScreenState();
 }
 
 class _DriverListScreenState extends State<DriverListScreen> {
+  final DriverService _driverService = DriverService();
   String _selectedFilter = 'Tous'; // Tous, Disponibles, Occupés
-  
-  final List<Map<String, dynamic>> _allDrivers = [
-    {
-      'id': '1',
-      'name': 'Diallo Ousmane',
-      'phone': '+225 07 00 00 00 01',
-      'vehicle': 'Moto-Yamaha',
-      'plateNumber': 'AB 123 CD',
-      'status': 'available',
-      'rating': 4.8,
-      'totalDeliveries': 150,
-    },
-    {
-      'id': '2',
-      'name': 'Kone Amadou',
-      'phone': '+225 07 00 00 00 02',
-      'vehicle': 'Voiture-Toyota',
-      'plateNumber': 'EF 456 GH',
-      'status': 'busy',
-      'rating': 4.5,
-      'totalDeliveries': 89,
-    },
-    {
-      'id': '3',
-      'name': 'Traoré Mamadou',
-      'phone': '+225 07 00 00 00 03',
-      'vehicle': 'Moto-Honda',
-      'plateNumber': 'IJ 789 KL',
-      'status': 'available',
-      'rating': 4.9,
-      'totalDeliveries': 203,
-    },
-  ];
+  List<Driver> _allDrivers = [];
+  bool _isLoading = true;
+  String? _error;
 
-  List<Map<String, dynamic>> get _filteredDrivers {
+  @override
+  void initState() {
+    super.initState();
+    _loadDrivers();
+  }
+
+  Future<void> _loadDrivers() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final drivers = await _driverService.getAllDrivers();
+      setState(() {
+        _allDrivers = drivers;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors du chargement des livreurs: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Driver> get _filteredDrivers {
     if (_selectedFilter == 'Tous') {
       return _allDrivers;
     } else if (_selectedFilter == 'Disponibles') {
-      return _allDrivers.where((d) => d['status'] == 'available').toList();
+      return _allDrivers.where((d) => d.status == 'available').toList();
     } else {
-      return _allDrivers.where((d) => d['status'] == 'busy').toList();
+      return _allDrivers.where((d) => d.status == 'busy').toList();
     }
   }
 
@@ -69,6 +72,12 @@ class _DriverListScreenState extends State<DriverListScreen> {
           'Livreurs',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadDrivers,
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -97,18 +106,44 @@ class _DriverListScreenState extends State<DriverListScreen> {
 
           // Liste des livreurs
           Expanded(
-            child: _filteredDrivers.isEmpty
-                ? _buildEmptyState()
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    itemCount: _filteredDrivers.length,
-                    itemBuilder: (context, index) {
-                      return _buildDriverCard(_filteredDrivers[index]);
-                    },
-                  ),
+            child: _buildDriverList(),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDriverList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadDrivers,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_filteredDrivers.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      itemCount: _filteredDrivers.length,
+      itemBuilder: (context, index) {
+        return _buildDriverCard(_filteredDrivers[index]);
+      },
     );
   }
 
@@ -155,9 +190,22 @@ class _DriverListScreenState extends State<DriverListScreen> {
     );
   }
 
-  Widget _buildDriverCard(Map<String, dynamic> driver) {
-    Color statusColor = driver['status'] == 'available' ? Colors.green : Colors.orange;
-    
+  Widget _buildDriverCard(Driver driver) {
+    Color statusColor =
+        driver.status == 'available' ? Colors.green : Colors.orange;
+
+    // Convertir le driver en Map pour rester compatible avec le code existant
+    final driverMap = {
+      'id': driver.id,
+      'name': driver.name,
+      'phone': driver.phone,
+      'vehicle': driver.vehicle,
+      'plateNumber': driver.plateNumber,
+      'status': driver.status,
+      'rating': driver.rating,
+      'totalDeliveries': driver.totalDeliveries,
+    };
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -176,7 +224,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
         ],
       ),
       child: InkWell(
-        onTap: () => _showDriverDetails(driver),
+        onTap: () => widget.selectionMode
+            ? _selectDriver(driverMap)
+            : _showDriverDetails(driverMap),
         borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -197,7 +247,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Informations
               Expanded(
                 child: Column(
@@ -207,7 +257,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            driver['name'],
+                            driver.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -216,13 +266,16 @@ class _DriverListScreenState extends State<DriverListScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            driver['status'] == 'available' ? 'Disponible' : 'Occupé',
+                            driver.status == 'available'
+                                ? 'Disponible'
+                                : 'Occupé',
                             style: TextStyle(
                               color: statusColor,
                               fontWeight: FontWeight.bold,
@@ -238,17 +291,18 @@ class _DriverListScreenState extends State<DriverListScreen> {
                         Icon(Icons.star, color: Colors.amber, size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          driver['rating'].toString(),
+                          driver.rating.toString(),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(Icons.delivery_dining, color: Colors.grey, size: 16),
+                        Icon(Icons.delivery_dining,
+                            color: Colors.grey, size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          '${driver['totalDeliveries']} livraisons',
+                          '${driver.totalDeliveries} livraisons',
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 12,
@@ -257,7 +311,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                       ],
                     ),
                     Text(
-                      driver['vehicle'],
+                      driver.vehicle,
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 12,
@@ -266,8 +320,8 @@ class _DriverListScreenState extends State<DriverListScreen> {
                   ],
                 ),
               ),
-              
-              // Bouton contact
+
+              // Bouton contact ou sélection
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -275,7 +329,7 @@ class _DriverListScreenState extends State<DriverListScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
-                  Icons.phone,
+                  widget.selectionMode ? Icons.check : Icons.phone,
                   color: AppTheme.primaryColor,
                   size: 24,
                 ),
@@ -285,6 +339,13 @@ class _DriverListScreenState extends State<DriverListScreen> {
         ),
       ),
     );
+  }
+
+  void _selectDriver(Map<String, dynamic> driver) {
+    if (widget.onDriverSelected != null) {
+      widget.onDriverSelected!(driver);
+      Navigator.pop(context, driver);
+    }
   }
 
   void _showDriverDetails(Map<String, dynamic> driver) {
@@ -310,7 +371,8 @@ class _DriverListScreenState extends State<DriverListScreen> {
               _buildInfoRow('Plaque', driver['plateNumber']),
               _buildInfoRow('Note', '${driver['rating']} ⭐'),
               _buildInfoRow('Livraisons', '${driver['totalDeliveries']}'),
-              _buildInfoRow('Statut', driver['status'] == 'available' ? 'Disponible' : 'Occupé'),
+              _buildInfoRow('Statut',
+                  driver['status'] == 'available' ? 'Disponible' : 'Occupé'),
             ],
           ),
         ),

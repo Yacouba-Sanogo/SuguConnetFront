@@ -10,7 +10,8 @@ class ProducerDashboardScreen extends StatefulWidget {
   const ProducerDashboardScreen({super.key});
 
   @override
-  State<ProducerDashboardScreen> createState() => _ProducerDashboardScreenState();
+  State<ProducerDashboardScreen> createState() =>
+      _ProducerDashboardScreenState();
 }
 
 class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
@@ -40,9 +41,9 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
             Text(
               'SuguConnect',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.black87,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
           ],
         ),
@@ -107,14 +108,14 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                 'Bienvenue Producteur',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Statistiques avec design moderne
             Row(
               children: [
@@ -149,20 +150,20 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Actions rapides avec design moderne
             Text(
               'Actions rapides',
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Boutons d'action modernes
             Row(
               children: [
@@ -172,12 +173,16 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                     label: 'Ajouter un produit',
                     color: const Color(0xFF4CAF50),
                     onTap: () async {
-                      final product = await ProducerProductFormScreen.show(context);
+                      final product =
+                          await ProducerProductFormScreen.show(context);
                       if (product != null && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
-                            backgroundColor: product['isBio'] ? Colors.green : AppTheme.primaryColor,
+                            content: Text(
+                                'Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
+                            backgroundColor: product['isBio']
+                                ? Colors.green
+                                : AppTheme.primaryColor,
                           ),
                         );
                       }
@@ -202,9 +207,9 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Bouton Messages avec effet de soulèvement
             SizedBox(
               width: double.infinity,
@@ -244,16 +249,15 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                       Text(
                         'Messages',
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w600,
-                        ),
+                              color: Colors.black,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            
           ],
         ),
       ),
@@ -311,17 +315,17 @@ class _ModernStatCard extends StatelessWidget {
           Text(
             value,
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
           ),
           const SizedBox(height: 4),
           Text(
             title,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
-            ),
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
           ),
         ],
       ),
@@ -361,7 +365,8 @@ class _ModernActionButton extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(12),
-            border: borderColor != null ? Border.all(color: borderColor!) : null,
+            border:
+                borderColor != null ? Border.all(color: borderColor!) : null,
           ),
           child: Column(
             children: [
@@ -381,9 +386,9 @@ class _ModernActionButton extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: textColor ?? Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
+                      color: textColor ?? Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                 textAlign: TextAlign.center,
               ),
             ],

@@ -13,42 +13,42 @@ class _MessagingPageState extends State<MessagingPage> {
   final TextEditingController _searchController = TextEditingController();
 
   // Liste des conversations
-  final List<Map<String, dynamic>> _conversations = [
+  final List<Map<String, dynamic>> _contacts = [
     {
       'id': '1',
-      'name': 'Sory Coulibaly',
-      'lastMessage': 'Lorem ipsum dolor sit amet, elit.',
-      'time': '10:20',
-      'unread': true,
-      'avatar': 'assets/images/producer1.jpg',
+      'name': 'Mamadou Diallo',
+      'lastMessage': 'Bonjour, votre commande est prête',
+      'time': '14:30',
+      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
       'isOnline': true,
+      'role': 'Producteur',
     },
     {
       'id': '2',
-      'name': 'Aminata Traoré',
-      'lastMessage': 'Merci pour votre commande, elle sera livrée demain.',
-      'time': 'Hier',
-      'unread': true,
-      'avatar': 'assets/images/producer2.jpg',
+      'name': 'Aicha Koné',
+      'lastMessage': 'Merci pour votre achat !',
+      'time': '12:15',
+      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
       'isOnline': false,
+      'role': 'Producteur',
     },
     {
       'id': '3',
-      'name': 'Moussa Diallo',
-      'lastMessage': 'Les légumes sont frais, voulez-vous en commander ?',
-      'time': '10:20',
-      'unread': true,
-      'avatar': 'assets/images/producer3.jpg',
+      'name': 'Ibrahim Touré',
+      'lastMessage': 'Votre livraison arrive dans 30 min',
+      'time': '10:45',
+      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
       'isOnline': true,
+      'role': 'Livreur',
     },
     {
       'id': '4',
-      'name': 'Fatouma Keita',
-      'lastMessage': 'Votre commande est prête pour la livraison.',
-      'time': '10:20',
-      'unread': false,
-      'avatar': 'assets/images/producer4.jpg',
+      'name': 'Fatou Diop',
+      'lastMessage': 'Pouvez-vous préciser l\'adresse ?',
+      'time': '09:20',
+      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
       'isOnline': false,
+      'role': 'Producteur',
     },
   ];
 
@@ -214,10 +214,10 @@ class _MessagingPageState extends State<MessagingPage> {
     return Expanded(
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _conversations.length,
+        itemCount: _contacts.length,
         separatorBuilder: (context, index) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          final conversation = _conversations[index];
+          final conversation = _contacts[index];
           return _buildConversationItem(conversation);
         },
       ),

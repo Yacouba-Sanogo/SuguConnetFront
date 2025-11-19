@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 
 // URL de base de l'API - à modifier selon l'environnement
-const String BASE_API_URL = 'http://10.175.47.34:8080';
+const String BASE_API_URL = 'http://10.175.47.42:8080';
 
 const String BASE_URL = '$BASE_API_URL/suguconnect';
 
