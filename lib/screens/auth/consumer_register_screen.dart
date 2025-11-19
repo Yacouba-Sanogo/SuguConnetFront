@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'login_screen.dart';
 import 'consumer_login_screen.dart';
 import '../consumer/main_screen.dart';
 import '../../services/auth_service.dart';
@@ -167,13 +166,13 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> with Si
             // Conteneur Central (La Carte de Formulaire) - Utilise l'espace restant
             Expanded(
               child: Container(
-                width: double.infinity, // 100% de la largeur
+                width: double.infinity, 
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
+                        color: Colors.grey.withValues(alpha:0.1),
                         spreadRadius: 1,
                         blurRadius: 8,
                         offset: const Offset(0, 2),
@@ -224,13 +223,7 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> with Si
                             padding: const EdgeInsets.all(20),
                             child: Column(
                               children: [
-                                const Text(
-                                  'Déjà un compte ?',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.grey,
-                                  ),
-                                ),
+
                                 const SizedBox(height: 20),
                                 ElevatedButton(
                                   onPressed: () {

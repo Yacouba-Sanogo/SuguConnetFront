@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'producer_register_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:suguconnect_mobile/screens/auth/consumer_register_screen.dart';
+import 'package:suguconnect_mobile/screens/auth/producer_register_screen.dart';
 
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
@@ -12,13 +13,12 @@ class RoleSelectionScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Éléments décoratifs orange
             Positioned(
-              top: -50,
-              right: -50,
+              top: -80,
+              right: -80,
               child: Container(
-                width: 200,
-                height: 200,
+                width: 220,
+                height: 220,
                 decoration: const BoxDecoration(
                   color: Color(0xFFFB662F),
                   shape: BoxShape.circle,
@@ -26,11 +26,11 @@ class RoleSelectionScreen extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: -80,
-              left: -80,
+              bottom: -100,
+              left: -100,
               child: Container(
-                width: 250,
-                height: 250,
+                width: 280,
+                height: 280,
                 decoration: const BoxDecoration(
                   color: Color(0xFFFB662F),
                   shape: BoxShape.circle,
@@ -38,14 +38,13 @@ class RoleSelectionScreen extends StatelessWidget {
               ),
             ),
 
-            // Contenu principal
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bouton retour
-                  IconButton(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 🔙 Bouton retour
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: Container(
                       width: 40,
@@ -61,119 +60,89 @@ class RoleSelectionScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                ),
 
-                  const SizedBox(height: 80),
-                  Container(
-                    width: double.infinity,
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 20, horizontal: 1),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5DC), // Beige/crème
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Bienvenue chez SUGUConnect',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                const SizedBox(height: 80),
+                Container(
+                  width: double.infinity,
+                  color: const Color(0x1A8FA31E),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 30,
+                    horizontal: 16,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Bienvenue chez SUGUConnect',
+                        style: GoogleFonts.itim(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Veuillez choisir votre rôle',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Veuillez choisir votre rôle',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 50),
+
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildRoleCard(
+                          context: context,
+                          icon: Icons.people,
+                          title: 'Producteur',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProducerRegisterScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 25),
+
+                        //  Consommateur
+                        _buildRoleCard(
+                          context: context,
+                          icon: Icons.shopping_cart,
+                          title: 'Consommateur',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ConsumerRegisterScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
-
-                  const SizedBox(height: 10),
-
-                  // Options de sélection de rôle
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Carte Producteur
-                          _buildRoleCard(
-                            context: context,
-                            icon: Icons.people,
-                            title: 'Producteur',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ProducerRegisterScreen(),
-                                ),
-                              );
-                            },
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Bouton de connexion
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey[300]!),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.login,
-                                    color: Colors.grey[600],
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Déjà un compte ? Se connecter',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
   }
-
   Widget _buildRoleCard({
     required BuildContext context,
     required IconData icon,
@@ -187,13 +156,13 @@ class RoleSelectionScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: Colors.grey[300]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.15),
               spreadRadius: 1,
-              blurRadius: 4,
+              blurRadius: 5,
               offset: const Offset(0, 2),
             ),
           ],
@@ -207,17 +176,13 @@ class RoleSelectionScreen extends StatelessWidget {
                 color: Colors.grey[100],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: Colors.black,
-                size: 24,
-              ),
+              child: Icon(icon, color: Colors.black, size: 24),
             ),
             const SizedBox(width: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 20,
+              style: GoogleFonts.itim(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),

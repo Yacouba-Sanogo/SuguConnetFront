@@ -182,7 +182,7 @@ class _ProducerRegisterScreenState extends State<ProducerRegisterScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 alignment: Alignment.center,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFF6B35),
+                                  color: Colors.white,
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Text(
