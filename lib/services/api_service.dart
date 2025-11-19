@@ -77,15 +77,12 @@ class ApiService {
   }) async {
     await _ensureClient();
     await _loadToken();
-<<<<<<< HEAD
-=======
 
     // Log pour le débogage
     print('=== Requête GET ===');
     print('Path: $path');
     print('Query parameters: $queryParameters');
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     return _dio!.get<T>(
       path,
       queryParameters: queryParameters,
@@ -188,8 +185,6 @@ class ApiService {
     // Sinon, construire l'URL complète
     return '$base/uploads/$imagePath';
   }
-<<<<<<< HEAD
-=======
 
   // Méthodes pour récupérer les listes d'utilisateurs
   Future<List<dynamic>> getConsumers() async {
@@ -206,5 +201,4 @@ class ApiService {
     final response = await _dio!.get<List<dynamic>>('/producteur/producteurs');
     return response.data ?? [];
   }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 }

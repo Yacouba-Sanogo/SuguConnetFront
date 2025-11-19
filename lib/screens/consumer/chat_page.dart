@@ -3,11 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
-<<<<<<< HEAD
-import 'dart:io';
-import 'dart:async';
-import '../../services/chat_service.dart';
-=======
 import 'package:dio/dio.dart';
 import 'dart:io';
 import 'dart:async';
@@ -15,7 +10,6 @@ import 'package:provider/provider.dart';
 import '../../services/chat_service.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
 // Page de chat individuel avec un producteur (version avancée)
 class ChatPage extends StatefulWidget {
@@ -38,10 +32,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ChatService _chatService = ChatService();
-<<<<<<< HEAD
-=======
   final ApiService _apiService = ApiService(); // Ajout de l'instance ApiService
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   bool _isRecording = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _recordingPath;
@@ -73,10 +64,6 @@ class _ChatPageState extends State<ChatPage> {
     });
 
     try {
-<<<<<<< HEAD
-      // TODO: Remplacer par l'ID de l'utilisateur connecté
-      final userId = 1; // ID de l'utilisateur connecté
-=======
       // Utiliser l'ID de l'utilisateur connecté
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
@@ -107,34 +94,11 @@ class _ChatPageState extends State<ChatPage> {
 
       print(
           'Appel de getMessages avec userId1: $userId, userId2: ${widget.producerId}');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       final messages = await _chatService.getMessages(
         userId1: userId,
         userId2: widget.producerId,
       );
 
-<<<<<<< HEAD
-      setState(() {
-        _messages.clear();
-        _messages.addAll(messages.map((msg) {
-          return {
-            'id': msg['id'].toString(),
-            'text': msg['content'],
-            'isMe': msg['senderId'] == userId,
-            'time': _formatTimeString(msg['timestamp']),
-            'type': msg['type']?.toLowerCase() ?? 'text',
-            'path': msg['filePath'], // Pour les fichiers/images
-          };
-        }).toList());
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur de chargement: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-=======
       // Construire les messages avec les URLs d'images correctes
       final processedMessages = await Future.wait(messages.map((msg) async {
         // Construire l'URL complète pour les fichiers
@@ -177,7 +141,6 @@ class _ChatPageState extends State<ChatPage> {
           ),
         );
       }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     } finally {
       setState(() {
         _isLoading = false;
@@ -215,10 +178,6 @@ class _ChatPageState extends State<ChatPage> {
   Future<void> _sendMessage() async {
     if (_messageController.text.trim().isNotEmpty) {
       try {
-<<<<<<< HEAD
-        // TODO: Remplacer par l'ID de l'utilisateur connecté
-        final userId = 1;
-=======
         // Utiliser l'ID de l'utilisateur connecté
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final userId = authProvider.currentUser?.id;
@@ -233,7 +192,6 @@ class _ChatPageState extends State<ChatPage> {
         if (userId == null) {
           throw Exception('Utilisateur non connecté');
         }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         final message = await _chatService.sendMessage(
           senderId: userId,
@@ -254,11 +212,8 @@ class _ChatPageState extends State<ChatPage> {
         _messageController.clear();
         _scrollToBottom();
       } catch (e) {
-<<<<<<< HEAD
-=======
         print('=== ERREUR D\'ENVOI DE MESSAGE ===');
         print('Erreur: $e');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur d\'envoi: $e'),
@@ -316,10 +271,6 @@ class _ChatPageState extends State<ChatPage> {
       HapticFeedback.mediumImpact();
 
       if (_recordingPath != null) {
-<<<<<<< HEAD
-        // TODO: Remplacer par l'ID de l'utilisateur connecté
-        final userId = 1;
-=======
         // Utiliser l'ID de l'utilisateur connecté
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final userId = authProvider.currentUser?.id;
@@ -328,7 +279,6 @@ class _ChatPageState extends State<ChatPage> {
         if (userId == null) {
           throw Exception('Utilisateur non connecté');
         }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         // Envoyer le message vocal
         final File audioFile = File(_recordingPath!);
@@ -391,10 +341,6 @@ class _ChatPageState extends State<ChatPage> {
       final XFile? image = await picker.pickImage(source: source);
 
       if (image != null) {
-<<<<<<< HEAD
-        // TODO: Remplacer par l'ID de l'utilisateur connecté
-        final userId = 1;
-=======
         // Utiliser l'ID de l'utilisateur connecté
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final userId = authProvider.currentUser?.id;
@@ -403,7 +349,6 @@ class _ChatPageState extends State<ChatPage> {
         if (userId == null) {
           throw Exception('Utilisateur non connecté');
         }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         // Envoyer l'image
         final File imageFile = File(image.path);
@@ -443,10 +388,6 @@ class _ChatPageState extends State<ChatPage> {
       final XFile? file = await picker.pickImage(source: ImageSource.gallery);
 
       if (file != null) {
-<<<<<<< HEAD
-        // TODO: Remplacer par l'ID de l'utilisateur connecté
-        final userId = 1;
-=======
         // Utiliser l'ID de l'utilisateur connecté
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         final userId = authProvider.currentUser?.id;
@@ -455,7 +396,6 @@ class _ChatPageState extends State<ChatPage> {
         if (userId == null) {
           throw Exception('Utilisateur non connecté');
         }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         // Envoyer le fichier
         final File selectedFile = File(file.path);
@@ -612,13 +552,6 @@ class _ChatPageState extends State<ChatPage> {
 
   // Construire la liste des messages
   Widget _buildMessagesList() {
-<<<<<<< HEAD
-    if (_messages.isEmpty) {
-      return const Center(
-        child: Text(
-          'Aucun message pour le moment',
-          style: TextStyle(color: Colors.grey),
-=======
     if (_isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -652,7 +585,6 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ],
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         ),
       );
     }
@@ -744,30 +676,6 @@ class _ChatPageState extends State<ChatPage> {
 
   // Construire un message image
   Widget _buildImageMessage(Map<String, dynamic> message) {
-<<<<<<< HEAD
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.file(
-            File(message['path']),
-            width: 200,
-            height: 150,
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          message['text'],
-          style: TextStyle(
-            color: message['isMe'] ? Colors.white : Colors.black,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    );
-=======
     // Vérifier si le chemin est un fichier local ou une URL
     if (message['path'] != null &&
         (message['path'].startsWith('http://') ||
@@ -869,7 +777,6 @@ class _ChatPageState extends State<ChatPage> {
         ],
       );
     }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   }
 
   // Construire un message vocal

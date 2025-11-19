@@ -41,20 +41,6 @@ class ChatService {
     required File audioFile,
   }) async {
     try {
-<<<<<<< HEAD
-      // TODO: Implémenter l'upload de fichier audio
-      // Pour l'instant, on simule l'envoi
-      await Future.delayed(const Duration(seconds: 1));
-
-      return {
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'senderId': senderId,
-        'receiverId': receiverId,
-        'content': 'Message vocal',
-        'type': 'VOICE',
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-=======
       // Implémenter l'upload de fichier audio
       final baseUrl = await _apiService.getBaseUrl();
       final url = '$baseUrl/suguconnect/messages/voice';
@@ -79,7 +65,6 @@ class ChatService {
         throw Exception(
             'Erreur lors de l\'envoi du message vocal: ${response.statusCode}');
       }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     } catch (e) {
       throw Exception('Erreur lors de l\'envoi du message vocal: $e');
     }
@@ -92,20 +77,6 @@ class ChatService {
     required File imageFile,
   }) async {
     try {
-<<<<<<< HEAD
-      // TODO: Implémenter l'upload de fichier image
-      // Pour l'instant, on simule l'envoi
-      await Future.delayed(const Duration(seconds: 1));
-
-      return {
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'senderId': senderId,
-        'receiverId': receiverId,
-        'content': 'Image',
-        'type': 'IMAGE',
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-=======
       // Implémenter l'upload de fichier image
       final baseUrl = await _apiService.getBaseUrl();
       final url = '$baseUrl/suguconnect/messages/image';
@@ -130,7 +101,6 @@ class ChatService {
         throw Exception(
             'Erreur lors de l\'envoi de l\'image: ${response.statusCode}');
       }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     } catch (e) {
       throw Exception('Erreur lors de l\'envoi de l\'image: $e');
     }
@@ -143,20 +113,6 @@ class ChatService {
     required File file,
   }) async {
     try {
-<<<<<<< HEAD
-      // TODO: Implémenter l'upload de fichier
-      // Pour l'instant, on simule l'envoi
-      await Future.delayed(const Duration(seconds: 1));
-
-      return {
-        'id': DateTime.now().millisecondsSinceEpoch,
-        'senderId': senderId,
-        'receiverId': receiverId,
-        'content': 'Fichier',
-        'type': 'FILE',
-        'timestamp': DateTime.now().toIso8601String(),
-      };
-=======
       // Implémenter l'upload de fichier
       final baseUrl = await _apiService.getBaseUrl();
       final url = '$baseUrl/suguconnect/messages/file';
@@ -182,7 +138,6 @@ class ChatService {
         throw Exception(
             'Erreur lors de l\'envoi du fichier: ${response.statusCode}');
       }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     } catch (e) {
       throw Exception('Erreur lors de l\'envoi du fichier: $e');
     }
@@ -194,13 +149,10 @@ class ChatService {
     required int userId2,
   }) async {
     try {
-<<<<<<< HEAD
-=======
       print('=== getMessages appelé ===');
       print('userId1: $userId1');
       print('userId2: $userId2');
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       final response = await _apiService.get<List<dynamic>>(
         '/messages/conversation',
         queryParameters: {
@@ -209,25 +161,14 @@ class ChatService {
         },
       );
 
-<<<<<<< HEAD
-=======
       print('Réponse du backend - Status: ${response.statusCode}');
       print('Réponse du backend - Headers: ${response.headers}');
       print('Réponse du backend - Data: ${response.data}');
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       if (response.statusCode == 200) {
         return response.data!
             .map((item) => item as Map<String, dynamic>)
             .toList();
-<<<<<<< HEAD
-      } else {
-        throw Exception(
-            'Erreur lors de la récupération des messages: ${response.statusCode}');
-      }
-    } catch (e) {
-      throw Exception('Erreur lors de la récupération des messages: $e');
-=======
       } else if (response.statusCode == 400) {
         print('ERREUR 400: Paramètres invalides');
         // Solution de contournement : retourner une liste vide au lieu de lancer une exception
@@ -247,7 +188,6 @@ class ChatService {
 
       // Dans tous les cas d'erreur, retourner une liste vide pour permettre à l'application de continuer
       return [];
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     }
   }
 

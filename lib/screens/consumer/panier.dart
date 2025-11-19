@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
-<<<<<<< HEAD
-=======
 import '../../services/order_service.dart'; // Ajout de l'import du service de commande
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'dart:ui';
@@ -31,11 +28,7 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     _loadCart();
   }
-<<<<<<< HEAD
-  
-=======
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -54,50 +47,6 @@ class _CartPageState extends State<CartPage> {
     return total;
   }
 
-<<<<<<< HEAD
-  void _updateQuantity(int index, int change) {
-    setState(() {
-      if (_cartItems[index]['quantity'] + change > 0) {
-        _cartItems[index]['quantity'] += change;
-      }
-    });
-
-    // Mettre à jour la quantité dans le backend
-    _updateQuantityInBackend(index, change);
-  }
-
-  Future<void> _updateQuantityInBackend(int index, int change) async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final userId = authProvider.currentUser?.id;
-      if (userId == null) return;
-
-      final productId = _cartItems[index]['id'];
-      final newQuantity = _cartItems[index]['quantity'] + change;
-
-      if (newQuantity > 0) {
-        // Mettre à jour la quantité du produit dans le panier
-        await _apiService.put(
-          '/consommateur/$userId/panier/ajouter/$productId',
-          queryParameters: {'quantite': newQuantity},
-        );
-      } else {
-        // Retirer le produit du panier si la quantité est 0
-        await _apiService.delete(
-          '/consommateur/$userId/panier/retirer/$productId',
-        );
-      }
-    } catch (e) {
-      // En cas d'erreur, revenir à l'état précédent
-      setState(() {
-        _cartItems[index]['quantity'] -= change;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors de la mise à jour: $e'),
-=======
   // Fonction pour mettre à jour la quantité d'un produit dans le panier
   void _updateQuantity(int index, int change) async {
     try {
@@ -211,7 +160,6 @@ class _CartPageState extends State<CartPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
             backgroundColor: Colors.red,
           ),
         );
@@ -287,14 +235,10 @@ class _CartPageState extends State<CartPage> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
-<<<<<<< HEAD
-      if (userId == null) {
-=======
       print('ID utilisateur: $userId');
 
       if (userId == null) {
         print('Utilisateur non connecté');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         setState(() {
           _cartItems = [];
           _loading = false;
@@ -303,23 +247,6 @@ class _CartPageState extends State<CartPage> {
         return;
       }
 
-<<<<<<< HEAD
-      final response = await _apiService.get<Map<String, dynamic>>(
-        '/consommateur/$userId/panier',
-      );
-
-      final data = response.data ?? {};
-
-      // On s'attend à ce que le panier contienne une liste "panierProduits"
-      final List<dynamic> panierProduits =
-          (data['panierProduits'] as List?) ?? const [];
-
-      final items = panierProduits.map<Map<String, dynamic>>((raw) {
-        final pp = raw as Map<String, dynamic>;
-        final produit = (pp['produit'] ?? {}) as Map<String, dynamic>;
-        final producteur =
-            (produit['producteur'] ?? {}) as Map<String, dynamic>;
-=======
       // Vérifier si le service API a un token
       final apiService = ApiService();
       print('API Service authentifié: ${apiService.isAuthenticated}');
@@ -392,7 +319,6 @@ class _CartPageState extends State<CartPage> {
                     ? Map<String, dynamic>.from(producteurRaw)
                     : <String, dynamic>{});
         print('Producteur: $producteur');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         // Normaliser prix et quantite (peuvent arriver en String ou num)
         final dynamic rawPrix =
@@ -403,10 +329,7 @@ class _CartPageState extends State<CartPage> {
         } else {
           price = double.tryParse(rawPrix.toString()) ?? 0.0;
         }
-<<<<<<< HEAD
-=======
         print('Prix: $price');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
         final dynamic rawQuantite = pp['quantite'] ?? 1;
         int quantity;
@@ -415,39 +338,6 @@ class _CartPageState extends State<CartPage> {
         } else {
           quantity = int.tryParse(rawQuantite.toString()) ?? 1;
         }
-<<<<<<< HEAD
-
-        // Extraction améliorée de l'URL de l'image
-        String imageUrl = '';
-        // Vérifier d'abord le tableau photos
-        final photos = produit['photos'] as List?;
-        if (photos != null && photos.isNotEmpty) {
-          final firstPhoto = photos.first;
-          if (firstPhoto is String) {
-            imageUrl = firstPhoto;
-          } else if (firstPhoto is Map<String, dynamic>) {
-            imageUrl =
-                (firstPhoto['url'] ?? firstPhoto['lien'] ?? '').toString();
-          }
-        }
-        // Sinon vérifier les autres champs
-        else {
-          final imageField = produit['imageUrl'] ??
-              produit['image'] ??
-              produit['photoUrl'] ??
-              produit['photo'];
-          if (imageField != null) {
-            if (imageField is String) {
-              imageUrl = imageField;
-            } else if (imageField is Map<String, dynamic>) {
-              imageUrl =
-                  (imageField['url'] ?? imageField['lien'] ?? '').toString();
-            }
-          }
-        }
-
-        return <String, dynamic>{
-=======
         print('Quantité: $quantity');
 
         // Extraction améliorée de l'URL de l'image
@@ -628,7 +518,6 @@ class _CartPageState extends State<CartPage> {
         print('Image URL finale pour ${produit['nom']}: $imageUrl');
 
         items.add(<String, dynamic>{
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
           'id': produit['id'] ?? pp['id'] ?? 0,
           'name': produit['nom'] ?? 'Produit',
           'producer': producteur['nomEntreprise'] ??
@@ -637,29 +526,20 @@ class _CartPageState extends State<CartPage> {
           'image': imageUrl,
           'quantity': quantity,
           'isSelected': true,
-<<<<<<< HEAD
-        };
-      }).toList();
-=======
         });
       }
 
       print('Produits transformés: $items');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
       setState(() {
         _cartItems = items;
         _loading = false;
         _error = null;
       });
-<<<<<<< HEAD
-    } catch (e) {
-=======
     } catch (e, stackTrace) {
       print('Erreur lors du chargement du panier: $e');
       print('Stack trace: $stackTrace');
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       // Si le backend renvoie 404 "Le panier est vide", on affiche simplement le panier vide
       setState(() {
         _cartItems = [];
@@ -784,11 +664,7 @@ class _CartPageState extends State<CartPage> {
               ],
             ),
           ),
-<<<<<<< HEAD
-          _buildQuantityControl(index),
-=======
           _buildQuantityControl(index), // Utiliser le bon contrôle
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         ],
       ),
     );
@@ -922,33 +798,8 @@ class _CartPageState extends State<CartPage> {
           // Navigation vers la page de paiement
           print('Bouton de paiement cliqué'); // Debug
 
-<<<<<<< HEAD
-          // Préparer les données de commande
-          final selectedItems =
-              _cartItems.where((item) => item['isSelected']).toList();
-          final orderData = {
-            'orderId': 12345, // ID de commande fictif
-            'amount': _calculateTotal(),
-            'items': selectedItems.map((item) {
-              return {
-                'id': item['id'],
-                'name': item['name'],
-                'price': item['price'],
-                'quantity': item['quantity'],
-              };
-            }).toList(),
-          };
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PaymentPage(orderData: orderData),
-            ),
-          );
-=======
           // Créer une vraie commande avant de procéder au paiement
           _placeOrderAndProceedToPayment();
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
@@ -966,8 +817,6 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
-<<<<<<< HEAD
-=======
 
   // Fonction pour créer une commande et procéder au paiement
   Future<void> _placeOrderAndProceedToPayment() async {
@@ -1066,5 +915,4 @@ class _CartPageState extends State<CartPage> {
       }
     }
   }
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 }

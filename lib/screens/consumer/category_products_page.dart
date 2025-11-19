@@ -460,12 +460,9 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
         queryParameters: {'quantite': 1},
       );
 
-<<<<<<< HEAD
-=======
+
       print(
           'Réponse d\'ajout au panier: ${response.statusCode} - ${response.data}');
-
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       if (response.statusCode == 200) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -477,16 +474,10 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
         }
       } else {
         throw Exception(
-<<<<<<< HEAD
             'Erreur lors de l\'ajout au panier: ${response.statusCode}');
       }
     } catch (e) {
-=======
-            'Erreur lors de l\'ajout au panier: ${response.statusCode} - ${response.data}');
-      }
-    } catch (e) {
       print('Erreur lors de l\'ajout au panier: $e');
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

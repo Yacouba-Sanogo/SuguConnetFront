@@ -3,15 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
-<<<<<<< HEAD
-import 'package:suguconnect_mobile/screens/consumer/chat_page_simple.dart';
-import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
-=======
 import 'package:suguconnect_mobile/screens/consumer/chat_page.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
 import 'package:dio/dio.dart';
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 import 'dart:async';
 
 // La page de détails du produit
@@ -24,22 +19,13 @@ class ProductDetailsPage extends StatefulWidget {
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
-<<<<<<< HEAD
-class _ProductDetailsPageState extends State<ProductDetailsPage> {
-=======
 class _ProductDetailsPageState extends State<ProductDetailsPage>
     with SingleTickerProviderStateMixin {
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   int _quantity = 1;
   late double _price;
   bool _isFavorite = false;
   int _currentPage = 0;
   final PageController _pageController = PageController();
-<<<<<<< HEAD
-
-  // Liste d'images pour le carrousel
-  late List<String> _productImages;
-=======
   final ApiService _apiService = ApiService();
 
   // Animation pour l'image unique
@@ -49,14 +35,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   // Liste d'images pour le carrousel
   late List<String> _productImages;
   bool _imagesLoading = true;
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
 
   @override
   void initState() {
     super.initState();
-
-<<<<<<< HEAD
-=======
     // Initialisation de l'animation
     _animationController = AnimationController(
       duration: const Duration(seconds: 20),
@@ -79,7 +61,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       'https://placehold.co/600x400/FFA726/FFFFFF?text=Chargement...',
     ];
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
     // Utiliser les données du produit ou des valeurs par défaut
     if (widget.product != null) {
       // Afficher les données du produit pour le débogage
@@ -97,24 +78,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       _price = double.tryParse(cleanedPriceString) ?? 0.0;
       print('Parsed price: $_price');
 
-<<<<<<< HEAD
-      _productImages = [
-        widget.product!['image']!,
-        'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
-      ];
-    } else {
-      _price = 40000.0;
-      _productImages = [
-        'https://placehold.co/600x400/FFA726/FFFFFF?text=Orange+1',
-        'https://placehold.co/600x400/FB8C00/FFFFFF?text=Orange+2',
-        'https://placehold.co/600x400/F57C00/FFFFFF?text=Orange+3',
-      ];
-    }
-
-    // Changement automatique des images (optionnel)
-    Timer.periodic(const Duration(seconds: 5), (Timer timer) {
-=======
       // Construire les URLs d'images
       _buildImageUrls();
     } else {
@@ -141,7 +104,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
         return;
       }
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
       if (_currentPage < _productImages.length - 1) {
         _currentPage++;
       } else {
@@ -157,20 +119,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     });
   }
 
-<<<<<<< HEAD
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
-=======
   // Fonction pour vérifier si une image existe
   Future<bool> _imageExists(String url) async {
     try {
@@ -200,74 +148,35 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
             'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1');
       }
 
-      // Générer des URLs potentielles pour des images supplémentaires
-      // Par exemple, si l'image principale est "image123.jpg", on peut essayer "image123_2.jpg"
-      if (mainImage != null && mainImage.isNotEmpty) {
-        final String baseName = mainImage.split('.').first;
-        final String extension = mainImage.split('.').last;
-
-        // Vérifier l'existence d'images supplémentaires
-        final potentialImages = [
-          '${baseName}_2.$extension',
-          '${baseName}_3.$extension',
-          '${baseName}2.$extension',
-          '${baseName}3.$extension',
-        ];
-
-        for (final potentialImage in potentialImages) {
-          try {
-            final fullUrl = await _apiService.buildImageUrl(potentialImage);
-            if (await _imageExists(fullUrl)) {
-              images.add(fullUrl);
-            }
-          } catch (e) {
-            print(
-                'Erreur lors de la vérification de l\'image $potentialImage: $e');
-          }
-        }
-      }
-
-      // Ajouter quelques placeholders si nous n'avons toujours qu'une seule image
-      if (images.length == 1) {
-        final String placeholder2 =
-            'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+2';
-        final String placeholder3 =
-            'https://placehold.co/600x400/F57C00/FFFFFF?text=${widget.product!['name']}+3';
-        images.add(placeholder2);
-        images.add(placeholder3);
-      }
-
-      if (mounted) {
-        setState(() {
-          _productImages = images;
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      setState(() {
+        _productImages = images;
+        _imagesLoading = false;
+      });
     } catch (e) {
       print('Erreur lors de la construction des URLs d\'images: $e');
-      // En cas d'erreur, utiliser une seule image
-      if (mounted) {
-        setState(() {
-          _productImages = [
-            'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
-          ];
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      // En cas d'erreur, utiliser des placeholders
+      setState(() {
+        _productImages = [
+          'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
+        ];
+        _imagesLoading = false;
+      });
     }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _animationController.dispose(); // Dispose l'animation controller
+    _animationController.dispose();
     super.dispose();
+  }
+
+  void _updateQuantity(int change) {
+    setState(() {
+      if (_quantity + change > 0) {
+        _quantity += change;
+      }
+    });
   }
 
   Widget _buildImageSlider() {
@@ -371,7 +280,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
         ],
       ),
     );
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   }
 
   @override
@@ -425,69 +333,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       ),
       centerTitle: true,
     );
-  }
-
-<<<<<<< HEAD
-  Widget _buildImageSlider() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _productImages.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                child: _productImages[index].startsWith('http')
-                    ? Image.network(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      )
-                    : Image.asset(
-                        _productImages[index],
-                        fit: BoxFit.cover,
-                      ),
-              );
-            },
-          ),
-          Positioned(
-            bottom: 10,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_productImages.length, (index) {
-                return Container(
-                  width: 8.0,
-                  height: 8.0,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.5),
-                  ),
-                );
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-=======
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   }
 
   Widget _buildProductHeader() {
@@ -689,14 +534,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-<<<<<<< HEAD
-                    builder: (_) => ChatPageSimple(
-=======
                     builder: (_) => ChatPage(
                       producerId:
                           int.tryParse(widget.product?['producerId'] ?? '1') ??
                               1,
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
                       producerName:
                           widget.product?['producerName'] ?? 'Producteur local',
                       producerAvatar: widget.product?['producerAvatar'] ??
@@ -760,8 +601,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     );
   }
 
-<<<<<<< HEAD
-=======
   // Widget pour le bouton de chat avec le producteur
   Widget _buildChatButton() {
     return Container(
@@ -799,7 +638,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     );
   }
 
->>>>>>> 5e709d18c9d247014977c9e8dc9a3fd00642889a
   // Fonction pour passer une commande directe
   void _placeDirectOrder() async {
     try {
