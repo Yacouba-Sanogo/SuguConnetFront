@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
-import 'package:suguconnect_mobile/screens/consumer/chat_page_simple.dart';
+import 'package:suguconnect_mobile/screens/consumer/chat_page.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
-import 'package:dio/dio.dart'; // Ajout de l'import Dio
+import 'package:dio/dio.dart';
 import 'dart:async';
 
 // La page de détails du produit
@@ -582,7 +582,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ChatPageSimple(
+                    builder: (_) => ChatPage(
+                      producerId:
+                          int.tryParse(widget.product?['producerId'] ?? '1') ??
+                              1,
                       producerName:
                           widget.product?['producerName'] ?? 'Producteur local',
                       producerAvatar: widget.product?['producerAvatar'] ??
@@ -642,6 +645,43 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // Widget pour le bouton de chat avec le producteur
+  Widget _buildChatButton() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          // Navigation vers la page de chat
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatPage(
+                producerId:
+                    int.tryParse(widget.product!['producerId'] ?? '1') ?? 1,
+                producerName: widget.product!['producerName'] ?? 'Producteur',
+                producerAvatar: widget.product!['producerAvatar'] ??
+                    'assets/images/improfil.png',
+              ),
+            ),
+          );
+        },
+        icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
+        label: const Text(
+          'Contacter le producteur',
+          style: TextStyle(color: Colors.white),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFB662F),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
       ),
     );
   }

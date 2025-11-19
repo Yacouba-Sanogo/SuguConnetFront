@@ -3,17 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:suguconnect_mobile/services/chat_service.dart'; // Ajout de l'import
 import 'dart:io';
 
 // Page de chat individuel avec un producteur (version simplifiée)
 class ChatPageSimple extends StatefulWidget {
   final String producerName;
   final String producerAvatar;
+  final int producerId; // Ajout de l'ID du producteur
+  final int consumerId; // Ajout de l'ID du consommateur
 
   const ChatPageSimple({
     super.key,
     required this.producerName,
     required this.producerAvatar,
+    required this.producerId,
+    required this.consumerId,
   });
 
   @override
@@ -23,39 +28,19 @@ class ChatPageSimple extends StatefulWidget {
 class _ChatPageSimpleState extends State<ChatPageSimple> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ChatService _chatService = ChatService(); // Ajout du service de chat
   bool _isRecording = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _recordingPath;
+  bool _isLoading = false; // Ajout d'un indicateur de chargement
 
   // Messages de la conversation
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'id': '1',
-      'text': 'Bonjour ! Comment puis-je vous aider ?',
-      'isMe': false,
-      'time': '10:30',
-      'type': 'text',
-    },
-    {
-      'id': '2',
-      'text': 'Je suis intéressé par vos produits locaux',
-      'isMe': true,
-      'time': '10:32',
-      'type': 'text',
-    },
-    {
-      'id': '3',
-      'text': 'Parfait ! J\'ai de beaux légumes frais du jardin',
-      'isMe': false,
-      'time': '10:33',
-      'type': 'text',
-    },
-  ];
+  final List<Map<String, dynamic>> _messages = [];
 
   @override
   void initState() {
     super.initState();
-    _scrollToBottom();
+    _loadMessages(); // Charger les messages depuis le backend
   }
 
   @override
@@ -98,6 +83,9 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       });
       _messageController.clear();
       _scrollToBottom();
+
+      // Envoyer le message au backend
+      _sendMessageToBackend(_messageController.text.trim());
     }
   }
 
@@ -110,9 +98,10 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
           _isRecording = true;
         });
         HapticFeedback.mediumImpact();
-        
-        _recordingPath = '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        
+
+        _recordingPath =
+            '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('🎤 Enregistrement en cours...'),
@@ -144,7 +133,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
         _isRecording = false;
       });
       HapticFeedback.mediumImpact();
-      
+
       if (_recordingPath != null) {
         _addVoiceMessage(_recordingPath!);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -153,6 +142,9 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
             backgroundColor: Color(0xFFFB662F),
           ),
         );
+
+        // Envoyer le message vocal au backend
+        _sendMessageToBackend(_recordingPath!, type: 'voice');
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -171,7 +163,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       _recordingPath = null;
     });
     HapticFeedback.lightImpact();
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('❌ Enregistrement annulé'),
@@ -216,7 +208,7 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       final XFile? image = await picker.pickImage(
         source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
       );
-      
+
       if (image != null) {
         _addImageMessage(image.path);
       }
@@ -243,6 +235,9 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
       });
     });
     _scrollToBottom();
+
+    // Envoyer l'image au backend
+    _sendMessageToBackend(path, type: 'image');
   }
 
   // Afficher les options d'attachement
@@ -263,7 +258,8 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
+              leading:
+                  const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
               title: const Text('Galerie'),
               onTap: () {
                 Navigator.pop(context);
@@ -279,7 +275,8 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.insert_drive_file, color: Color(0xFFFB662F)),
+              leading:
+                  const Icon(Icons.insert_drive_file, color: Color(0xFFFB662F)),
               title: const Text('Document'),
               onTap: () {
                 Navigator.pop(context);
@@ -397,9 +394,8 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: message['isMe'] 
-            ? MainAxisAlignment.end 
-            : MainAxisAlignment.start,
+        mainAxisAlignment:
+            message['isMe'] ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!message['isMe']) ...[
             CircleAvatar(
@@ -412,15 +408,15 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: message['isMe'] 
-                    ? const Color(0xFFFB662F).withOpacity(0.9) 
+                color: message['isMe']
+                    ? const Color(0xFFFB662F).withOpacity(0.9)
                     : Colors.white.withOpacity(0.9),
                 borderRadius: BorderRadius.circular(18).copyWith(
-                  bottomLeft: message['isMe'] 
-                      ? const Radius.circular(18) 
+                  bottomLeft: message['isMe']
+                      ? const Radius.circular(18)
                       : const Radius.circular(4),
-                  bottomRight: message['isMe'] 
-                      ? const Radius.circular(4) 
+                  bottomRight: message['isMe']
+                      ? const Radius.circular(4)
                       : const Radius.circular(18),
                 ),
                 boxShadow: [
@@ -567,7 +563,8 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
                       padding: const EdgeInsets.all(8),
                       child: Icon(
                         _isRecording ? Icons.stop : Icons.mic,
-                        color: _isRecording ? Colors.red : const Color(0xFFFB662F),
+                        color:
+                            _isRecording ? Colors.red : const Color(0xFFFB662F),
                         size: 24,
                       ),
                     ),
@@ -583,5 +580,54 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
         ],
       ),
     );
+  }
+
+  // Charger les messages depuis le backend
+  Future<void> _loadMessages() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final messages = await _chatService.getMessages(
+        producerId: widget.producerId,
+        consumerId: widget.consumerId,
+      );
+
+      setState(() {
+        _messages.addAll(messages);
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur de chargement: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Envoyer un message au backend
+  Future<void> _sendMessageToBackend(String message,
+      {String type = 'text'}) async {
+    try {
+      await _chatService.sendMessage(
+        producerId: widget.producerId,
+        consumerId: widget.consumerId,
+        message: message,
+        type: type,
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur d\'envoi: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

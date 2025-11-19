@@ -10,6 +10,7 @@ import '../../services/api_service.dart';
 import '../../services/product_service.dart'; // Ajout du service produit
 import '../../models/product.dart'; // Ajout du modèle produit
 import 'category_products_page.dart'; // Ajout de la nouvelle page
+import '../consumer/panier.dart';
 
 // Page d'accueil principale de l'application consommateur
 class AccueilPage extends StatefulWidget {
@@ -114,63 +115,26 @@ class _AccueilPageState extends State<AccueilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Barre d'application avec logo et notifications
       appBar: AppBar(
-        title: Image.asset('assets/images/logo.png',
-            height: 40), // Logo de l'application
-        centerTitle: true, // Centrer le titre
-        backgroundColor: Colors.white, // Fond blanc
-        elevation: 0, // Pas d'ombre
-        actions: [
-          // Bouton de notification avec badge
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.notifications_outlined, color: Colors.black87),
-                onPressed: () {
-                  // Navigation vers la page des notifications
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => NotificationsPage(),
-                    ),
-                  );
-                },
-              ),
-              // Badge de notification (point orange)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: Colors.orange, // Couleur du badge
-                    shape: BoxShape.circle, // Forme circulaire
-                  ),
-                  constraints: BoxConstraints(
-                    minWidth: 8,
-                    minHeight: 8,
-                  ),
-                  child: Text(
-                    '3', // Nombre de notifications
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
+        title: const Text(
+          'SuguConnect',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
-          // Bouton de profil utilisateur
+        ),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        actions: [
           IconButton(
-            icon: Icon(Icons.person_outline, color: Colors.black87),
+            icon: const Icon(Icons.notifications, color: Color.fromARGB(255, 245, 140, 2)),
             onPressed: () {
-              // Afficher un message temporaire pour le profil
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Page de profil à venir')),
+              // Navigation vers la page de notifications
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsPage(),
+                ),
               );
             },
           ),
@@ -410,6 +374,8 @@ class _AccueilPageState extends State<AccueilPage> {
                 'location': 'Local',
                 'image': produit.photoUrl,
                 'producerName': produit.nomProducteur,
+                'producerId': produit.producteurId
+                    .toString(), // Ajout de l'ID du producteur
                 'producerAvatar': 'assets/images/improfil.png',
                 'description': produit.description,
               };

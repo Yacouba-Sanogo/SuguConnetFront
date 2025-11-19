@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+import '../../services/order_service.dart'; // Ajout de l'import du service de commande
 import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'dart:ui';
@@ -797,28 +798,8 @@ class _CartPageState extends State<CartPage> {
           // Navigation vers la page de paiement
           print('Bouton de paiement cliqué'); // Debug
 
-          // Préparer les données de commande
-          final selectedItems =
-              _cartItems.where((item) => item['isSelected']).toList();
-          final orderData = {
-            'orderId': 12345, // ID de commande fictif
-            'amount': _calculateTotal(),
-            'items': selectedItems.map((item) {
-              return {
-                'id': item['id'],
-                'name': item['name'],
-                'price': item['price'],
-                'quantity': item['quantity'],
-              };
-            }).toList(),
-          };
-
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PaymentPage(orderData: orderData),
-            ),
-          );
+          // Créer une vraie commande avant de procéder au paiement
+          _placeOrderAndProceedToPayment();
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
@@ -835,5 +816,103 @@ class _CartPageState extends State<CartPage> {
         ),
       ),
     );
+  }
+
+  // Fonction pour créer une commande et procéder au paiement
+  Future<void> _placeOrderAndProceedToPayment() async {
+    try {
+      // Vérifier l'authentification
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (!authProvider.isAuthenticated) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter pour passer une commande'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Vérifier qu'il y a des articles sélectionnés
+      final selectedItems =
+          _cartItems.where((item) => item['isSelected']).toList();
+      if (selectedItems.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez sélectionner au moins un article'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Créer la commande
+      final orderService = OrderService();
+
+      // Préparer les données des produits
+      final products = selectedItems.map((item) {
+        return {
+          'produitId': item['id'],
+          'quantite': item['quantity'],
+        };
+      }).toList();
+
+      print('Création de commande avec produits: $products');
+
+      // Passer la commande
+      final orderData = await orderService.placeDirectOrder(
+        consumerId: authProvider.currentUser!.id!,
+        products: products,
+        paymentMethod:
+            'ORANGE_MONEY', // Valeur par défaut, peut être changée dans la page de paiement
+      );
+
+      print('Commande créée avec succès: $orderData');
+
+      // Préparer les données pour la page de paiement
+      final paymentOrderData = {
+        'orderId': int.tryParse(orderData['idCommande'].toString()) ?? 1,
+        'amount': _calculateTotal(),
+        'consumerId': authProvider.currentUser!.id!,
+        'items': selectedItems.map((item) {
+          return {
+            'id': item['id'],
+            'name': item['name'],
+            'price': item['price'],
+            'quantity': item['quantity'],
+            'image': item['image'] ?? '', // Ajouter l'URL de l'image
+          };
+        }).toList(),
+      };
+
+      print('Données de paiement préparées: $paymentOrderData');
+
+      // Naviguer vers la page de paiement
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentPage(orderData: paymentOrderData),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('Erreur lors de la création de la commande: $e');
+      print('Stack trace: $stackTrace');
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+                'Erreur lors de la création de la commande: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
