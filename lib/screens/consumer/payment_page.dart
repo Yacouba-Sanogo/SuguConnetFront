@@ -4,7 +4,10 @@ import 'package:suguconnect_mobile/services/payment_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
+<<<<<<< HEAD
 import 'package:suguconnect_mobile/services/api_service.dart';
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
 
 // La page de paiement
 class PaymentPage extends StatefulWidget {
@@ -25,7 +28,10 @@ class _PaymentPageState extends State<PaymentPage> {
   final List<String> _operators = ['Orange money', 'Moov money', 'Wave'];
   final TextEditingController _phoneController = TextEditingController();
   final PaymentService _paymentService = PaymentService();
+<<<<<<< HEAD
   final ApiService _apiService = ApiService(); // Ajout du service API
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
   bool _isProcessing = false;
 
   @override
@@ -210,6 +216,7 @@ class _PaymentPageState extends State<PaymentPage> {
             height: 50,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
+<<<<<<< HEAD
             ),
             child: FutureBuilder<String>(
               future: itemImage.isNotEmpty
@@ -256,6 +263,19 @@ class _PaymentPageState extends State<PaymentPage> {
                 );
               },
             ),
+=======
+              image: itemImage.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(itemImage),
+                      fit: BoxFit.cover,
+                    )
+                  : null,
+              color: Colors.grey.shade200,
+            ),
+            child: itemImage.isEmpty
+                ? const Icon(Icons.image, size: 20, color: Colors.grey)
+                : null,
+>>>>>>> f8cdcc2 (commit pour le premier)
           ),
           const SizedBox(width: 12),
           // Détails du produit

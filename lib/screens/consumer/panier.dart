@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
+<<<<<<< HEAD
 import '../../services/order_service.dart'; // Ajout de l'import du service de commande
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
 import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'dart:ui';
@@ -28,7 +31,11 @@ class _CartPageState extends State<CartPage> {
     super.initState();
     _loadCart();
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> f8cdcc2 (commit pour le premier)
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -47,6 +54,7 @@ class _CartPageState extends State<CartPage> {
     return total;
   }
 
+<<<<<<< HEAD
   // Fonction pour mettre à jour la quantité d'un produit dans le panier
   void _updateQuantity(int index, int change) async {
     try {
@@ -160,6 +168,50 @@ class _CartPageState extends State<CartPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erreur: $e'),
+=======
+  void _updateQuantity(int index, int change) {
+    setState(() {
+      if (_cartItems[index]['quantity'] + change > 0) {
+        _cartItems[index]['quantity'] += change;
+      }
+    });
+
+    // Mettre à jour la quantité dans le backend
+    _updateQuantityInBackend(index, change);
+  }
+
+  Future<void> _updateQuantityInBackend(int index, int change) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+      if (userId == null) return;
+
+      final productId = _cartItems[index]['id'];
+      final newQuantity = _cartItems[index]['quantity'] + change;
+
+      if (newQuantity > 0) {
+        // Mettre à jour la quantité du produit dans le panier
+        await _apiService.put(
+          '/consommateur/$userId/panier/ajouter/$productId',
+          queryParameters: {'quantite': newQuantity},
+        );
+      } else {
+        // Retirer le produit du panier si la quantité est 0
+        await _apiService.delete(
+          '/consommateur/$userId/panier/retirer/$productId',
+        );
+      }
+    } catch (e) {
+      // En cas d'erreur, revenir à l'état précédent
+      setState(() {
+        _cartItems[index]['quantity'] -= change;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la mise à jour: $e'),
+>>>>>>> f8cdcc2 (commit pour le premier)
             backgroundColor: Colors.red,
           ),
         );
@@ -235,10 +287,14 @@ class _CartPageState extends State<CartPage> {
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final userId = authProvider.currentUser?.id;
+<<<<<<< HEAD
       print('ID utilisateur: $userId');
 
       if (userId == null) {
         print('Utilisateur non connecté');
+=======
+      if (userId == null) {
+>>>>>>> f8cdcc2 (commit pour le premier)
         setState(() {
           _cartItems = [];
           _loading = false;
@@ -247,6 +303,7 @@ class _CartPageState extends State<CartPage> {
         return;
       }
 
+<<<<<<< HEAD
       // Vérifier si le service API a un token
       final apiService = ApiService();
       print('API Service authentifié: ${apiService.isAuthenticated}');
@@ -319,6 +376,23 @@ class _CartPageState extends State<CartPage> {
                     ? Map<String, dynamic>.from(producteurRaw)
                     : <String, dynamic>{});
         print('Producteur: $producteur');
+=======
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/consommateur/$userId/panier',
+      );
+
+      final data = response.data ?? {};
+
+      // On s'attend à ce que le panier contienne une liste "panierProduits"
+      final List<dynamic> panierProduits =
+          (data['panierProduits'] as List?) ?? const [];
+
+      final items = panierProduits.map<Map<String, dynamic>>((raw) {
+        final pp = raw as Map<String, dynamic>;
+        final produit = (pp['produit'] ?? {}) as Map<String, dynamic>;
+        final producteur =
+            (produit['producteur'] ?? {}) as Map<String, dynamic>;
+>>>>>>> f8cdcc2 (commit pour le premier)
 
         // Normaliser prix et quantite (peuvent arriver en String ou num)
         final dynamic rawPrix =
@@ -329,7 +403,10 @@ class _CartPageState extends State<CartPage> {
         } else {
           price = double.tryParse(rawPrix.toString()) ?? 0.0;
         }
+<<<<<<< HEAD
         print('Prix: $price');
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
 
         final dynamic rawQuantite = pp['quantite'] ?? 1;
         int quantity;
@@ -338,6 +415,7 @@ class _CartPageState extends State<CartPage> {
         } else {
           quantity = int.tryParse(rawQuantite.toString()) ?? 1;
         }
+<<<<<<< HEAD
         print('Quantité: $quantity');
 
         // Extraction améliorée de l'URL de l'image
@@ -518,6 +596,39 @@ class _CartPageState extends State<CartPage> {
         print('Image URL finale pour ${produit['nom']}: $imageUrl');
 
         items.add(<String, dynamic>{
+=======
+
+        // Extraction améliorée de l'URL de l'image
+        String imageUrl = '';
+        // Vérifier d'abord le tableau photos
+        final photos = produit['photos'] as List?;
+        if (photos != null && photos.isNotEmpty) {
+          final firstPhoto = photos.first;
+          if (firstPhoto is String) {
+            imageUrl = firstPhoto;
+          } else if (firstPhoto is Map<String, dynamic>) {
+            imageUrl =
+                (firstPhoto['url'] ?? firstPhoto['lien'] ?? '').toString();
+          }
+        }
+        // Sinon vérifier les autres champs
+        else {
+          final imageField = produit['imageUrl'] ??
+              produit['image'] ??
+              produit['photoUrl'] ??
+              produit['photo'];
+          if (imageField != null) {
+            if (imageField is String) {
+              imageUrl = imageField;
+            } else if (imageField is Map<String, dynamic>) {
+              imageUrl =
+                  (imageField['url'] ?? imageField['lien'] ?? '').toString();
+            }
+          }
+        }
+
+        return <String, dynamic>{
+>>>>>>> f8cdcc2 (commit pour le premier)
           'id': produit['id'] ?? pp['id'] ?? 0,
           'name': produit['nom'] ?? 'Produit',
           'producer': producteur['nomEntreprise'] ??
@@ -526,20 +637,29 @@ class _CartPageState extends State<CartPage> {
           'image': imageUrl,
           'quantity': quantity,
           'isSelected': true,
+<<<<<<< HEAD
         });
       }
 
       print('Produits transformés: $items');
+=======
+        };
+      }).toList();
+>>>>>>> f8cdcc2 (commit pour le premier)
 
       setState(() {
         _cartItems = items;
         _loading = false;
         _error = null;
       });
+<<<<<<< HEAD
     } catch (e, stackTrace) {
       print('Erreur lors du chargement du panier: $e');
       print('Stack trace: $stackTrace');
 
+=======
+    } catch (e) {
+>>>>>>> f8cdcc2 (commit pour le premier)
       // Si le backend renvoie 404 "Le panier est vide", on affiche simplement le panier vide
       setState(() {
         _cartItems = [];
@@ -664,7 +784,11 @@ class _CartPageState extends State<CartPage> {
               ],
             ),
           ),
+<<<<<<< HEAD
           _buildQuantityControl(index), // Utiliser le bon contrôle
+=======
+          _buildQuantityControl(index),
+>>>>>>> f8cdcc2 (commit pour le premier)
         ],
       ),
     );
@@ -798,8 +922,33 @@ class _CartPageState extends State<CartPage> {
           // Navigation vers la page de paiement
           print('Bouton de paiement cliqué'); // Debug
 
+<<<<<<< HEAD
           // Créer une vraie commande avant de procéder au paiement
           _placeOrderAndProceedToPayment();
+=======
+          // Préparer les données de commande
+          final selectedItems =
+              _cartItems.where((item) => item['isSelected']).toList();
+          final orderData = {
+            'orderId': 12345, // ID de commande fictif
+            'amount': _calculateTotal(),
+            'items': selectedItems.map((item) {
+              return {
+                'id': item['id'],
+                'name': item['name'],
+                'price': item['price'],
+                'quantity': item['quantity'],
+              };
+            }).toList(),
+          };
+
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PaymentPage(orderData: orderData),
+            ),
+          );
+>>>>>>> f8cdcc2 (commit pour le premier)
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
@@ -817,6 +966,7 @@ class _CartPageState extends State<CartPage> {
       ),
     );
   }
+<<<<<<< HEAD
 
   // Fonction pour créer une commande et procéder au paiement
   Future<void> _placeOrderAndProceedToPayment() async {
@@ -915,4 +1065,6 @@ class _CartPageState extends State<CartPage> {
       }
     }
   }
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
 }

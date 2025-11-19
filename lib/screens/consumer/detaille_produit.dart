@@ -3,10 +3,15 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
+<<<<<<< HEAD
 import 'package:suguconnect_mobile/screens/consumer/chat_page.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
 import 'package:dio/dio.dart';
+=======
+import 'package:suguconnect_mobile/screens/consumer/chat_page_simple.dart';
+import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
+>>>>>>> f8cdcc2 (commit pour le premier)
 import 'dart:async';
 
 // La page de détails du produit
@@ -19,13 +24,18 @@ class ProductDetailsPage extends StatefulWidget {
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
 }
 
+<<<<<<< HEAD
 class _ProductDetailsPageState extends State<ProductDetailsPage>
     with SingleTickerProviderStateMixin {
+=======
+class _ProductDetailsPageState extends State<ProductDetailsPage> {
+>>>>>>> f8cdcc2 (commit pour le premier)
   int _quantity = 1;
   late double _price;
   bool _isFavorite = false;
   int _currentPage = 0;
   final PageController _pageController = PageController();
+<<<<<<< HEAD
   final ApiService _apiService = ApiService();
 
   // Animation pour l'image unique
@@ -35,11 +45,17 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   // Liste d'images pour le carrousel
   late List<String> _productImages;
   bool _imagesLoading = true;
+=======
+
+  // Liste d'images pour le carrousel
+  late List<String> _productImages;
+>>>>>>> f8cdcc2 (commit pour le premier)
 
   @override
   void initState() {
     super.initState();
 
+<<<<<<< HEAD
     // Initialisation de l'animation
     _animationController = AnimationController(
       duration: const Duration(seconds: 20),
@@ -62,6 +78,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       'https://placehold.co/600x400/FFA726/FFFFFF?text=Chargement...',
     ];
 
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
     // Utiliser les données du produit ou des valeurs par défaut
     if (widget.product != null) {
       // Afficher les données du produit pour le débogage
@@ -79,6 +97,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       _price = double.tryParse(cleanedPriceString) ?? 0.0;
       print('Parsed price: $_price');
 
+<<<<<<< HEAD
       // Construire les URLs d'images
       _buildImageUrls();
     } else {
@@ -105,6 +124,24 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
         return;
       }
 
+=======
+      _productImages = [
+        widget.product!['image']!,
+        'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+2',
+        'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+3',
+      ];
+    } else {
+      _price = 40000.0;
+      _productImages = [
+        'https://placehold.co/600x400/FFA726/FFFFFF?text=Orange+1',
+        'https://placehold.co/600x400/FB8C00/FFFFFF?text=Orange+2',
+        'https://placehold.co/600x400/F57C00/FFFFFF?text=Orange+3',
+      ];
+    }
+
+    // Changement automatique des images (optionnel)
+    Timer.periodic(const Duration(seconds: 5), (Timer timer) {
+>>>>>>> f8cdcc2 (commit pour le premier)
       if (_currentPage < _productImages.length - 1) {
         _currentPage++;
       } else {
@@ -120,6 +157,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     });
   }
 
+<<<<<<< HEAD
   // Fonction pour vérifier si une image existe
   Future<bool> _imageExists(String url) async {
     try {
@@ -320,6 +358,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
         ],
       ),
     );
+=======
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _updateQuantity(int change) {
+    setState(() {
+      if (_quantity + change > 0) {
+        _quantity += change;
+      }
+    });
+>>>>>>> f8cdcc2 (commit pour le premier)
   }
 
   @override
@@ -375,12 +427,67 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     );
   }
 
+<<<<<<< HEAD
   void _updateQuantity(int change) {
     setState(() {
       if (_quantity + change > 0) {
         _quantity += change;
       }
     });
+=======
+  Widget _buildImageSlider() {
+    return SizedBox(
+      height: 180,
+      child: Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          PageView.builder(
+            controller: _pageController,
+            itemCount: _productImages.length,
+            onPageChanged: (int page) {
+              setState(() {
+                _currentPage = page;
+              });
+            },
+            itemBuilder: (context, index) {
+              return ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(20)),
+                child: _productImages[index].startsWith('http')
+                    ? Image.network(
+                        _productImages[index],
+                        fit: BoxFit.cover,
+                      )
+                    : Image.asset(
+                        _productImages[index],
+                        fit: BoxFit.cover,
+                      ),
+              );
+            },
+          ),
+          Positioned(
+            bottom: 10,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(_productImages.length, (index) {
+                return Container(
+                  width: 8.0,
+                  height: 8.0,
+                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPage == index
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.5),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
+    );
+>>>>>>> f8cdcc2 (commit pour le premier)
   }
 
   Widget _buildProductHeader() {
@@ -582,10 +689,14 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                 Navigator.push(
                   context,
                   MaterialPageRoute(
+<<<<<<< HEAD
                     builder: (_) => ChatPage(
                       producerId:
                           int.tryParse(widget.product?['producerId'] ?? '1') ??
                               1,
+=======
+                    builder: (_) => ChatPageSimple(
+>>>>>>> f8cdcc2 (commit pour le premier)
                       producerName:
                           widget.product?['producerName'] ?? 'Producteur local',
                       producerAvatar: widget.product?['producerAvatar'] ??
@@ -649,6 +760,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     );
   }
 
+<<<<<<< HEAD
   // Widget pour le bouton de chat avec le producteur
   Widget _buildChatButton() {
     return Container(
@@ -686,6 +798,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     );
   }
 
+=======
+>>>>>>> f8cdcc2 (commit pour le premier)
   // Fonction pour passer une commande directe
   void _placeDirectOrder() async {
     try {
