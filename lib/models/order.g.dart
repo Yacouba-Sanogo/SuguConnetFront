@@ -45,7 +45,7 @@ Map<String, dynamic> _$DetailCommandeToJson(DetailCommande instance) =>
 
 Commande _$CommandeFromJson(Map<String, dynamic> json) => Commande(
       id: (json['idCommande'] as num?)?.toInt() ?? 0,
-      numeroCommande: json['numeroCommande'] as String,
+      numeroCommande: json['numeroCommande'] as String? ?? '',
       dateCommande: DateTime.parse(json['dateCommande'] as String),
       dateLivraison: json['dateLivraison'] == null
           ? null
@@ -116,7 +116,7 @@ Map<String, dynamic> _$PaiementToJson(Paiement instance) => <String, dynamic>{
     };
 
 Livraison _$LivraisonFromJson(Map<String, dynamic> json) => Livraison(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       adresseLivraison: json['adresseLivraison'] as String? ?? '',
       numeroSuivi: json['numeroSuivi'] as String?,
       statut: json['statut'] as String? ?? '',
@@ -141,11 +141,13 @@ Map<String, dynamic> _$LivraisonToJson(Livraison instance) => <String, dynamic>{
 
 Remboursement _$RemboursementFromJson(Map<String, dynamic> json) =>
     Remboursement(
-      id: (json['id'] as num).toInt(),
+      id: (json['id'] as num?)?.toInt() ?? 0,
       montant: (json['montant'] as num?)?.toDouble() ?? 0.0,
       motif: json['motif'] as String? ?? '',
       statut: json['statut'] as String? ?? '',
-      dateDemande: DateTime.parse(json['dateDemande'] as String),
+      dateDemande: json['dateDemande'] == null
+          ? null
+          : DateTime.parse(json['dateDemande'] as String),
       dateTraitement: json['dateTraitement'] == null
           ? null
           : DateTime.parse(json['dateTraitement'] as String),
@@ -161,7 +163,7 @@ Map<String, dynamic> _$RemboursementToJson(Remboursement instance) =>
       'montant': instance.montant,
       'motif': instance.motif,
       'statut': instance.statut,
-      'dateDemande': instance.dateDemande.toIso8601String(),
+      'dateDemande': instance.dateDemande?.toIso8601String(),
       'dateTraitement': instance.dateTraitement?.toIso8601String(),
       'commentaire': instance.commentaire,
       'commande': instance.commande,

@@ -119,7 +119,7 @@ class Commande {
   bool get estAnnulee => statut == 'ANNULEE';
 }
 
-@JsonSerializable()
+@JsonSerializable(fieldRename: FieldRename.none)
 class Paiement {
   @JsonKey(name: 'idPaiement', defaultValue: 0)
   final int id;
@@ -160,6 +160,7 @@ class Paiement {
 
 @JsonSerializable(fieldRename: FieldRename.none)
 class Livraison {
+  @JsonKey(defaultValue: 0)
   final int id;
 
   @JsonKey(name: 'adresseLivraison', defaultValue: '')
@@ -196,6 +197,7 @@ class Livraison {
 
 @JsonSerializable(fieldRename: FieldRename.none)
 class Remboursement {
+  @JsonKey(defaultValue: 0)
   final int id;
 
   @JsonKey(defaultValue: 0.0)
@@ -208,7 +210,7 @@ class Remboursement {
   final String statut;
 
   @JsonKey(name: 'dateDemande')
-  final DateTime dateDemande;
+  final DateTime? dateDemande;
 
   final DateTime? dateTraitement;
 
@@ -221,7 +223,7 @@ class Remboursement {
     required this.montant,
     required this.motif,
     required this.statut,
-    required this.dateDemande,
+    this.dateDemande,
     this.dateTraitement,
     this.commentaire,
     this.commande,
