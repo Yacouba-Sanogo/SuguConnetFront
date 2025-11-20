@@ -14,7 +14,8 @@ class ProducerOrdersScreen extends StatefulWidget {
   State<ProducerOrdersScreen> createState() => _ProducerOrdersScreenState();
 }
 
-class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with SingleTickerProviderStateMixin {
+class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
   final _orderService = OrderService();
@@ -22,7 +23,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   @override
@@ -55,6 +56,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
             Tab(text: 'En attente'),
             Tab(text: 'Expédiée'),
             Tab(text: 'Livrée'),
+            Tab(text: 'Payées'), // Nouvel onglet
           ],
         ),
       ),
@@ -108,6 +110,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                 _buildOrderList('En attente'),
                 _buildOrderList('Expédiée'),
                 _buildOrderList('Livrée'),
+                _buildOrderList('Payées'), // Nouvel onglet
               ],
             ),
           ),
@@ -124,6 +127,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
         return 'EN_LIVRAISON';
       case 'Livrée':
         return 'LIVREE';
+      case 'Payées':
+        return 'PAYEE'; // Nouveau statut pour les commandes payées
       default:
         return '';
     }
@@ -137,6 +142,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
         return 'Expédiée';
       case 'LIVREE':
         return 'Livrée';
+      case 'PAYEE':
+        return 'Payées';
       default:
         return backend;
     }
@@ -147,6 +154,75 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
     final producteurId = auth.currentUser?.id;
     if (producteurId == null) {
       return const Center(child: Text('Utilisateur non connecté'));
+    }
+
+    // Pour l'onglet "Payées", utiliser une méthode différente
+    if (status == 'Payées') {
+      return RefreshIndicator(
+        onRefresh: () async {
+          setState(() {});
+        },
+        child: FutureBuilder<List<Commande>>(
+          future: _orderService.getOrdersByProducerPaid(
+            producteurId,
+            search: _searchQuery.isNotEmpty ? _searchQuery : null,
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Erreur: ${snapshot.error}'));
+            }
+            final orders = snapshot.data ?? [];
+            if (orders.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.shopping_cart_outlined,
+                        size: 64, color: Colors.grey.shade300),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Aucune commande payée',
+                      style:
+                          TextStyle(fontSize: 18, color: Colors.grey.shade500),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(20),
+              itemCount: orders.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final c = orders[index];
+                final uiStatus = _statusToUi(c.statut);
+                final qty = c.detailsCommande.isNotEmpty
+                    ? c.detailsCommande.first.quantite.toString()
+                    : '-';
+                final productName = c.detailsCommande.isNotEmpty
+                    ? c.detailsCommande.first.produit.nom
+                    : 'Produit';
+                final price = c.montantTotal.toStringAsFixed(0) + ' fcfa';
+                return _ModernOrderCard(
+                  orderNumber: c.numeroCommande,
+                  product: '$productName • Qté: $qty • $price',
+                  quantity: qty,
+                  price: price,
+                  status: uiStatus,
+                  onTap: () {
+                    // Implémenter l'action lors du tap sur la commande
+                  },
+                );
+              },
+            );
+          },
+        ),
+      );
     }
 
     final backendStatus = _statusToBackend(status);
@@ -174,7 +250,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey.shade300),
+                  Icon(Icons.shopping_cart_outlined,
+                      size: 64, color: Colors.grey.shade300),
                   const SizedBox(height: 16),
                   Text(
                     'Aucune commande',
@@ -193,23 +270,22 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
             itemBuilder: (context, index) {
               final c = orders[index];
               final uiStatus = _statusToUi(c.statut);
-              final qty = c.detailsCommande.isNotEmpty ? c.detailsCommande.first.quantite.toString() : '-';
-              final productName = c.detailsCommande.isNotEmpty ? c.detailsCommande.first.produit.nom : 'Produit';
+              final qty = c.detailsCommande.isNotEmpty
+                  ? c.detailsCommande.first.quantite.toString()
+                  : '-';
+              final productName = c.detailsCommande.isNotEmpty
+                  ? c.detailsCommande.first.produit.nom
+                  : 'Produit';
               final price = c.montantTotal.toStringAsFixed(0) + ' fcfa';
               return _ModernOrderCard(
                 orderNumber: c.numeroCommande,
-                product: productName,
+                product: '$productName • Qté: $qty • $price',
                 quantity: qty,
                 price: price,
                 status: uiStatus,
-                onTap: () => _showOrderDetailDialog(context, {
-                  'id': c.id.toString(),
-                  'num': c.numeroCommande,
-                  'product': productName,
-                  'qty': qty,
-                  'price': price,
-                  'status': uiStatus,
-                }),
+                onTap: () {
+                  // Implémenter l'action lors du tap sur la commande
+                },
               );
             },
           );
@@ -223,7 +299,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           child: Container(
             padding: const EdgeInsets.all(24),
             constraints: const BoxConstraints(maxWidth: 500),
@@ -250,7 +327,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                     ],
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Stepper
                   Container(
                     padding: const EdgeInsets.all(16),
@@ -258,11 +335,16 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                       color: Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: _ModernOrderStepper(activeStep: order['status'] == 'En attente' ? 0 : order['status'] == 'Expédiée' ? 1 : 2),
+                    child: _ModernOrderStepper(
+                        activeStep: order['status'] == 'En attente'
+                            ? 0
+                            : order['status'] == 'Expédiée'
+                                ? 1
+                                : 2),
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Informations de la commande
                   Row(
                     children: [
@@ -296,7 +378,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                             Text('Quantité : ${order['qty']}'),
                             const SizedBox(height: 8),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFB662F).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -314,9 +397,9 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 20),
-                  
+
                   // Bouton d'action
                   if (order['status'] == 'En attente')
                     SizedBox(
@@ -325,18 +408,23 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                       child: ElevatedButton(
                         onPressed: () async {
                           try {
-                            final auth = Provider.of<AuthProvider>(context, listen: false);
+                            final auth = Provider.of<AuthProvider>(context,
+                                listen: false);
                             final userId = auth.currentUser?.id;
                             if (userId == null) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Utilisateur non connecté')),
+                                const SnackBar(
+                                    content: Text('Utilisateur non connecté')),
                               );
                               return;
                             }
-                            final commandeId = int.tryParse(order['id'] ?? '') ?? 0;
+                            final commandeId =
+                                int.tryParse(order['id'] ?? '') ?? 0;
                             if (commandeId == 0) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Identifiant commande introuvable')),
+                                const SnackBar(
+                                    content: Text(
+                                        'Identifiant commande introuvable')),
                               );
                               return;
                             }
@@ -348,14 +436,17 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> with Single
                             if (context.mounted) {
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Commande expédiée avec succès')),
+                                const SnackBar(
+                                    content:
+                                        Text('Commande expédiée avec succès')),
                               );
                               setState(() {});
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Erreur: ${e.toString()}')),
+                                SnackBar(
+                                    content: Text('Erreur: ${e.toString()}')),
                               );
                             }
                           }
@@ -426,9 +517,9 @@ class ProducerOrderDetailScreen extends StatelessWidget {
               ),
               child: const _ModernOrderStepper(activeStep: 1),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Détails de la commande
             Container(
               padding: const EdgeInsets.all(20),
@@ -478,7 +569,8 @@ class ProducerOrderDetailScreen extends StatelessWidget {
                         const Text('Prix unitaire : 40 000 fcfa'),
                         const SizedBox(height: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFB662F).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
@@ -497,9 +589,9 @@ class ProducerOrderDetailScreen extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const Spacer(),
-            
+
             // Bouton d'action moderne
             SizedBox(
               width: double.infinity,
@@ -617,7 +709,8 @@ class _ModernOrderCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
                         color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
@@ -670,7 +763,9 @@ class _ModernOrderStepper extends StatelessWidget {
                         height: 3,
                         margin: const EdgeInsets.symmetric(horizontal: 8),
                         decoration: BoxDecoration(
-                          color: isActive ? const Color(0xFFFB662F) : Colors.grey.shade300,
+                          color: isActive
+                              ? const Color(0xFFFB662F)
+                              : Colors.grey.shade300,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -689,7 +784,8 @@ class _ModernOrderStepper extends StatelessWidget {
               child: Text(
                 steps[i],
                 style: TextStyle(
-                  color: isActive ? const Color(0xFFFB662F) : Colors.grey.shade500,
+                  color:
+                      isActive ? const Color(0xFFFB662F) : Colors.grey.shade500,
                   fontSize: 12,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
                 ),
@@ -718,9 +814,13 @@ class _ModernDot extends StatelessWidget {
       width: 16,
       height: 16,
       decoration: BoxDecoration(
-        color: isCompleted ? const Color(0xFFFB662F) : (isActive ? const Color(0xFFFB662F) : Colors.grey.shade300),
+        color: isCompleted
+            ? const Color(0xFFFB662F)
+            : (isActive ? const Color(0xFFFB662F) : Colors.grey.shade300),
         shape: BoxShape.circle,
-        border: isActive && !isCompleted ? Border.all(color: const Color(0xFFFB662F), width: 3) : null,
+        border: isActive && !isCompleted
+            ? Border.all(color: const Color(0xFFFB662F), width: 3)
+            : null,
       ),
       child: isCompleted
           ? const Icon(
@@ -732,5 +832,3 @@ class _ModernDot extends StatelessWidget {
     );
   }
 }
-
-

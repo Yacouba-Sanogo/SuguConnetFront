@@ -66,15 +66,29 @@ class Producteur extends User {
     required this.nombreEvaluations,
   });
 
-  factory Producteur.fromJson(Map<String, dynamic> json) => _$ProducteurFromJson(json);
+  factory Producteur.fromJson(Map<String, dynamic> json) =>
+      _$ProducteurFromJson(json);
   Map<String, dynamic> toJson() => _$ProducteurToJson(this);
 }
 
 @JsonSerializable()
 class Consommateur extends User {
+  @JsonKey(defaultValue: '')
   final String? preferences;
+
   final String? allergies;
+
+  @JsonKey(defaultValue: true)
   final bool notificationsActives;
+
+  @JsonKey(name: 'localisation', defaultValue: '')
+  final String localisation;
+
+  @JsonKey(defaultValue: 0.0)
+  final double longitude;
+
+  @JsonKey(defaultValue: 0.0)
+  final double latitude;
 
   Consommateur({
     required super.id,
@@ -82,7 +96,9 @@ class Consommateur extends User {
     required super.prenom,
     required super.email,
     required super.telephone,
-    required super.adresse,
+    required this.localisation,
+    required this.longitude,
+    required this.latitude,
     required super.role,
     required super.actif,
     required super.dateCreation,
@@ -90,9 +106,12 @@ class Consommateur extends User {
     this.preferences,
     this.allergies,
     required this.notificationsActives,
-  });
+  }) : super(
+          adresse: localisation, // Utiliser localisation comme adresse
+        );
 
-  factory Consommateur.fromJson(Map<String, dynamic> json) => _$ConsommateurFromJson(json);
+  factory Consommateur.fromJson(Map<String, dynamic> json) =>
+      _$ConsommateurFromJson(json);
   Map<String, dynamic> toJson() => _$ConsommateurToJson(this);
 }
 

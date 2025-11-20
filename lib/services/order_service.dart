@@ -193,19 +193,123 @@ class OrderService {
                       Uri.encodeQueryComponent(e.value))
                   .join('&'));
 
+      print('=== Récupération des commandes filtrées ===');
+      print('Path: $path');
+      print('Query params: $qp');
+
       final response = await _apiService.get<List<dynamic>>(path + qp);
 
+      print('Statut réponse: ${response.statusCode}');
+      print('Données brutes: ${response.data}');
+
       if (response.statusCode == 200) {
-        return response.data!
-            .map((json) => Commande.fromJson(json as Map<String, dynamic>))
-            .toList();
+        if (response.data is List) {
+          final List<dynamic> rawData = response.data as List;
+          print('Nombre de commandes reçues: ${rawData.length}');
+
+          // Filtrer les éléments null et convertir avec gestion d'erreurs
+          final List<Commande> orders = [];
+          for (var item in rawData) {
+            if (item != null) {
+              try {
+                print('Conversion de la commande: $item');
+                final commande =
+                    Commande.fromJson(item as Map<String, dynamic>);
+                orders.add(commande);
+              } catch (e) {
+                print('Erreur lors de la conversion d\'une commande: $e');
+                print('Données problématiques: $item');
+                // Ignorer cette commande et continuer avec les autres
+              }
+            }
+          }
+
+          print('Nombre de commandes converties: ${orders.length}');
+          return orders;
+        } else {
+          print('Réponse inattendue: ${response.data.runtimeType}');
+          print('Contenu de la réponse: ${response.data}');
+          return [];
+        }
       } else {
         throw Exception(
             'Erreur lors de la récupération des commandes producteur');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('Erreur détaillée: $e');
+      print('Stack trace: $stackTrace');
       throw Exception(
           'Erreur lors de la récupération des commandes producteur: $e');
+    }
+  }
+
+  /// Récupérer les commandes payées d'un producteur avec recherche
+  Future<List<Commande>> getOrdersByProducerPaid(
+    int producteurId, {
+    String? search,
+  }) async {
+    try {
+      final query = <String, String>{};
+      if (search != null && search.isNotEmpty) query['search'] = search;
+
+      final path = '/producteur/$producteurId/commandes/payees';
+      final qp = query.isEmpty
+          ? ''
+          : ('?' +
+              query.entries
+                  .map((e) =>
+                      Uri.encodeQueryComponent(e.key) +
+                      '=' +
+                      Uri.encodeQueryComponent(e.value))
+                  .join('&'));
+
+      print('=== Récupération des commandes payées ===');
+      print('Path: $path');
+      print('Query params: $qp');
+
+      final response = await _apiService.get<List<dynamic>>(path + qp);
+
+      print('Statut réponse: ${response.statusCode}');
+      print('Données brutes: ${response.data}');
+
+      if (response.statusCode == 200) {
+        if (response.data is List) {
+          final List<dynamic> rawData = response.data as List;
+          print('Nombre de commandes reçues: ${rawData.length}');
+
+          // Filtrer les éléments null et convertir avec gestion d'erreurs
+          final List<Commande> orders = [];
+          for (var item in rawData) {
+            if (item != null) {
+              try {
+                print('Conversion de la commande: $item');
+                final commande =
+                    Commande.fromJson(item as Map<String, dynamic>);
+                orders.add(commande);
+              } catch (e) {
+                print('Erreur lors de la conversion d\'une commande: $e');
+                print('Données problématiques: $item');
+                // Ignorer cette commande et continuer avec les autres
+              }
+            }
+          }
+
+          print('Nombre de commandes converties: ${orders.length}');
+          return orders;
+        } else {
+          print('Réponse inattendue: ${response.data.runtimeType}');
+          print('Contenu de la réponse: ${response.data}');
+          return [];
+        }
+      } else {
+        throw Exception(
+            'Erreur lors de la récupération des commandes payées producteur: ${response.statusCode}');
+      }
+    } catch (e, stackTrace) {
+      print('Erreur détaillée: $e');
+      print('Stack trace: $stackTrace');
+      throw Exception(
+          'Erreur lors de la récupération des commandes payées producteur: $e');
     }
   }
 
