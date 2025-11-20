@@ -9,9 +9,9 @@ class DriverService {
   /// Récupérer tous les livreurs
   Future<List<Driver>> getAllDrivers() async {
     try {
-      // Utilisation de l'endpoint public avec l'adresse IP correcte
-      final response = await _dio.get<List<dynamic>>(
-        'http://10.175.47.42:8080/suguconnect/public/livreurs/all',
+      // Utilisation de l'API service pour gérer correctement l'URL de base
+      final response = await _apiService.get<List<dynamic>>(
+        '/public/livreurs/all',
       );
 
       if (response.statusCode == 200) {
@@ -32,9 +32,9 @@ class DriverService {
   /// Récupérer les livreurs disponibles
   Future<List<Driver>> getAvailableDrivers() async {
     try {
-      // Utilisation de l'endpoint public avec l'adresse IP correcte
-      final response = await _dio.get<List<dynamic>>(
-        'http://10.175.47.42:8080/suguconnect/public/livreurs/disponibles',
+      // Utilisation de l'API service pour gérer correctement l'URL de base
+      final response = await _apiService.get<List<dynamic>>(
+        '/public/livreurs/disponibles',
       );
 
       if (response.statusCode == 200) {
@@ -59,9 +59,9 @@ class DriverService {
   /// Récupérer un livreur par son ID
   Future<Driver> getDriverById(String id) async {
     try {
-      // Endpoint à adapter selon votre backend
-      final response = await _dio.get<Map<String, dynamic>>(
-        'http://10.175.47.42:8080/suguconnect/admin/livreurs/$id',
+      // Utilisation de l'API service pour gérer correctement l'URL de base
+      final response = await _apiService.get<Map<String, dynamic>>(
+        '/admin/livreurs/$id',
       );
 
       if (response.statusCode == 200) {

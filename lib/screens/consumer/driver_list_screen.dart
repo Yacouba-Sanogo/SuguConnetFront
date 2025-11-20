@@ -28,6 +28,9 @@ class _DriverListScreenState extends State<DriverListScreen> {
   }
 
   Future<void> _loadDrivers() async {
+    // Vérifier si le widget est encore monté avant de continuer
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
       _error = null;
@@ -35,11 +38,17 @@ class _DriverListScreenState extends State<DriverListScreen> {
 
     try {
       final drivers = await _driverService.getAllDrivers();
+      // Vérifier à nouveau si le widget est encore monté
+      if (!mounted) return;
+
       setState(() {
         _allDrivers = drivers;
         _isLoading = false;
       });
     } catch (e) {
+      // Vérifier à nouveau si le widget est encore monté
+      if (!mounted) return;
+
       setState(() {
         _error = 'Erreur lors du chargement des livreurs: $e';
         _isLoading = false;
