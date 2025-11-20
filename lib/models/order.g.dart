@@ -6,18 +6,61 @@ part of 'order.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-Commande _$CommandeFromJson(Map<String, dynamic> json) => Commande(
+ProduitCommande _$ProduitCommandeFromJson(Map<String, dynamic> json) =>
+    ProduitCommande(
       id: (json['id'] as num).toInt(),
+      nom: json['nom'] as String,
+      prix: (json['prixUnitaire'] as num?)?.toDouble() ?? 0.0,
+    );
+
+Map<String, dynamic> _$ProduitCommandeToJson(ProduitCommande instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'nom': instance.nom,
+      'prixUnitaire': instance.prix,
+    };
+
+DetailCommande _$DetailCommandeFromJson(Map<String, dynamic> json) =>
+    DetailCommande(
+      id: (json['id'] as num).toInt(),
+      quantite: (json['quantite'] as num?)?.toInt() ?? 0,
+      prixUnitaire: (json['prixUnitaire'] as num?)?.toDouble() ?? 0.0,
+      prixTotal: (json['prixTotal'] as num?)?.toDouble() ?? 0.0,
+      produit:
+          ProduitCommande.fromJson(json['produit'] as Map<String, dynamic>),
+      commande: json['commande'] == null
+          ? null
+          : Commande.fromJson(json['commande'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$DetailCommandeToJson(DetailCommande instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'quantite': instance.quantite,
+      'prixUnitaire': instance.prixUnitaire,
+      'prixTotal': instance.prixTotal,
+      'produit': instance.produit,
+      'commande': instance.commande,
+    };
+
+Commande _$CommandeFromJson(Map<String, dynamic> json) => Commande(
+      id: (json['idCommande'] as num?)?.toInt() ?? 0,
       numeroCommande: json['numeroCommande'] as String,
       dateCommande: DateTime.parse(json['dateCommande'] as String),
       dateLivraison: json['dateLivraison'] == null
           ? null
           : DateTime.parse(json['dateLivraison'] as String),
-      montantTotal: (json['montantTotal'] as num).toDouble(),
-      statut: json['statut'] as String,
+      montantTotal: (json['montantTotal'] as num?)?.toDouble() ?? 0.0,
+      statut: json['statutCommande'] as String? ?? '',
+      motifRejet: json['motifRejet'] as String? ?? '',
+      receptionValidee: json['receptionValidee'] as bool? ?? false,
+      dateReceptionValidee: json['dateReceptionValidee'] == null
+          ? null
+          : DateTime.parse(json['dateReceptionValidee'] as String),
+      modePaiement: json['modePaiement'] as String? ?? '',
       consommateur:
           Consommateur.fromJson(json['consommateur'] as Map<String, dynamic>),
-      detailsCommande: (json['detailsCommande'] as List<dynamic>)
+      detailsCommande: (json['commandeProduits'] as List<dynamic>)
           .map((e) => DetailCommande.fromJson(e as Map<String, dynamic>))
           .toList(),
       paiement: json['paiement'] == null
@@ -33,53 +76,39 @@ Commande _$CommandeFromJson(Map<String, dynamic> json) => Commande(
     );
 
 Map<String, dynamic> _$CommandeToJson(Commande instance) => <String, dynamic>{
-      'id': instance.id,
+      'idCommande': instance.id,
       'numeroCommande': instance.numeroCommande,
       'dateCommande': instance.dateCommande.toIso8601String(),
       'dateLivraison': instance.dateLivraison?.toIso8601String(),
       'montantTotal': instance.montantTotal,
-      'statut': instance.statut,
+      'statutCommande': instance.statut,
+      'motifRejet': instance.motifRejet,
+      'receptionValidee': instance.receptionValidee,
+      'dateReceptionValidee': instance.dateReceptionValidee?.toIso8601String(),
+      'modePaiement': instance.modePaiement,
       'consommateur': instance.consommateur,
-      'detailsCommande': instance.detailsCommande,
+      'commandeProduits': instance.detailsCommande,
       'paiement': instance.paiement,
       'livraison': instance.livraison,
       'remboursement': instance.remboursement,
     };
 
-DetailCommande _$DetailCommandeFromJson(Map<String, dynamic> json) =>
-    DetailCommande(
-      id: (json['id'] as num).toInt(),
-      quantite: (json['quantite'] as num).toInt(),
-      prixUnitaire: (json['prixUnitaire'] as num).toDouble(),
-      prixTotal: (json['prixTotal'] as num).toDouble(),
-      produit: Produit.fromJson(json['produit'] as Map<String, dynamic>),
-      commande: Commande.fromJson(json['commande'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$DetailCommandeToJson(DetailCommande instance) =>
-    <String, dynamic>{
-      'id': instance.id,
-      'quantite': instance.quantite,
-      'prixUnitaire': instance.prixUnitaire,
-      'prixTotal': instance.prixTotal,
-      'produit': instance.produit,
-      'commande': instance.commande,
-    };
-
 Paiement _$PaiementFromJson(Map<String, dynamic> json) => Paiement(
-      id: (json['id'] as num).toInt(),
-      methodePaiement: json['methodePaiement'] as String,
-      statut: json['statut'] as String,
-      montant: (json['montant'] as num).toDouble(),
+      id: (json['idPaiement'] as num?)?.toInt() ?? 0,
+      methodePaiement: json['methodePaiement'] as String? ?? '',
+      statut: json['statutPaiement'] as String? ?? '',
+      montant: (json['montant'] as num?)?.toDouble() ?? 0.0,
       numeroTransaction: json['numeroTransaction'] as String?,
       datePaiement: DateTime.parse(json['datePaiement'] as String),
-      commande: Commande.fromJson(json['commande'] as Map<String, dynamic>),
+      commande: json['commande'] == null
+          ? null
+          : Commande.fromJson(json['commande'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$PaiementToJson(Paiement instance) => <String, dynamic>{
-      'id': instance.id,
+      'idPaiement': instance.id,
       'methodePaiement': instance.methodePaiement,
-      'statut': instance.statut,
+      'statutPaiement': instance.statut,
       'montant': instance.montant,
       'numeroTransaction': instance.numeroTransaction,
       'datePaiement': instance.datePaiement.toIso8601String(),
@@ -88,14 +117,16 @@ Map<String, dynamic> _$PaiementToJson(Paiement instance) => <String, dynamic>{
 
 Livraison _$LivraisonFromJson(Map<String, dynamic> json) => Livraison(
       id: (json['id'] as num).toInt(),
-      adresseLivraison: json['adresseLivraison'] as String,
+      adresseLivraison: json['adresseLivraison'] as String? ?? '',
       numeroSuivi: json['numeroSuivi'] as String?,
-      statut: json['statut'] as String,
+      statut: json['statut'] as String? ?? '',
       dateLivraison: json['dateLivraison'] == null
           ? null
           : DateTime.parse(json['dateLivraison'] as String),
       commentaire: json['commentaire'] as String?,
-      commande: Commande.fromJson(json['commande'] as Map<String, dynamic>),
+      commande: json['commande'] == null
+          ? null
+          : Commande.fromJson(json['commande'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$LivraisonToJson(Livraison instance) => <String, dynamic>{
@@ -111,15 +142,17 @@ Map<String, dynamic> _$LivraisonToJson(Livraison instance) => <String, dynamic>{
 Remboursement _$RemboursementFromJson(Map<String, dynamic> json) =>
     Remboursement(
       id: (json['id'] as num).toInt(),
-      montant: (json['montant'] as num).toDouble(),
-      motif: json['motif'] as String,
-      statut: json['statut'] as String,
+      montant: (json['montant'] as num?)?.toDouble() ?? 0.0,
+      motif: json['motif'] as String? ?? '',
+      statut: json['statut'] as String? ?? '',
       dateDemande: DateTime.parse(json['dateDemande'] as String),
       dateTraitement: json['dateTraitement'] == null
           ? null
           : DateTime.parse(json['dateTraitement'] as String),
       commentaire: json['commentaire'] as String?,
-      commande: Commande.fromJson(json['commande'] as Map<String, dynamic>),
+      commande: json['commande'] == null
+          ? null
+          : Commande.fromJson(json['commande'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$RemboursementToJson(Remboursement instance) =>

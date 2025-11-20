@@ -87,16 +87,18 @@ Consommateur _$ConsommateurFromJson(Map<String, dynamic> json) => Consommateur(
       prenom: json['prenom'] as String,
       email: json['email'] as String,
       telephone: json['telephone'] as String,
-      adresse: json['adresse'] as String,
+      localisation: json['localisation'] as String? ?? '',
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       role: json['role'] as String,
       actif: json['actif'] as bool,
       dateCreation: DateTime.parse(json['dateCreation'] as String),
       dateDerniereConnexion: json['dateDerniereConnexion'] == null
           ? null
           : DateTime.parse(json['dateDerniereConnexion'] as String),
-      preferences: json['preferences'] as String?,
+      preferences: json['preferences'] as String? ?? '',
       allergies: json['allergies'] as String?,
-      notificationsActives: json['notificationsActives'] as bool,
+      notificationsActives: json['notificationsActives'] as bool? ?? true,
     );
 
 Map<String, dynamic> _$ConsommateurToJson(Consommateur instance) =>
@@ -106,7 +108,6 @@ Map<String, dynamic> _$ConsommateurToJson(Consommateur instance) =>
       'prenom': instance.prenom,
       'email': instance.email,
       'telephone': instance.telephone,
-      'adresse': instance.adresse,
       'role': instance.role,
       'actif': instance.actif,
       'dateCreation': instance.dateCreation.toIso8601String(),
@@ -115,6 +116,9 @@ Map<String, dynamic> _$ConsommateurToJson(Consommateur instance) =>
       'preferences': instance.preferences,
       'allergies': instance.allergies,
       'notificationsActives': instance.notificationsActives,
+      'localisation': instance.localisation,
+      'longitude': instance.longitude,
+      'latitude': instance.latitude,
     };
 
 Admin _$AdminFromJson(Map<String, dynamic> json) => Admin(

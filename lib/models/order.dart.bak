@@ -1,0 +1,72 @@
+@JsonSerializable()
+class DetailCommande {
+  final int id;
+  final int quantite;
+  final double prixUnitaire;
+  final double prixTotal;
+  final Produit produit;
+  final Commande commande;
+
+  DetailCommande({
+    required this.id,
+    required this.quantite,
+    required this.prixUnitaire,
+    required this.prixTotal,
+    required this.produit,
+    required this.commande,
+  });
+
+  factory DetailCommande.fromJson(Map<String, dynamic> json) {
+    // Gérer les valeurs null avec des valeurs par défaut
+    final id = (json['id'] as num?)?.toInt() ?? 0;
+    final quantite = (json['quantite'] as num?)?.toInt() ?? 0;
+    final prixUnitaire = (json['prixUnitaire'] as num?)?.toDouble() ?? 0.0;
+    final prixTotal = (json['prixTotal'] as num?)?.toDouble() ?? 0.0;
+    
+    // Gérer les objets imbriqués
+    final produit = json['produit'] != null
+        ? Produit.fromJson(json['produit'] as Map<String, dynamic>)
+        : Produit(
+            id: 0,
+            nom: 'Produit inconnu',
+            description: '',
+            prix: 0.0,
+            unite: '',
+            categorie: '',
+            bio: false,
+            disponible: false,
+            image: '',
+          );
+    
+    final commande = json['commande'] != null
+        ? Commande.fromJson(json['commande'] as Map<String, dynamic>)
+        : Commande(
+            id: 0,
+            numeroCommande: '',
+            dateCommande: DateTime.now(),
+            montantTotal: 0.0,
+            statut: '',
+            consommateur: Consommateur(
+              id: 0,
+              nom: 'Inconnu',
+              prenom: 'Inconnu',
+              telephone: '',
+              email: '',
+              adresse: '',
+              role: 'CONSOMMATEUR',
+            ),
+            detailsCommande: [],
+          );
+
+    return DetailCommande(
+      id: id,
+      quantite: quantite,
+      prixUnitaire: prixUnitaire,
+      prixTotal: prixTotal,
+      produit: produit,
+      commande: commande,
+    );
+  }
+  
+  Map<String, dynamic> toJson() => _$DetailCommandeToJson(this);
+}

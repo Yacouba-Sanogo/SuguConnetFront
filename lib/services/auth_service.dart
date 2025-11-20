@@ -25,8 +25,8 @@ class AuthService {
     if (Platform.isAndroid) {
       return [
         build('10.0.2.2'), // Émulateur Android -> host machine
-        build(lanIp),
         build('127.0.0.1'),
+        build(lanIp),
       ];
     }
 

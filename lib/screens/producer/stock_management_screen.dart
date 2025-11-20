@@ -1,94 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import '../../models/stock_product.dart';
+import '../../services/stock_service.dart';
+import '../../providers/auth_provider.dart';
 
 class StockManagementScreen extends StatefulWidget {
   final int initialTabIndex;
-  
+
   const StockManagementScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<StockManagementScreen> createState() => _StockManagementScreenState();
 }
 
-class _StockManagementScreenState extends State<StockManagementScreen> with SingleTickerProviderStateMixin {
+class _StockManagementScreenState extends State<StockManagementScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _searchQuery = '';
-  
-  // Données de démonstration
-  final List<Map<String, dynamic>> _allProducts = [
-    {
-      'name': 'Tomates fraîches',
-      'price': '5000',
-      'stock': 150,
-      'minStock': 50,
-      'unit': 'Kg',
-      'category': 'Légumes',
-      'status': 'stock_normal',
-      'image': 'assets/images/carottes.png',
-      'lastUpdated': 'Aujourd\'hui',
-      'isBio': true,
-    },
-    {
-      'name': 'Carottes bio',
-      'price': '3500',
-      'stock': 8,
-      'minStock': 50,
-      'unit': 'Kg',
-      'category': 'Légumes',
-      'status': 'stock_low',
-      'image': 'assets/images/carottes.png',
-      'lastUpdated': 'Hier',
-      'isBio': true,
-    },
-    {
-      'name': 'Oignons',
-      'price': '2000',
-      'stock': 0,
-      'minStock': 30,
-      'unit': 'Kg',
-      'category': 'Légumes',
-      'status': 'stock_empty',
-      'image': 'assets/images/Oignons.png',
-      'lastUpdated': 'Il y a 2 jours',
-      'isBio': false,
-    },
-    {
-      'name': 'Mangues',
-      'price': '8000',
-      'stock': 200,
-      'minStock': 30,
-      'unit': 'Carton',
-      'category': 'Fruits',
-      'status': 'stock_normal',
-      'image': 'assets/images/pommes.png',
-      'lastUpdated': 'Aujourd\'hui',
-      'isBio': true,
-    },
-    {
-      'name': 'Riz local',
-      'price': '12000',
-      'stock': 75,
-      'minStock': 25,
-      'unit': 'Sac',
-      'category': 'Céréales',
-      'status': 'stock_normal',
-      'image': 'assets/images/Cereales.svg',
-      'lastUpdated': 'Aujourd\'hui',
-      'isBio': false,
-    },
-    {
-      'name': 'Piment rouge',
-      'price': '6000',
-      'stock': 12,
-      'minStock': 20,
-      'unit': 'Kg',
-      'category': 'Epices',
-      'status': 'stock_low',
-      'image': 'assets/images/Oignons.png',
-      'lastUpdated': 'Hier',
-      'isBio': false,
-    },
-  ];
+  final StockService _stockService = StockService();
+
+  List<StockProduct> _allProducts = [];
+  bool _isLoading = true;
+  String? _error;
+
+  int? _producteurId;
 
   @override
   void initState() {
@@ -98,6 +34,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
       vsync: this,
       initialIndex: widget.initialTabIndex,
     );
+    _loadStockData();
   }
 
   @override
@@ -106,30 +43,106 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     super.dispose();
   }
 
-  List<Map<String, dynamic>> get _filteredProducts {
+  Future<void> _loadStockData() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // Récupérer l'ID du producteur depuis le provider d'authentification
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final currentUser = authProvider.currentUser;
+
+      if (currentUser != null && currentUser.id != null) {
+        _producteurId = currentUser.id;
+        final products =
+            await _stockService.getAllStockProducts(_producteurId!);
+
+        setState(() {
+          _allProducts = products;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _error = 'Utilisateur non authentifié';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors du chargement des données: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<StockProduct> get _filteredProductsList {
     String selectedStatus = _getStatusForTab(_tabController.index);
-    
-    return _allProducts.where((product) {
-      final matchesStatus = selectedStatus == 'all' || product['status'] == selectedStatus;
-      final matchesSearch = _searchQuery.isEmpty || 
-          product['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-      return matchesStatus && matchesSearch;
-    }).toList();
+
+    List<StockProduct> filtered = _allProducts;
+
+    // Appliquer la recherche
+    if (_searchQuery.isNotEmpty) {
+      filtered = filtered.where((product) {
+        return product.name.toLowerCase().contains(_searchQuery.toLowerCase());
+      }).toList();
+    }
+
+    // Appliquer le filtre par statut
+    if (selectedStatus != 'all') {
+      filtered = filtered
+          .where((product) => product.status == selectedStatus)
+          .toList();
+    }
+
+    return filtered;
   }
 
   String _getStatusForTab(int index) {
     switch (index) {
-      case 0: return 'all';
-      case 1: return 'stock_normal';
-      case 2: return 'stock_low';
-      case 3: return 'stock_empty';
-      default: return 'all';
+      case 0:
+        return 'all';
+      case 1:
+        return 'en_stock';
+      case 2:
+        return 'stock_faible';
+      case 3:
+        return 'epuise';
+      default:
+        return 'all';
     }
   }
 
-  int get _totalStockValue => _allProducts.fold<int>(0, (sum, p) => sum + (p['stock'] as int) * int.parse(p['price']));
-  int get _lowStockCount => _allProducts.where((p) => p['status'] == 'stock_low').length;
-  int get _emptyStockCount => _allProducts.where((p) => p['status'] == 'stock_empty').length;
+  Future<double> _getTotalStockValue() async {
+    if (_producteurId == null) return 0.0;
+    try {
+      return await _stockService.getTotalStockValue(_producteurId!);
+    } catch (e) {
+      print('Erreur lors de la récupération de la valeur totale: $e');
+      return 0.0;
+    }
+  }
+
+  Future<int> _getLowStockCount() async {
+    if (_producteurId == null) return 0;
+    try {
+      return await _stockService.getLowStockCount(_producteurId!);
+    } catch (e) {
+      print('Erreur lors de la récupération du stock faible: $e');
+      return 0;
+    }
+  }
+
+  Future<int> _getEmptyStockCount() async {
+    if (_producteurId == null) return 0;
+    try {
+      return await _stockService.getOutOfStockCount(_producteurId!);
+    } catch (e) {
+      print('Erreur lors de la récupération du stock épuisé: $e');
+      return 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -213,24 +226,16 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
           children: [
             // Statistiques rapides
             _buildStatisticsBar(),
-            
+
             // Barre de recherche
             _buildSearchBar(),
-            
+
             // Onglets
             _buildTabs(),
-            
+
             // Liste des produits
             Expanded(
-              child: _filteredProducts.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _filteredProducts.length,
-                      itemBuilder: (context, index) {
-                        return _buildProductCard(_filteredProducts[index], index);
-                      },
-                    ),
+              child: _buildProductList(),
             ),
           ],
         ),
@@ -248,54 +253,95 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
   }
 
   Widget _buildStatisticsBar() {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildStatItem(
-              'Total',
-              '${_totalStockValue.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]} ')} fcfa',
-              Icons.attach_money,
-              Colors.blue,
+    return FutureBuilder(
+      future: Future.wait([
+        _getTotalStockValue(),
+        _getLowStockCount(),
+        _getEmptyStockCount()
+      ]).timeout(const Duration(seconds: 10), onTimeout: () {
+        return [0.0, 0, 0];
+      }),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
             ),
-          ),
-          Container(width: 1, height: 40, color: Colors.grey.shade300),
-          Expanded(
-            child: _buildStatItem(
-              'Stock faible',
-              _lowStockCount.toString(),
-              Icons.warning,
-              Colors.orange,
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
             ),
+            child: Text('Erreur: ${snapshot.error}'),
+          );
+        }
+
+        final data = snapshot.data as List;
+        final totalValue = data[0] as double;
+        final lowStockCount = data[1] as int;
+        final emptyStockCount = data[2] as int;
+
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          Container(width: 1, height: 40, color: Colors.grey.shade300),
-          Expanded(
-            child: _buildStatItem(
-              'Épuisé',
-              _emptyStockCount.toString(),
-              Icons.error,
-              Colors.red,
-            ),
+          child: Row(
+            children: [
+              Expanded(
+                child: _buildStatItem(
+                  'Total',
+                  '${totalValue.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]} ')} ',
+                  Icons.currency_franc,
+                  Colors.blue,
+                ),
+              ),
+              Container(width: 1, height: 40, color: Colors.grey.shade300),
+              Expanded(
+                child: _buildStatItem(
+                  'Stock faible',
+                  lowStockCount.toString(),
+                  Icons.warning,
+                  Colors.orange,
+                ),
+              ),
+              Container(width: 1, height: 40, color: Colors.grey.shade300),
+              Expanded(
+                child: _buildStatItem(
+                  'Épuisé',
+                  emptyStockCount.toString(),
+                  Icons.error,
+                  Colors.red,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon, Color color) {
+  Widget _buildStatItem(
+      String label, String value, IconData icon, Color color) {
     return Column(
       children: [
         Icon(icon, color: color, size: 24),
@@ -345,7 +391,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                 )
               : null,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -375,30 +422,63 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade400),
-          const SizedBox(height: 16),
-          Text(
-            'Aucun produit',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+  Widget _buildProductList() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadStockData,
+              child: const Text('Réessayer'),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      );
+    }
+
+    final filteredProducts = _filteredProductsList;
+
+    if (filteredProducts.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inventory_2_outlined,
+                size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Aucun produit',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: filteredProducts.length,
+      itemBuilder: (context, index) {
+        return _buildProductCard(filteredProducts[index]);
+      },
     );
   }
 
-  Widget _buildProductCard(Map<String, dynamic> product, int index) {
-    Color statusColor = _getStatusColor(product['status']);
-    IconData statusIcon = _getStatusIcon(product['status']);
-    
+  Widget _buildProductCard(StockProduct product) {
+    Color statusColor = _getStatusColor(product.statusColor);
+    IconData statusIcon = _getStatusIcon(product.status);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -433,7 +513,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Icône de statut
               Container(
                 padding: const EdgeInsets.all(8),
@@ -444,7 +524,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                 child: Icon(statusIcon, color: statusColor, size: 24),
               ),
               const SizedBox(width: 12),
-              
+
               // Informations
               Expanded(
                 child: Column(
@@ -454,7 +534,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                       children: [
                         Expanded(
                           child: Text(
-                            product['name'],
+                            product.name,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -462,9 +542,10 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                             ),
                           ),
                         ),
-                        if (product['isBio'] == true)
+                        if (product.isBio)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.green.shade50,
                               borderRadius: BorderRadius.circular(4),
@@ -472,7 +553,8 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.eco, size: 12, color: Colors.green.shade700),
+                                Icon(Icons.eco,
+                                    size: 12, color: Colors.green.shade700),
                                 const SizedBox(width: 2),
                                 Text(
                                   'Bio',
@@ -489,7 +571,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Stock: ${product['stock']} ${product['unit']}',
+                      'Stock: ${product.quantity} ${product.unit}',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -497,7 +579,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                       ),
                     ),
                     Text(
-                      'Min: ${product['minStock']} ${product['unit']}',
+                      'Min: ${product.minStockAlert} ${product.unit}',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -506,13 +588,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                   ],
                 ),
               ),
-              
+
               // Prix et actions
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${product['price']} fcfa',
+                    '${product.price.toStringAsFixed(0)} fcfa',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -525,13 +607,17 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                       _buildActionButton(
                         icon: Icons.add,
                         color: AppTheme.primaryColor,
-                        onTap: () => _showAddStockDialog(product),
+                        onTap: () => _updateProductQuantity(
+                            product, product.quantity + 1),
                       ),
                       const SizedBox(width: 4),
                       _buildActionButton(
                         icon: Icons.remove,
                         color: Colors.grey.shade600,
-                        onTap: () => _showRemoveStockDialog(product),
+                        onTap: () => product.quantity > 0
+                            ? _updateProductQuantity(
+                                product, product.quantity - 1)
+                            : null,
                       ),
                     ],
                   ),
@@ -544,13 +630,13 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'stock_normal':
+  Color _getStatusColor(String color) {
+    switch (color) {
+      case 'green':
         return const Color(0xFF4CAF50);
-      case 'stock_low':
+      case 'orange':
         return Colors.orange;
-      case 'stock_empty':
+      case 'red':
         return Colors.red;
       default:
         return Colors.grey;
@@ -559,11 +645,11 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
 
   IconData _getStatusIcon(String status) {
     switch (status) {
-      case 'stock_normal':
+      case 'en_stock':
         return Icons.check_circle;
-      case 'stock_low':
+      case 'stock_faible':
         return Icons.warning;
-      case 'stock_empty':
+      case 'epuise':
         return Icons.error;
       default:
         return Icons.help;
@@ -573,7 +659,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
   Widget _buildActionButton({
     required IconData icon,
     required Color color,
-    required VoidCallback onTap,
+    required VoidCallback? onTap,
   }) {
     return Material(
       color: color.withOpacity(0.1),
@@ -594,9 +680,44 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  void _showProductDetails(Map<String, dynamic> product) {
-    final minStockController = TextEditingController(text: product['minStock'].toString());
-    
+  Future<void> _updateProductQuantity(
+      StockProduct product, int newQuantity) async {
+    if (_producteurId == null) return;
+
+    try {
+      final updatedProduct = await _stockService.updateProductQuantity(
+          _producteurId!, product.id, newQuantity);
+
+      // Mettre à jour la liste des produits
+      setState(() {
+        for (int i = 0; i < _allProducts.length; i++) {
+          if (_allProducts[i].id == product.id) {
+            _allProducts[i] = updatedProduct;
+            break;
+          }
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Stock mis à jour avec succès'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur lors de la mise à jour du stock: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showProductDetails(StockProduct product) {
+    final minStockController =
+        TextEditingController(text: product.minStockAlert.toString());
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -613,9 +734,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailRow('Nom', product['name']),
-              _buildDetailRow('Prix', '${product['price']} fcfa'),
-              _buildDetailRow('Stock actuel', '${product['stock']} ${product['unit']}'),
+              _buildDetailRow('Nom', product.name),
+              _buildDetailRow('Description', product.description),
+              _buildDetailRow(
+                  'Prix', '${product.price.toStringAsFixed(0)} fcfa'),
+              _buildDetailRow(
+                  'Stock actuel', '${product.quantity} ${product.unit}'),
               const SizedBox(height: 8),
               Text(
                 'Stock minimum d\'alerte',
@@ -631,16 +755,18 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   hintText: 'Quantité minimum',
-                  prefixIcon: const Icon(Icons.warning_amber, color: Colors.orange),
-                  suffix: Text(product['unit'], style: TextStyle(color: Colors.grey.shade600)),
+                  prefixIcon:
+                      const Icon(Icons.warning_amber, color: Colors.orange),
+                  suffix: Text(product.unit,
+                      style: TextStyle(color: Colors.grey.shade600)),
                   border: const OutlineInputBorder(),
                   helperText: 'Alerte quand le stock atteint cette quantité',
                 ),
               ),
               const SizedBox(height: 8),
-              _buildDetailRow('Catégorie', product['category']),
-              _buildDetailRow('Type', product['isBio'] ? 'Bio' : 'Conventionnel'),
-              _buildDetailRow('Dernière mise à jour', product['lastUpdated']),
+              _buildDetailRow('Catégorie', product.category),
+              _buildDetailRow('Type', product.isBio ? 'Bio' : 'Conventionnel'),
+              _buildDetailRow('Dernière mise à jour', product.lastUpdated),
             ],
           ),
         ),
@@ -650,19 +776,45 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
             child: const Text('Fermer'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              if (_producteurId == null) {
+                Navigator.pop(context);
+                return;
+              }
+
               final newMinStock = int.tryParse(minStockController.text);
               if (newMinStock != null && newMinStock >= 0) {
-                setState(() {
-                  product['minStock'] = newMinStock;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Stock minimum mis à jour à ${newMinStock} ${product['unit']}'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                try {
+                  final updatedProduct =
+                      await _stockService.updateMinStockAlert(
+                          _producteurId!, product.id, newMinStock);
+
+                  // Mettre à jour la liste des produits
+                  setState(() {
+                    for (int i = 0; i < _allProducts.length; i++) {
+                      if (_allProducts[i].id == product.id) {
+                        _allProducts[i] = updatedProduct;
+                        break;
+                      }
+                    }
+                  });
+
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                          'Stock minimum mis à jour à ${newMinStock} ${product.unit}'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -712,100 +864,12 @@ class _StockManagementScreenState extends State<StockManagementScreen> with Sing
     );
   }
 
-  void _showAddStockDialog([Map<String, dynamic>? product]) {
-    final qtyController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Ajouter au stock'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (product != null)
-              Text('Produit: ${product['name']}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Quantité à ajouter',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Stock ajouté avec succès'),
-                  backgroundColor: Colors.green,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
-            ),
-            child: const Text('Ajouter'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showRemoveStockDialog(Map<String, dynamic> product) {
-    final qtyController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Retirer du stock'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Produit: ${product['name']}'),
-            Text('Stock actuel: ${product['stock']} ${product['unit']}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: qtyController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Quantité à retirer',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Stock retiré avec succès'),
-                  backgroundColor: Colors.orange,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-            ),
-            child: const Text('Retirer'),
-          ),
-        ],
+  void _showAddStockDialog() {
+    // Pour l'instant, afficher un message
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Fonctionnalité d\'ajout de stock à implémenter'),
+        backgroundColor: Color(0xFF4CAF50),
       ),
     );
   }
