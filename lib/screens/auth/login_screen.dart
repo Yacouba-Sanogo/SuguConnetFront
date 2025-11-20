@@ -3,14 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'producer_register_screen.dart';
+import 'consumer_register_screen.dart';
 import '../consumer/main_screen.dart';
 import '../producer/producer_main_screen.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../constantes.dart';
 
 // Écran de connexion pour les utilisateurs existants
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? role; // 'producteur' ou 'consommateur' pour déterminer la redirection
+  const LoginScreen({super.key, this.role});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -127,22 +130,53 @@ class _LoginScreenState extends State<LoginScreen> {
               left: 0,
               right: 0,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 5.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                    // Bouton retour en haut à gauche
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        'Heureux de vous revoir 🌻',
-                        style: GoogleFonts.itim(fontSize: 20, fontWeight: FontWeight.w600),
+                    const SizedBox(height: 2),
+                    // Logo SUGUConnect centré
+                    Container(
+                      width: 140,
+                      height: 140,
+                      child: Image.asset(
+                        Constantes.logoPath,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    // Slogan - aligné à gauche
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            'Heureux de vous revoir 🌻',
+                            style: GoogleFonts.itim(fontSize: 18, fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -196,10 +230,18 @@ class _LoginScreenState extends State<LoginScreen> {
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const ProducerRegisterScreen()),
-                                    );
+                                    // Rediriger vers producer_register_screen si on vient du producteur, sinon consumer_register_screen
+                                    if (widget.role == 'producteur') {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ProducerRegisterScreen()),
+                                      );
+                                    } else {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ConsumerRegisterScreen()),
+                                      );
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),

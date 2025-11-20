@@ -237,7 +237,7 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  const ConsumerLoginScreen(),
+                                                  const LoginScreen(),
                                             ),
                                           );
                                         },
