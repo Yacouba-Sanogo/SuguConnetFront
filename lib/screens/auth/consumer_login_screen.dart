@@ -357,7 +357,7 @@ class _ConsumerLoginScreenState extends State<ConsumerLoginScreen>
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) =>
-                                            const LoginScreen(),
+                                            const LoginScreen(role: null),
                                       ),
                                     );
                                   },

@@ -249,7 +249,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(builder: (context) => const LoginScreen(role: null)),
         );
       });
 

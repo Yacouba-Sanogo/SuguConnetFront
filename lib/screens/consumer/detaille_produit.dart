@@ -572,7 +572,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                        builder: (context) => const LoginScreen(role: null)),
                   );
                   return;
                 }
