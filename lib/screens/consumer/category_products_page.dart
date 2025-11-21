@@ -374,9 +374,9 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
       padding: const EdgeInsets.all(16.0),
       child: Container(
         height: 120,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(15)),
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
+          borderRadius: BorderRadius.circular(5),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -416,9 +416,10 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                 child: Text(
                   widget.category.nom,
                   style: const TextStyle(
+                    fontFamily: "inter",
                     color: Colors.white,
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 50,
+                    fontWeight: FontWeight.normal,
                     shadows: [
                       Shadow(
                         blurRadius: 10.0,

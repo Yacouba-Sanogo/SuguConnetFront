@@ -353,41 +353,47 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> {
                                         },
                                       ),
                                       const SizedBox(height: 16),
-                                      IntlPhoneField(
-                                        controller: _telephoneController,
-                                        decoration: InputDecoration(
-                                          hintText: 'Numéro de téléphone',
-                                          hintStyle: TextStyle(color: Colors.grey[500]),
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: BorderSide(color: Colors.grey[300]!),
+                                      ClipRect(
+                                        child: IntlPhoneField(
+                                          controller: _telephoneController,
+                                          decoration: InputDecoration(
+                                            hintText: 'Numéro de téléphone',
+                                            hintStyle: TextStyle(color: Colors.grey[500]),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: BorderSide(color: Colors.grey[300]!),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                              borderSide: const BorderSide(color: Constantes.primaryOrange, width: 2),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                                           ),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: BorderSide(color: Colors.grey[300]!),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(8),
-                                            borderSide: const BorderSide(color: Constantes.primaryOrange, width: 2),
-                                          ),
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                          initialCountryCode: 'ML',
+                                          languageCode: "fr",
+                                          dropdownIconPosition: IconPosition.leading,
+                                          flagsButtonPadding: const EdgeInsets.only(left: 8),
+                                          dropdownTextStyle: const TextStyle(fontSize: 16),
+                                          textAlignVertical: TextAlignVertical.center,
+                                          onChanged: (phone) {
+                                            _completePhoneNumber = phone.completeNumber;
+                                          },
+                                          validator: (phone) {
+                                            if (phone == null || phone.number.isEmpty) {
+                                              return 'Numéro requis';
+                                            }
+                                            if (!phone.isValidNumber()) {
+                                              return 'Numéro invalide';
+                                            }
+                                            return null;
+                                          },
                                         ),
-                                        initialCountryCode: 'ML',
-                                        languageCode: "fr",
-                                        onChanged: (phone) {
-                                          _completePhoneNumber = phone.completeNumber;
-                                        },
-                                        validator: (phone) {
-                                          if (phone == null || phone.number.isEmpty) {
-                                            return 'Numéro requis';
-                                          }
-                                          if (!phone.isValidNumber()) {
-                                            return 'Numéro invalide';
-                                          }
-                                          return null;
-                                        },
                                       ),
                                       const SizedBox(height: 16),
                                       TextFormField(
