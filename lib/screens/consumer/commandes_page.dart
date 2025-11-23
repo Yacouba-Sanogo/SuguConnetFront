@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'order_detail_page.dart';
+import '../../widgets/entete_widget.dart';
 
 // Page des commandes avec design moderne et onglets de filtrage
 class CommandesPage extends StatefulWidget {
+  const CommandesPage({super.key, this.showAppBar = true});
+  
+  final bool showAppBar;
+  
   @override
   _CommandesPageState createState() => _CommandesPageState();
 }
@@ -16,9 +21,14 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
     {
       'id': '12345',
       'client': 'Ali Touré',
-      'status': 'Livrée',
+      'status': 'Expédié',
       'date': '2024-01-15',
-      'total': 12500.0,
+      'total': 120000.0,
+      'producerName': 'Ali Touré',
+      'productName': 'Orange',
+      'productImage': null,
+      'quantity': 3,
+      'unitPrice': 40000.0,
     },
     {
       'id': '12346',
@@ -26,6 +36,11 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
       'status': 'En attente',
       'date': '2024-01-16',
       'total': 8500.0,
+      'producerName': 'Fatou Diallo',
+      'productName': 'Tomate',
+      'productImage': null,
+      'quantity': 2,
+      'unitPrice': 4250.0,
     },
     {
       'id': '12347',
@@ -33,6 +48,11 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
       'status': 'Livrée',
       'date': '2024-01-17',
       'total': 15200.0,
+      'producerName': 'Moussa Keita',
+      'productName': 'Riz',
+      'productImage': null,
+      'quantity': 1,
+      'unitPrice': 15200.0,
     },
     {
       'id': '12348',
@@ -40,6 +60,11 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
       'status': 'Livrée',
       'date': '2024-01-18',
       'total': 9800.0,
+      'producerName': 'Aminata Traoré',
+      'productName': 'Mangue',
+      'productImage': null,
+      'quantity': 5,
+      'unitPrice': 1960.0,
     },
   ];
 
@@ -57,71 +82,32 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          _buildFilterTabs(),
-          Expanded(
-            child: _buildOrdersList(),
-          ),
-        ],
-      ),
-    
-    );
-  }
-
-  // Construit la barre d'application avec logo et notifications
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading:       Container(
-        margin: const EdgeInsets.all(8),
-        child: Image.asset(
-          'assets/images/logo.png',
-          width: 24,
-          height: 24,
-          color: const Color(0xFFFB662F),
-        ),
-      ),
-      title: const Text(
-        'Commandes',
-        style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
-      ),
-      centerTitle: true,
-      actions: [
-        // Bouton de notifications
-        Stack(
+    if (widget.showAppBar) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: const EnteteWidget(),
+        body: Column(
           children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined, color: Colors.black),
-              onPressed: () {
-                // Navigation vers les notifications
-                Navigator.pushNamed(context, '/consumer/notifications');
-              },
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFB662F),
-                  shape: BoxShape.circle,
-                ),
-              ),
+            _buildFilterTabs(),
+            Expanded(
+              child: _buildOrdersList(),
             ),
           ],
         ),
-      ],
-    );
+      );
+    } else {
+      return Container(
+        color: Colors.white,
+        child: Column(
+          children: [
+            _buildFilterTabs(),
+            Expanded(
+              child: _buildOrdersList(),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // Construit les onglets de filtrage
@@ -202,6 +188,11 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
               status: order['status'],
               total: order['total'],
               date: order['date'],
+              producerName: order['producerName'],
+              productName: order['productName'],
+              productImage: order['productImage'],
+              quantity: order['quantity'],
+              unitPrice: order['unitPrice'],
             ),
           ),
         );
@@ -250,6 +241,11 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
                                 status: order['status'],
                                 total: order['total'],
                                 date: order['date'],
+                                producerName: order['producerName'],
+                                productName: order['productName'],
+                                productImage: order['productImage'],
+                                quantity: order['quantity'],
+                                unitPrice: order['unitPrice'],
                               ),
                             ),
                           );

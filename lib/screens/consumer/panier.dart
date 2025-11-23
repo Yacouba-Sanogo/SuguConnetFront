@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_service.dart';
 import '../../services/order_service.dart'; // Ajout de l'import du service de commande
 import 'notifications_page.dart';
 import 'payment_page.dart';
+import '../../widgets/entete_widget.dart';
+import '../../widgets/bottom_navigation_bar_widget.dart';
+import '../../widgets/quantity_selector.dart';
+import '../../widgets/primary_button.dart';
+import '../../widgets/network_image_with_fallback.dart';
+import 'main_screen.dart';
 import 'dart:ui';
 
 // La page du panier
@@ -177,59 +184,38 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
-      appBar: _buildAppBar(context),
+      appBar: const EnteteWidget(),
       body: _buildBody(),
+      floatingActionButton: SizedBox(
+        width: 72,
+        height: 72,
+        child: FloatingActionButton(
+          onPressed: () {
+            // Le panier est déjà ouvert, donc on peut fermer ou ne rien faire
+            // Ou naviguer vers MainScreen
+            Navigator.pop(context);
+          },
+          backgroundColor: const Color(0xFFFB662F),
+          elevation: 8,
+          shape: const CircleBorder(side: BorderSide(color: Colors.white, width: 6)),
+          child: const Icon(Icons.shopping_cart_outlined, color: Colors.white, size: 28),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomNavigationBarWidget(
+        onTap: (index) {
+          // Navigation vers MainScreen avec l'index approprié
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MainScreen(initialIndex: index),
+            ),
+          );
+        },
+      ),
     );
   }
 
-  // Construit la barre d'application (similaire à la page des favoris)
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: const Color(0xFFFB662F)
-          .withOpacity(0.3), // Couleur FB662F avec 30% d'opacité
-      elevation: 0,
-      leading: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: () => Navigator.of(context).pop(),
-          child: CircleAvatar(
-            backgroundColor: Colors.orange.shade100,
-            child: const Icon(Icons.arrow_back, color: Colors.deepOrange),
-          ),
-        ),
-      ),
-      actions: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined,
-                  color: Colors.black54, size: 28),
-              onPressed: () {
-                // Navigation vers la page des notifications
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsPage(),
-                  ),
-                );
-              },
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 10, right: 12),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
 
   Future<void> _loadCart() async {
     try {
@@ -611,7 +597,7 @@ class _CartPageState extends State<CartPage> {
         ),
         _buildTotalSection(),
         _buildCheckoutButton(),
-        const SizedBox(height: 20),
+        const SizedBox(height: 80), // Espace pour la barre de navigation
       ],
     );
   }
@@ -645,7 +631,12 @@ class _CartPageState extends State<CartPage> {
           const SizedBox(width: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: _buildProductImage(item['image']),
+            child: NetworkImageWithFallback(
+              imagePath: item['image'] as String?,
+              width: 48,
+              height: 48,
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -664,104 +655,18 @@ class _CartPageState extends State<CartPage> {
               ],
             ),
           ),
-          _buildQuantityControl(index), // Utiliser le bon contrôle
+          QuantitySelector(
+            quantity: _cartItems[index]['quantity'] as int,
+            onDecrement: () => _updateQuantity(index, -1),
+            onIncrement: () => _updateQuantity(index, 1),
+            color: Colors.deepOrange,
+          ),
         ],
       ),
     );
   }
 
-  // Widget pour afficher l'image du produit
-  Widget _buildProductImage(String? imageUrl) {
-    // Si l'URL est vide ou null, afficher une image par défaut
-    if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(
-        width: 48,
-        height: 48,
-        color: Colors.grey.shade200,
-        child: const Icon(Icons.image, size: 24, color: Colors.grey),
-      );
-    }
 
-    // Utiliser l'API service pour construire l'URL complète de l'image
-    return FutureBuilder<String>(
-      future: _apiService.buildImageUrl(imageUrl),
-      builder: (context, snapshot) {
-        // En cas d'erreur ou d'URL non disponible, afficher une image par défaut
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            width: 48,
-            height: 48,
-            color: Colors.grey.shade200,
-            child: const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
-          );
-        }
-
-        if (snapshot.hasError || !snapshot.hasData) {
-          return Container(
-            width: 48,
-            height: 48,
-            color: Colors.grey.shade200,
-            child: const Icon(Icons.image, size: 24, color: Colors.grey),
-          );
-        }
-
-        final url = snapshot.data!;
-        return Image.network(
-          url,
-          width: 48,
-          height: 48,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            width: 48,
-            height: 48,
-            color: Colors.grey.shade200,
-            child: const Icon(Icons.image, size: 24, color: Colors.grey),
-          ),
-        );
-      },
-    );
-  }
-
-  // Widget pour le contrôle de la quantité
-  Widget _buildQuantityControl(int index) {
-    return Row(
-      children: [
-        _buildQuantityButton(Icons.remove, () => _updateQuantity(index, -1)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text(
-            _cartItems[index]['quantity'].toString(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-        ),
-        _buildQuantityButton(Icons.add, () => _updateQuantity(index, 1),
-            isAdd: true),
-      ],
-    );
-  }
-
-  Widget _buildQuantityButton(IconData icon, VoidCallback onPressed,
-      {bool isAdd = false}) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          color: isAdd ? Colors.deepOrange : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child:
-            Icon(icon, color: isAdd ? Colors.white : Colors.black54, size: 16),
-      ),
-    );
-  }
 
   // Widget pour la section du total
   Widget _buildTotalSection() {
@@ -791,9 +696,9 @@ class _CartPageState extends State<CartPage> {
   // Widget pour le bouton "Acheter"
   Widget _buildCheckoutButton() {
     return Container(
-      width: double.infinity,
       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: ElevatedButton(
+      child: PrimaryButton(
+        text: 'Passer la commande',
         onPressed: () {
           // Navigation vers la page de paiement
           print('Bouton de paiement cliqué'); // Debug
@@ -801,19 +706,8 @@ class _CartPageState extends State<CartPage> {
           // Créer une vraie commande avant de procéder au paiement
           _placeOrderAndProceedToPayment();
         },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFB662F), // Couleur FB662F
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          minimumSize: const Size(double.infinity, 50),
-        ),
-        child: const Text(
-          'Passer la commande',
-          style: TextStyle(
-              fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
-        ),
+        height: 50,
+        fontSize: 18,
       ),
     );
   }

@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginScreen(role: null), // Connexion
           '/register': (context) => const RegisterScreen(), // Inscription
           '/role-selection': (context) => const RoleSelectionScreen(), // Sélection de rôle
-          '/consumer': (context) => MainScreen(), // Interface consommateur
+          '/consumer': (context) => const MainScreen(), // Interface consommateur
           '/consumer/catalog': (context) => const ProductCatalogScreen(), // Catalogue produits
           '/consumer/cart': (context) => const CartPage(), // Panier
           '/consumer/notifications': (context) => const NotificationsPage(), // Notifications

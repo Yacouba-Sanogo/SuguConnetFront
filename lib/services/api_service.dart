@@ -38,8 +38,12 @@ class ApiService {
       onRequest: (options, handler) async {
         print(
             'Requête envoyée: ${options.method} ${options.baseUrl}${options.path}');
+        await _loadToken(); // Recharger le token à chaque requête
         if (_token != null) {
           options.headers['Authorization'] = 'Bearer $_token';
+          print('Token ajouté: ${_token!.substring(0, _token!.length > 20 ? 20 : _token!.length)}...');
+        } else {
+          print('ATTENTION: Aucun token disponible pour cette requête');
         }
         handler.next(options);
       },
@@ -56,6 +60,11 @@ class ApiService {
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
+    if (_token != null) {
+      print('Token chargé depuis SharedPreferences: ${_token!.substring(0, _token!.length > 20 ? 20 : _token!.length)}...');
+    } else {
+      print('ATTENTION: Aucun token trouvé dans SharedPreferences');
+    }
   }
 
   Future<void> _saveToken(String token) async {

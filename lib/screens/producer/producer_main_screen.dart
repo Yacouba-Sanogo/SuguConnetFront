@@ -35,16 +35,16 @@ class _ProducerMainScreenState extends State<ProducerMainScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.only(
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(20),
             topRight: Radius.circular(20),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.12),
               blurRadius: 18,
               spreadRadius: 1,
-              offset: const Offset(0, 6),
+              offset: const Offset(0, -4),
             ),
           ],
         ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
 import 'package:suguconnect_mobile/screens/producer/stock_management_screen.dart';
 import 'package:suguconnect_mobile/screens/consumer/driver_list_screen.dart';
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
+import '../../constantes.dart';
 
 class ProducerDashboardScreen extends StatefulWidget {
   const ProducerDashboardScreen({super.key});
@@ -18,246 +20,284 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        title: Row(
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Header avec logo uniquement
             Container(
-              width: 40,
-              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Image.asset(
-                'assets/images/logo.png',
-                width: 32,
-                height: 32,
-                color: const Color(0xFFFB662F),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'SuguConnect',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.bold,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 2),
                   ),
-            ),
-          ],
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsPage(),
-                  ),
-                );
-              },
-              child: Stack(
+                ],
+              ),
+              child: Row(
                 children: [
+                  // Logo circulaire sans bordure
                   Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(12),
+                    width: 50,
+                    height: 50,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      color: Colors.black54,
-                      size: 24,
-                    ),
-                  ),
-                  Positioned(
-                    right: 6,
-                    top: 6,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFB662F),
-                        shape: BoxShape.circle,
+                    child: ClipOval(
+                      child: Image.asset(
+                        Constantes.logoPath,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.shopping_bag,
+                            color: Color(0xFFFB662F),
+                            size: 30,
+                          );
+                        },
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+
+            const SizedBox(height: 24),
+
             // Bannière de bienvenue
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFB662F),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                'Bienvenue Producteur',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Statistiques avec design moderne
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const StockManagementScreen(),
-                        ),
-                      );
-                    },
-                    child: _ModernStatCard(
-                      title: 'Produits en stock',
-                      value: '20',
-                      icon: Icons.inventory_2,
-                      color: const Color(0xFFFB662F),
-                      backgroundColor: const Color(0xFFFFF3E0),
-                    ),
-                  ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 48),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFB662F),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _ModernStatCard(
-                    title: 'Rupture de stock',
-                    value: '10',
-                    icon: Icons.warning_amber,
-                    color: const Color(0xFFE53935),
-                    backgroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Actions rapides avec design moderne
-            Text(
-              'Actions rapides',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                child: Text(
+                  'Bienvenue Producteur',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.itim(
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: Colors.white,
                   ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Cartes de statistiques
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  // Carte "Produits en stock"
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const StockManagementScreen(),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEE8E3), // Light peach background
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Produits en stock',
+                              style: GoogleFonts.itim(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.normal,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              '20',
+                              style: GoogleFonts.itim(
+                                fontSize: 36,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  // Carte "Rupture de stock"
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.08),
+                            blurRadius: 8,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Rupture de stock',
+                            style: GoogleFonts.itim(
+                              fontSize: 14,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.normal,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            '10',
+                            style: GoogleFonts.itim(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Section Actions rapides
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Actions rapides',
+                style: GoogleFonts.itim(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
             ),
 
             const SizedBox(height: 12),
 
-            // Boutons d'action modernes
-            Row(
-              children: [
-                Expanded(
-                  child: _ModernActionButton(
-                    icon: Icons.add_shopping_cart,
-                    label: 'Ajouter un produit',
-                    color: const Color(0xFF4CAF50),
-                    onTap: () async {
-                      final product =
-                          await ProducerProductFormScreen.show(context);
-                      if (product != null && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                                'Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
-                            backgroundColor: product['isBio']
-                                ? Colors.green
-                                : AppTheme.primaryColor,
-                          ),
-                        );
-                      }
-                    },
+            // Boutons d'action
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  // Première ligne: Ajouter un produit et Livreurs
+                  Row(
+                    children: [
+                      // Bouton "Ajouter un produit" (orange)
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.shopping_cart_outlined,
+                          label: 'Ajouter un produit',
+                          backgroundColor: const Color(0xFFFB662F),
+                          iconColor: Colors.white,
+                          textColor: Colors.white,
+                          onTap: () async {
+                            final product =
+                                await ProducerProductFormScreen.show(context);
+                            if (product != null) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                        'Produit ajouté avec succès${product['isBio'] ? ' (Bio)' : ''}'),
+                                    backgroundColor: product['isBio']
+                                        ? Colors.green
+                                        : AppTheme.primaryColor,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // Bouton "Livreurs" (vert olive)
+                      Expanded(
+                        child: _ActionButton(
+                          icon: Icons.local_shipping,
+                          label: 'Livreurs',
+                          backgroundColor: const Color(0xFF8FA31E),
+                          iconColor: Colors.white,
+                          textColor: Colors.white,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const DriverListScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _ModernActionButton(
-                    icon: Icons.local_shipping,
-                    label: 'Livreurs',
-                    color: const Color(0xFF2196F3),
+                  const SizedBox(height: 16),
+                  // Bouton "Messages" (blanc, centré)
+                  _ActionButton(
+                    icon: Icons.chat_bubble_outline,
+                    label: 'Messages',
+                    backgroundColor: Colors.white,
+                    iconColor: const Color(0xFFFB662F),
+                    textColor: Colors.black,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const DriverListScreen(),
+                          builder: (context) => MessagingPage(),
                         ),
                       );
                     },
+                    isFullWidth: true,
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 16),
-
-            // Bouton Messages avec effet de soulèvement
-            SizedBox(
-              width: double.infinity,
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MessagingPage(),
-                    ),
-                  );
-                },
-                child: Container(
-                  height: 100,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 2,
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.message_outlined,
-                        color: Color(0xFFFB662F),
-                        size: 24,
-                      ),
-                      SizedBox(width: 12),
-                      Text(
-                        'Messages',
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.black,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ),
             ),
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -265,135 +305,93 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
   }
 }
 
-class _ModernStatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  final Color backgroundColor;
-
-  const _ModernStatCard({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    required this.backgroundColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const Spacer(),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w500,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ModernActionButton extends StatelessWidget {
+// Widget pour les boutons d'action
+class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
-  final Color color;
-  final Color? textColor;
-  final Color? borderColor;
+  final Color backgroundColor;
+  final Color iconColor;
+  final Color textColor;
   final VoidCallback onTap;
+  final bool isFullWidth;
 
-  const _ModernActionButton({
+  const _ActionButton({
     required this.icon,
     required this.label,
-    required this.color,
-    this.textColor,
-    this.borderColor,
+    required this.backgroundColor,
+    required this.iconColor,
+    required this.textColor,
     required this.onTap,
+    this.isFullWidth = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      borderRadius: BorderRadius.circular(12),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(12),
-            border:
-                borderColor != null ? Border.all(color: borderColor!) : null,
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: (textColor ?? Colors.white).withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  icon,
-                  color: textColor ?? Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: textColor ?? Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: isFullWidth ? double.infinity : null,
+        height: isFullWidth ? 100 : 120,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(12),
+          border: isFullWidth
+              ? Border.all(
+                  color: Colors.grey.shade300,
+                  width: 1,
+                )
+              : null,
+          boxShadow: isFullWidth
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    spreadRadius: 2,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 8,
+                    spreadRadius: 1,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
         ),
+        child: isFullWidth
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: 28),
+                  const SizedBox(width: 12),
+                  Text(
+                    label,
+                    style: GoogleFonts.itim(
+                      fontSize: 16,
+                      fontWeight: FontWeight.normal,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: 32),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: GoogleFonts.itim(
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
+                      color: textColor,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
       ),
     );
   }

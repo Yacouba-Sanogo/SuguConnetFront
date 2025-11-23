@@ -11,6 +11,7 @@ import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/api_service.dart'; // Déjà importé
 import '../../theme/app_theme.dart';
+import '../../widgets/entete_widget.dart';
 
 class ProducerProductsScreen extends StatefulWidget {
   const ProducerProductsScreen({super.key});
@@ -159,10 +160,10 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      appBar: const EnteteWidget(),
       body: SafeArea(
         child: Column(
           children: [
-            _buildAppBar(),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
@@ -202,63 +203,6 @@ class _ProducerProductsScreenState extends State<ProducerProductsScreen> {
     );
   }
 
-  Widget _buildAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.all(color: const Color(0xFFFB662F), width: 2),
-            ),
-            child: const Icon(
-              Icons.shopping_bag_outlined,
-              color: Color(0xFFFB662F),
-            ),
-          ),
-          const Spacer(),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              child: Stack(
-                children: [
-                  const Icon(
-                    Icons.notifications_outlined,
-                    size: 28,
-                    color: Colors.black87,
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFB662F),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildProductCard(Map<String, dynamic> product, int index) {
     return Container(

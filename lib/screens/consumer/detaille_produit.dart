@@ -180,104 +180,79 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   }
 
   Widget _buildImageSlider() {
-    return SizedBox(
-      height: 180,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: _productImages.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(bottom: Radius.circular(20)),
-                child: _imagesLoading
-                    ? Container(
-                        color: Colors.grey[200],
-                        child: const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : (_productImages.length == 1
-                        // Animation pour l'image unique
-                        ? ScaleTransition(
-                            scale: _scaleAnimation,
-                            child: Image.network(
-                              _productImages[index],
-                              fit: BoxFit.cover,
-                              loadingBuilder:
-                                  (context, child, loadingProgress) {
-                                if (loadingProgress == null) return child;
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                );
-                              },
-                              errorBuilder: (context, error, stackTrace) {
-                                // Image de secours en cas d'erreur
-                                return Container(
-                                  color: Colors.grey[200],
-                                  child: const Icon(Icons.image,
-                                      size: 50, color: Colors.grey),
-                                );
-                              },
-                            ),
-                          )
-                        // Pas d'animation pour plusieurs images
-                        : Image.network(
-                            _productImages[index],
-                            fit: BoxFit.cover,
-                            loadingBuilder: (context, child, loadingProgress) {
-                              if (loadingProgress == null) return child;
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            },
-                            errorBuilder: (context, error, stackTrace) {
-                              // Image de secours en cas d'erreur
-                              return Container(
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.image,
-                                    size: 50, color: Colors.grey),
-                              );
-                            },
-                          )),
-              );
-            },
-          ),
-          // Indicateur de pagination seulement si nous avons plus d'une image
-          if (_productImages.length > 1)
-            Positioned(
-              bottom: 10,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: List.generate(_productImages.length, (index) {
-                  return Container(
-                    width: 8.0,
-                    height: 8.0,
-                    margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: _currentPage == index
-                          ? Colors.white
-                          : Colors.white.withOpacity(0.5),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: SizedBox(
+        height: 300,
+        width: double.infinity,
+        child: _imagesLoading
+            ? Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            : (_productImages.length == 1
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      _productImages[0],
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[200],
+                          child: const Icon(Icons.image,
+                              size: 50, color: Colors.grey),
+                        );
+                      },
                     ),
-                  );
-                }),
-              ),
-            ),
-        ],
+                  )
+                : PageView.builder(
+                    controller: _pageController,
+                    itemCount: _productImages.length,
+                    onPageChanged: (int page) {
+                      setState(() {
+                        _currentPage = page;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          _productImages[index],
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: Colors.grey[200],
+                              child: const Icon(Icons.image,
+                                  size: 50, color: Colors.grey),
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  )),
       ),
     );
   }
@@ -287,35 +262,50 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildImageSlider(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildImageSlider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildProductHeader(),
-                  const SizedBox(height: 12),
-                  _buildProducerInfo(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+            _buildProducerInfo(),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   _buildPriceInfo(),
+                  const SizedBox(height: 16),
+                  const Divider(
+                    color: Colors.grey,
+                    thickness: 1,
+                    height: 1,
+                  ),
                   const SizedBox(height: 16),
                   _buildQuantitySelector(),
                   const SizedBox(height: 8),
                   _buildTotalPrice(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   _buildDescription(),
-                  const Spacer(),
+                  const SizedBox(height: 20), // Espace pour le bouton fixe en bas
                 ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: _buildAddToCartButton(),
+      bottomNavigationBar: SafeArea(
+        child: _buildAddToCartButton(),
+      ),
     );
   }
 
@@ -324,11 +314,11 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       backgroundColor: Colors.white,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
+        icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: const Text(
-        'Détails produit',
+        'Details produit',
         style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
@@ -339,14 +329,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          widget.product?['name'] ?? 'Orange du Maroc',
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+        Expanded(
+          child: Text(
+            widget.product?['name'] ?? 'Poires du Maroc',
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
         ),
         IconButton(
           icon: Icon(
             _isFavorite ? Icons.favorite : Icons.favorite_border,
-            color: _isFavorite ? Colors.red : Colors.grey,
+            color: _isFavorite ? Colors.red : Colors.grey.shade400,
             size: 28,
           ),
           onPressed: () {
@@ -363,7 +359,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     final producerName = widget.product?['producerName'] ?? 'Sory Coulibaly';
     final producerAvatar =
         widget.product?['producerAvatar'] ?? 'assets/images/improfil.png';
-    final producerLocation = widget.product?['location'] ?? 'Bamako';
+    final producerLocation = widget.product?['location'] ?? 'Djoliba, Koulikoro';
+    final farmName = 'Djoliba'; // Vous pouvez ajouter ce champ au produit si nécessaire
 
     ImageProvider avatarProvider;
     if (producerAvatar.startsWith('http')) {
@@ -373,18 +370,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
     }
 
     return Container(
-      padding: const EdgeInsets.all(8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(8),
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(0),
       ),
       child: Row(
         children: [
           CircleAvatar(
-            radius: 20,
+            radius: 35,
             backgroundImage: avatarProvider,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -392,14 +390,27 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                 Text(
                   'Producteur : $producerName',
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 12),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.black87,
+                  ),
                 ),
-                const SizedBox(height: 2),
-                Text('Localisation : $producerLocation',
-                    style: const TextStyle(color: Colors.grey, fontSize: 10)),
-                const SizedBox(height: 2),
-                const Text('Producteur local, 100% bio et équitable.',
-                    style: TextStyle(color: Colors.grey, fontSize: 10)),
+                const SizedBox(height: 6),
+                Text(
+                  'Ferme : $farmName, $producerLocation',
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Producteur local, 100% bio et équitable.',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
           )
@@ -414,23 +425,33 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       children: [
         const Text(
           '100% naturelle, sans engrais chimiques',
-          style: TextStyle(color: Colors.orange, fontSize: 12),
+          style: TextStyle(
+            color: Colors.orange,
+            fontSize: 14,
+            fontWeight: FontWeight.normal,
+          ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: Text(
                 'Prix : ${widget.product?['price'] ?? '${_price.toStringAsFixed(0)} fcfa'}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orange,
+                ),
               ),
             ),
-            _buildTag(widget.product?['weight'] ?? '20 kg', Colors.pink.shade50,
-                Colors.pink.shade400),
-            const SizedBox(width: 8),
-            _buildTag(
-                'Disponible', Colors.green.shade50, Colors.green.shade600),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                _buildTag('Le carton', Colors.orange.shade100, Colors.orange.shade700),
+                const SizedBox(height: 8),
+                _buildTag('Disponible', Colors.green.shade50, Colors.green.shade700),
+              ],
+            ),
           ],
         )
       ],
@@ -439,13 +460,19 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
 
   Widget _buildTag(String text, Color bgColor, Color textColor) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(text,
-          style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: textColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      ),
     );
   }
 
@@ -487,36 +514,46 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
 
   Widget _buildTotalPrice() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text('Prix total :',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text(
+          'Prix total :',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(width: 8),
         Text(
           '${(_price * _quantity).toStringAsFixed(0)} fcfa',
           style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.deepOrange),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.orange,
+          ),
         )
       ],
     );
   }
 
   Widget _buildDescription() {
+    final description = widget.product?['description'] ?? 
+        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Description',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 4),
-        const Text(
-          'Produit frais et naturel, cultivé localement sans engrais chimiques. Idéal pour une alimentation saine et équilibrée.',
           style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-            height: 1.3,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          description,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Colors.black87,
+            height: 1.5,
           ),
         ),
       ],
@@ -524,81 +561,233 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   }
 
   Widget _buildAddToCartButton() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
+    // Vérifier si le produit est en stock (par défaut on assume qu'il est disponible)
+    final bool enStock = true; // Vous pouvez ajuster cette logique selon vos besoins
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: Colors.grey.shade300,
+            width: 0.5,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 8.0, bottom: 0.0),
+        child: Row(
         children: [
-          Expanded(
-            child: OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => ChatPage(
-                      producerId:
-                          int.tryParse(widget.product?['producerId'] ?? '1') ??
-                              1,
-                      producerName:
-                          widget.product?['producerName'] ?? 'Producteur local',
-                      producerAvatar: widget.product?['producerAvatar'] ??
-                          'assets/images/improfil.png',
-                    ),
-                  ),
-                );
-              },
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFFFB662F),
-                side: const BorderSide(color: Color(0xFFFB662F), width: 2),
-                minimumSize: const Size(0, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // Bouton circulaire Menu
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade200,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.3),
+                  spreadRadius: 1,
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-              ),
-              child: const Text(
-                'Discuter',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
+              ],
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.more_vert, color: Colors.black87, size: 20),
+              onPressed: () => _showOptionsMenu(context),
             ),
           ),
           const SizedBox(width: 12),
+          // Bouton Ajouter au panier
           Expanded(
-            child: ElevatedButton(
-              onPressed: () {
-                // Vérifier si l'utilisateur est authentifié
-                final authProvider =
-                    Provider.of<AuthProvider>(context, listen: false);
-                if (!authProvider.isAuthenticated) {
-                  // Rediriger vers l'écran de connexion si l'utilisateur n'est pas authentifié
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen(role: null)),
-                  );
-                  return;
-                }
-
-                // Passer la commande directement
-                _placeDirectOrder();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFB662F),
-                minimumSize: const Size(0, 56),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            flex: 1,
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFB662F),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.3),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Text(
-                'Acheter',
-                style: TextStyle(
-                    fontSize: 16,
+              child: ElevatedButton.icon(
+                onPressed: enStock ? () => _addToCart(context) : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFB662F),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.shopping_cart_outlined),
+                label: Text(
+                  enStock ? 'Ajouter au panier' : 'Rupture de stock',
+                  style: const TextStyle(
+                    fontFamily : "inter",
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ),
         ],
+        ),
       ),
     );
+  }
+
+  // Fonction pour afficher le menu d'options
+  void _showOptionsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Option 1: Discuter avec le producteur
+              ListTile(
+                leading: const Icon(Icons.chat_bubble_outline, color: Colors.black87),
+                title: const Text(
+                  'Discuter avec le producteur',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatPage(
+                        producerId:
+                            int.tryParse(widget.product?['producerId'] ?? '1') ??
+                                1,
+                        producerName:
+                            widget.product?['producerName'] ?? 'Producteur local',
+                        producerAvatar: widget.product?['producerAvatar'] ??
+                            'assets/images/improfil.png',
+                      ),
+                    ),
+                  );
+                },
+              ),
+              // Option 2: Acheter
+              ListTile(
+                leading: const Icon(Icons.account_balance_wallet_outlined, color: Colors.black87),
+                title: const Text(
+                  'Acheter',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  final authProvider =
+                      Provider.of<AuthProvider>(context, listen: false);
+                  if (!authProvider.isAuthenticated) {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const LoginScreen(role: null)),
+                    );
+                    return;
+                  }
+                  _placeDirectOrder();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Fonction pour ajouter au panier
+  void _addToCart(BuildContext context) async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+
+      if (userId == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez vous connecter pour ajouter au panier'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Récupérer l'ID du produit
+      final productId = widget.product?['id'];
+      if (productId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Erreur: ID du produit introuvable'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Ajouter le produit au panier avec la quantité sélectionnée
+      final response = await _apiService.post(
+        '/consommateur/$userId/panier/ajouter/$productId',
+        queryParameters: {'quantite': _quantity},
+      );
+
+      print('Réponse d\'ajout au panier: ${response.statusCode} - ${response.data}');
+      if (response.statusCode == 200) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${widget.product?['name'] ?? 'Produit'} ajouté au panier'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } else {
+        throw Exception('Erreur lors de l\'ajout au panier: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Erreur lors de l\'ajout au panier: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   // Widget pour le bouton de chat avec le producteur

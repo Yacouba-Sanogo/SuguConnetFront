@@ -2,61 +2,24 @@ import 'package:flutter/material.dart';
 import 'notifications_page.dart';
 import 'payment_page.dart';
 import 'detaille_produit.dart';
+import '../../widgets/entete_widget.dart';
 
 // La page des favoris
 class FavorisPage extends StatelessWidget {
-  const FavorisPage({super.key});
+  const FavorisPage({super.key, this.showAppBar = true});
+  
+  final bool showAppBar;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: _buildBody(),
-    );
-  }
-
-  // Construit la barre d'application
-  PreferredSizeWidget _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: const Color(0xFFF9F9F9),
-      elevation: 0,
-      leading: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CircleAvatar(
-          backgroundColor: Colors.orange.shade100,
-          // Remplacer par votre logo
-          child: const Icon(Icons.store, color: Colors.deepOrange),
-        ),
-      ),
-      actions: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined, color: Colors.black54, size: 28),
-              onPressed: () {
-                // Navigation vers la page des notifications
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NotificationsPage(),
-                  ),
-                );
-              },
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 10, right: 12),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+    if (showAppBar) {
+      return Scaffold(
+        appBar: const EnteteWidget(),
+        body: _buildBody(),
+      );
+    } else {
+      return _buildBody();
+    }
   }
 
   // Construit le corps de la page

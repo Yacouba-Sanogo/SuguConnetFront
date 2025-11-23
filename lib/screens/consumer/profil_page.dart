@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import '../../providers/auth_provider.dart';
+import '../constantes.dart';
+import '../../widgets/custom_text_field.dart';
+import '../../widgets/primary_button.dart';
+import '../../widgets/card_container.dart';
+import '../../widgets/phone_field.dart';
 
 class ProfilPage extends StatefulWidget {
-  const ProfilPage({super.key});
+  const ProfilPage({super.key, this.showAppBar = true});
+  
+  final bool showAppBar;
 
   @override
   State<ProfilPage> createState() => _ProfilPageState();
@@ -11,10 +19,10 @@ class ProfilPage extends StatefulWidget {
 
 class _ProfilPageState extends State<ProfilPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nomController = TextEditingController(text: 'Sanogo');
-  final _prenomController = TextEditingController(text: 'Yacouba');
+  final _nomController = TextEditingController(text: 'Coulibaly');
+  final _prenomController = TextEditingController(text: 'Aïssatou');
   final _telephoneController = TextEditingController(text: '60153483');
-  final _emailController = TextEditingController(text: 'yacouba.sanogo@email.com');
+  final _emailController = TextEditingController(text: 'coulibalyaïssatou37@gmail.com');
   final _motDePasseController = TextEditingController(text: '*******');
   final _nouveauMotDePasseController = TextEditingController(text: '*******');
   final _confirmerMotDePasseController = TextEditingController(text: '*******');
@@ -50,314 +58,206 @@ class _ProfilPageState extends State<ProfilPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5), // Fond beige clair
-      appBar: _buildAppBar(),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildHeader(),
-            _buildProfileForm(),
-            _buildConfirmButton(),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // AppBar avec titre "Profil" et icône de déconnexion
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: const Color(0xFFF5F5F5), // Fond beige clair
-      elevation: 0,
-      title: const Text(
-        'Profil',
-        style: TextStyle(
-          color: Colors.black,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ),
-      ),
-      centerTitle: true,
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          child: GestureDetector(
-            onTap: () {
-              // Action de déconnexion
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Déconnexion'),
-                    content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Annuler'),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Provider.of<AuthProvider>(context, listen: false).logout();
-                          Navigator.pushReplacementNamed(context, '/');
-                        },
-                        child: const Text('Déconnexion', style: TextStyle(color: Colors.red)),
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.red.shade200, width: 1),
-              ),
-              child: Icon(
-                Icons.logout,
-                color: Colors.red.shade600,
-                size: 20,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // En-tête avec photo de profil et nom
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      child: Row(
+    final content = SingleChildScrollView(
+      child: Column(
         children: [
-          // Photo de profil
-          Stack(
+          _buildHeader(),
+          _buildProfileForm(),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+
+    if (widget.showAppBar) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFFEE8E3), // Fond pêche/clair
+        body: content,
+      );
+    } else {
+      return Container(
+        color: const Color(0xFFFEE8E3), // Fond pêche/clair
+        child: content,
+      );
+    }
+  }
+
+  // Header avec fond pêche, titre "Profil", icône profil, nom utilisateur et bouton déconnexion
+  Widget _buildHeader() {
+    return Consumer<AuthProvider>(
+      builder: (context, auth, _) {
+        final u = auth.currentUser;
+        final displayName = u == null ? 'Aïssatou Coulibaly' : (u.prenom + ' ' + u.nom).trim();
+        
+        return Container(
+          padding: const EdgeInsets.only(top: 50, bottom: 30, left: 20, right: 20),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFEE8E3), // Fond pêche/clair
+          ),
+          child: Column(
             children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: const DecorationImage(
-                    image: AssetImage('assets/images/improfil.png'),
-                    fit: BoxFit.cover,
+              // AppBar personnalisée avec titre "Profil" et bouton déconnexion
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Espace vide à gauche pour équilibrer
+                  const SizedBox(width: 70),
+                  // Titre "Profil" centré
+                  const Text(
+                    'Profil',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
                   ),
-                ),
+                  // Bouton déconnexion à droite
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text('Déconnexion'),
+                            content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Annuler'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  Provider.of<AuthProvider>(context, listen: false).logout();
+                                  Navigator.pushReplacementNamed(context, '/');
+                                },
+                                child: const Text('Déconnexion', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Symbols.chip_extraction,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              // Icône d'édition
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
+              const SizedBox(height: 20),
+              // Icône de profil et nom de l'utilisateur alignés
+              Row(
+                children: [
+                  // Icône de profil à gauche (agrandie et alignée avec le nom)
+                  Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: orangeVif.withValues(alpha: 0.30),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.account_circle,
+                      color: orangePrincipal.withValues(alpha: 0.31),
+                      size: 80,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.edit,
-                    color: Color(0xFFFB662F),
-                    size: 16,
+                  const SizedBox(width: 16),
+                  // Nom de l'utilisateur
+                  Expanded(
+                    child: Text(
+                      displayName,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
-          const SizedBox(width: 20),
-          // Nom de l'utilisateur
-          Expanded(
-            child: Consumer<AuthProvider>(
-              builder: (context, auth, _) {
-                final u = auth.currentUser;
-                final displayName = u == null ? '' : (u.prenom + ' ' + u.nom).trim();
-                return Text(
-                  displayName,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  // Formulaire de profil
+  // Formulaire de profil dans une carte blanche
   Widget _buildProfileForm() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return CardContainer(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Nom', _nomController),
-            const SizedBox(height: 16),
-            _buildTextField('Prénom', _prenomController),
-            const SizedBox(height: 16),
-            _buildPhoneField(),
-            const SizedBox(height: 16),
-            _buildTextField('Mail', _emailController),
-            const SizedBox(height: 16),
-            _buildTextField('Mot de passe', _motDePasseController, isPassword: true),
-            const SizedBox(height: 16),
-            _buildTextField('Nouveau mot de passe', _nouveauMotDePasseController, isPassword: true),
-            const SizedBox(height: 16),
-            _buildTextField('Confirmer le nouveau mot de passe', _confirmerMotDePasseController, isPassword: true),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Champ de téléphone avec indicatif
-  Widget _buildPhoneField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Téléphone',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            // Indicatif pays
-            Container(
-              width: 80,
-              height: 50,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedCountryCode,
-                  isExpanded: true,
-                  items: const [
-                    DropdownMenuItem(value: '223', child: Text('223')),
-                    DropdownMenuItem(value: '226', child: Text('226')),
-                    DropdownMenuItem(value: '225', child: Text('225')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCountryCode = value!;
-                    });
-                  },
-                ),
-              ),
+            CustomTextField(
+              label: 'Nom',
+              controller: _nomController,
             ),
-            const SizedBox(width: 12),
-            // Numéro de téléphone
-            Expanded(
-              child: Container(
-                height: 50,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TextFormField(
-                  controller: _telephoneController,
-                  decoration: const InputDecoration(
-                    border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                  ),
-                ),
-              ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Prénom',
+              controller: _prenomController,
+            ),
+            const SizedBox(height: 16),
+            PhoneField(
+              label: 'Téléphone',
+              phoneController: _telephoneController,
+              selectedCountryCode: _selectedCountryCode,
+              onCountryCodeChanged: (value) {
+                setState(() {
+                  _selectedCountryCode = value;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Mail',
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Mot de passe',
+              controller: _motDePasseController,
+              isPassword: true,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Nouveau mot de passe',
+              controller: _nouveauMotDePasseController,
+              isPassword: true,
+            ),
+            const SizedBox(height: 16),
+            CustomTextField(
+              label: 'Confirmer le nouveau mot de passe',
+              controller: _confirmerMotDePasseController,
+              isPassword: true,
+            ),
+            const SizedBox(height: 24),
+            // Bouton Confirmer
+            PrimaryButton(
+              text: 'Confirmer',
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Profil mis à jour avec succès')),
+                  );
+                }
+              },
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  // Champ de texte générique
-  Widget _buildTextField(String label, TextEditingController controller, {bool isPassword = false}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 50,
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: TextFormField(
-            controller: controller,
-            obscureText: isPassword,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Bouton Confirmer
-  Widget _buildConfirmButton() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        onPressed: () {
-          if (_formKey.currentState!.validate()) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Profil mis à jour avec succès')),
-            );
-          }
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFB662F),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        child: const Text(
-          'Confirmer',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
         ),
       ),
     );

@@ -15,14 +15,14 @@ class LandingPage extends StatelessWidget {
           image: DecorationImage(
             image: AssetImage('assets/images/landing_women.png'),
             fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
+          child: SafeArea(
+            child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+              children: [
               // Logo SUGUConnect centré en haut
-              Padding(
+                Padding(
                 padding: const EdgeInsets.only(top: 20),
                 child: Container(
                   width: 300,
@@ -32,12 +32,12 @@ class LandingPage extends StatelessWidget {
                     width: 260,
                     height: 260,
                     fit: BoxFit.contain,
+                    ),
                   ),
                 ),
-              ),
 
               // Boutons en bas
-              Padding(
+                Padding(
                 padding: const EdgeInsets.only(bottom: 40),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -110,7 +110,7 @@ class LandingPage extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
+              ],
           ),
         ),
       ),

@@ -272,8 +272,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
       builder: (ctx) {
         String? tempLocality = _selectedLocality;
         String? tempUnit = _selectedUnit;
-        double tempMin = _minPrice ?? _dataMinPrice ?? 0;
-        double tempMax = _maxPrice ?? _dataMaxPrice ?? 0;
         return StatefulBuilder(builder: (ctx, setSt) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -312,23 +310,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                   ],
                   onChanged: (v) => setSt(() => tempUnit = v),
                 ),
-                const SizedBox(height: 8),
-                const Text('Prix'),
-                if ((_dataMinPrice ?? 0) < (_dataMaxPrice ?? 0))
-                  RangeSlider(
-                    values: RangeValues(tempMin, tempMax),
-                    min: _dataMinPrice ?? 0,
-                    max: _dataMaxPrice ?? 0,
-                    divisions: 20,
-                    labels: RangeLabels('${tempMin.toStringAsFixed(0)}',
-                        '${tempMax.toStringAsFixed(0)}'),
-                    onChanged: (vals) => setSt(() {
-                      tempMin = vals.start;
-                      tempMax = vals.end;
-                    }),
-                  )
-                else
-                  Text('Aucune borne de prix disponible'),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -337,8 +318,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                         setState(() {
                           _selectedLocality = null;
                           _selectedUnit = null;
-                          _minPrice = _dataMinPrice;
-                          _maxPrice = _dataMaxPrice;
                           _applyAllFilters();
                         });
                         Navigator.pop(ctx);
@@ -351,8 +330,6 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                         setState(() {
                           _selectedLocality = tempLocality;
                           _selectedUnit = tempUnit;
-                          _minPrice = tempMin;
-                          _maxPrice = tempMax;
                           _applyAllFilters();
                         });
                         Navigator.pop(ctx);
