@@ -3,15 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:suguconnect_mobile/services/chat_service.dart'; // Ajout de l'import
 import 'dart:io';
 
-// Page de chat individuel avec un producteur (version simplifiée)
+import 'package:suguconnect_mobile/services/chat_service.dart';
+
 class ChatPageSimple extends StatefulWidget {
   final String producerName;
   final String producerAvatar;
-  final int producerId; // Ajout de l'ID du producteur
-  final int consumerId; // Ajout de l'ID du consommateur
+  final int producerId;
+  final int consumerId;
 
   const ChatPageSimple({
     super.key,
@@ -28,19 +28,19 @@ class ChatPageSimple extends StatefulWidget {
 class _ChatPageSimpleState extends State<ChatPageSimple> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final ChatService _chatService = ChatService(); // Ajout du service de chat
-  bool _isRecording = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
-  String? _recordingPath;
-  bool _isLoading = false; // Ajout d'un indicateur de chargement
+  final ChatService _chatService = ChatService();
 
-  // Messages de la conversation
+  bool _isRecording = false;
+  String? _recordingPath;
+  bool _isLoading = false;
+
   final List<Map<String, dynamic>> _messages = [];
 
   @override
   void initState() {
     super.initState();
-    _loadMessages(); // Charger les messages depuis le backend
+    _loadMessages();
   }
 
   @override
@@ -51,7 +51,6 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
     super.dispose();
   }
 
-  // Scroll vers le bas de la liste
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -64,115 +63,76 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
     });
   }
 
-  // Formater l'heure
   String _formatTime(DateTime dateTime) {
     return '${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
   }
 
-  // Envoyer un message texte
+  // -----------------------------
+  // ENVOI TEXTE
+  // -----------------------------
   void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
-      setState(() {
-        _messages.add({
-          'id': DateTime.now().millisecondsSinceEpoch.toString(),
-          'text': _messageController.text.trim(),
-          'isMe': true,
-          'time': _formatTime(DateTime.now()),
-          'type': 'text',
-        });
-      });
-      _messageController.clear();
-      _scrollToBottom();
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
 
-      // Envoyer le message au backend
-      _sendMessageToBackend(_messageController.text.trim());
-    }
+    setState(() {
+      _messages.add({
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'text': message,
+        'isMe': true,
+        'time': _formatTime(DateTime.now()),
+        'type': 'text',
+      });
+    });
+
+    _messageController.clear();
+    _scrollToBottom();
+
+    // Envoi backend
+    _sendMessageToBackend(message, type: "text");
   }
 
-  // Démarre l'enregistrement vocal (simulé)
+  // -----------------------------
+  // ENREGISTREMENT VOIX
+  // -----------------------------
   Future<void> _startRecording() async {
-    try {
-      final status = await Permission.microphone.request();
-      if (status.isGranted) {
-        setState(() {
-          _isRecording = true;
-        });
-        HapticFeedback.mediumImpact();
-
-        _recordingPath =
-            '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('🎤 Enregistrement en cours...'),
-            backgroundColor: Color(0xFFFB662F),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Permission microphone refusée'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-        ),
+        const SnackBar(content: Text('Permission microphone refusée'), backgroundColor: Colors.red),
       );
+      return;
     }
+
+    setState(() => _isRecording = true);
+    HapticFeedback.mediumImpact();
+
+    _recordingPath = '/tmp/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('🎤 Enregistrement en cours...'),
+        backgroundColor: Color(0xFFFB662F),
+      ),
+    );
   }
 
-  // Arrête l'enregistrement vocal (simulé)
   Future<void> _stopRecording() async {
-    try {
-      setState(() {
-        _isRecording = false;
-      });
-      HapticFeedback.mediumImpact();
+    if (_recordingPath == null) return;
+    setState(() => _isRecording = false);
+    HapticFeedback.mediumImpact();
 
-      if (_recordingPath != null) {
-        _addVoiceMessage(_recordingPath!);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Message vocal enregistré'),
-            backgroundColor: Color(0xFFFB662F),
-          ),
-        );
+    _addVoiceMessage(_recordingPath!);
 
-        // Envoyer le message vocal au backend
-        _sendMessageToBackend(_recordingPath!, type: 'voice');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    _sendMessageToBackend(_recordingPath!, type: 'voice');
   }
 
-  // Annule l'enregistrement vocal
   void _cancelRecording() {
     setState(() {
       _isRecording = false;
       _recordingPath = null;
     });
-    HapticFeedback.lightImpact();
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('❌ Enregistrement annulé'),
-        backgroundColor: Colors.grey,
-      ),
-    );
   }
 
-  // Ajouter un message vocal
   void _addVoiceMessage(String path) {
     setState(() {
       _messages.add({
@@ -184,45 +144,30 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
         'path': path,
       });
     });
+
     _scrollToBottom();
   }
 
-  // Jouer un message vocal
   Future<void> _playVoiceMessage(String path) async {
-    try {
-      await _audioPlayer.play(DeviceFileSource(path));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur de lecture: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    await _audioPlayer.play(DeviceFileSource(path));
   }
 
-  // Sélectionner une image
+  // -----------------------------
+  // IMAGE
+  // -----------------------------
   Future<void> _pickImage(String source) async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
-      );
+    final picker = ImagePicker();
+    final img = await picker.pickImage(
+      source: source == 'camera' ? ImageSource.camera : ImageSource.gallery,
+    );
 
-      if (image != null) {
-        _addImageMessage(image.path);
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur de sélection: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+    if (img != null) {
+      _addImageMessage(img.path);
+
+      _sendMessageToBackend(img.path, type: 'image');
     }
   }
 
-  // Ajouter un message image
   void _addImageMessage(String path) {
     setState(() {
       _messages.add({
@@ -234,298 +179,129 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
         'path': path,
       });
     });
-    _scrollToBottom();
 
-    // Envoyer l'image au backend
-    _sendMessageToBackend(path, type: 'image');
+    _scrollToBottom();
   }
 
-  // Afficher les options d'attachement
   void _showAttachmentOptions() {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_camera, color: Color(0xFFFB662F)),
-              title: const Text('Appareil photo'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage('camera');
-              },
-            ),
-            ListTile(
-              leading:
-                  const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
-              title: const Text('Galerie'),
-              onTap: () {
-                Navigator.pop(context);
-                _pickImage('gallery');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.videocam, color: Color(0xFFFB662F)),
-              title: const Text('Vidéo'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implémenter la sélection de vidéo
-              },
-            ),
-            ListTile(
-              leading:
-                  const Icon(Icons.insert_drive_file, color: Color(0xFFFB662F)),
-              title: const Text('Document'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implémenter la sélection de document
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.location_on, color: Color(0xFFFB662F)),
-              title: const Text('Localisation'),
-              onTap: () {
-                Navigator.pop(context);
-                // TODO: Implémenter l'envoi de localisation
-              },
-            ),
-          ],
-        ),
+      builder: (_) => ListView(
+        shrinkWrap: true,
+        children: [
+          ListTile(
+            leading: const Icon(Icons.photo_camera, color: Color(0xFFFB662F)),
+            title: const Text('Appareil photo'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImage('camera');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.photo_library, color: Color(0xFFFB662F)),
+            title: const Text('Galerie'),
+            onTap: () {
+              Navigator.pop(context);
+              _pickImage('gallery');
+            },
+          ),
+        ],
       ),
     );
   }
 
+  // -----------------------------
+  // UI PRINCIPALE
+  // -----------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       appBar: _buildAppBar(),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/icons/arrièreplandiscussion.png'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: _buildMessagesList(),
-            ),
-            _buildMessageInput(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Construire l'AppBar
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
-      ),
-      title: Row(
+      body: Stack(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundImage: AssetImage(widget.producerAvatar),
+          Positioned.fill(
+            child: Image.asset('assets/icons/arrièreplandiscussion.png', fit: BoxFit.cover),
           ),
-          const SizedBox(width: 12),
           Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.producerName,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Text(
-                'En ligne',
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 12,
-                ),
-              ),
+              Expanded(child: _buildMessagesList()),
+              _buildMessageInput(),
             ],
           ),
         ],
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.videocam, color: Color(0xFFFB662F)),
-          onPressed: () {
-            // TODO: Implémenter l'appel vidéo
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.phone, color: Color(0xFFFB662F)),
-          onPressed: () {
-            // TODO: Implémenter l'appel vocal
-          },
-        ),
-      ],
     );
   }
 
-  // Construire la liste des messages
-  Widget _buildMessagesList() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        return _buildMessageBubble(message);
-      },
-    );
-  }
-
-  // Construire une bulle de message
-  Widget _buildMessageBubble(Map<String, dynamic> message) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment:
-            message['isMe'] ? MainAxisAlignment.end : MainAxisAlignment.start,
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      title: Row(
         children: [
-          if (!message['isMe']) ...[
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: AssetImage(widget.producerAvatar),
-            ),
-            const SizedBox(width: 8),
-          ],
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message['isMe']
-                    ? const Color(0xFFFB662F).withOpacity(0.9)
-                    : Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(18).copyWith(
-                  bottomLeft: message['isMe']
-                      ? const Radius.circular(18)
-                      : const Radius.circular(4),
-                  bottomRight: message['isMe']
-                      ? const Radius.circular(4)
-                      : const Radius.circular(18),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: _buildMessageContent(message),
-            ),
-          ),
-          if (message['isMe']) ...[
-            const SizedBox(width: 8),
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: const Color(0xFFFB662F),
-              child: const Icon(Icons.person, color: Colors.white, size: 16),
-            ),
-          ],
+          CircleAvatar(backgroundImage: AssetImage(widget.producerAvatar)),
+          const SizedBox(width: 10),
+          Text(widget.producerName),
         ],
       ),
     );
   }
 
-  // Construire le contenu du message
+  Widget _buildMessagesList() {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(12),
+      itemCount: _messages.length,
+      itemBuilder: (_, i) => _buildMessageBubble(_messages[i]),
+    );
+  }
+
+  Widget _buildMessageBubble(Map<String, dynamic> message) {
+    final isMe = message['isMe'] as bool;
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isMe ? const Color(0xFFFB662F) : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: _buildMessageContent(message),
+      ),
+    );
+  }
+
   Widget _buildMessageContent(Map<String, dynamic> message) {
     switch (message['type']) {
-      case 'image':
-        return _buildImageMessage(message);
       case 'voice':
-        return _buildVoiceMessage(message);
+        return GestureDetector(
+          onTap: () => _playVoiceMessage(message['path']),
+          child: const Icon(Icons.play_arrow, color: Colors.white),
+        );
+
+      case 'image':
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.file(File(message['path']), width: 150, fit: BoxFit.cover),
+        );
+
       default:
         return Text(
           message['text'],
           style: TextStyle(
             color: message['isMe'] ? Colors.white : Colors.black,
-            fontSize: 16,
           ),
         );
     }
   }
 
-  // Construire un message image
-  Widget _buildImageMessage(Map<String, dynamic> message) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Image.file(
-            File(message['path']),
-            width: 200,
-            height: 150,
-            fit: BoxFit.cover,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          message['text'],
-          style: TextStyle(
-            color: message['isMe'] ? Colors.white : Colors.black,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // Construire un message vocal
-  Widget _buildVoiceMessage(Map<String, dynamic> message) {
-    return GestureDetector(
-      onTap: () => _playVoiceMessage(message['path']),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.play_arrow,
-            color: message['isMe'] ? Colors.white : const Color(0xFFFB662F),
-            size: 24,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            'Message vocal',
-            style: TextStyle(
-              color: message['isMe'] ? Colors.white : Colors.black,
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Construire la zone de saisie de message
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 4,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(12),
+      color: Colors.white,
       child: Row(
         children: [
           IconButton(
@@ -533,101 +309,54 @@ class _ChatPageSimpleState extends State<ChatPageSimple> {
             onPressed: _showAttachmentOptions,
           ),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(25),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        hintText: 'Tapez votre message...',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                      ),
-                      maxLines: null,
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTapDown: (_) => _startRecording(),
-                    onTapUp: (_) => _stopRecording(),
-                    onTapCancel: _cancelRecording,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        _isRecording ? Icons.stop : Icons.mic,
-                        color:
-                            _isRecording ? Colors.red : const Color(0xFFFB662F),
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send, color: Color(0xFFFB662F)),
-                    onPressed: _sendMessage,
-                  ),
-                ],
+            child: TextField(
+              controller: _messageController,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                hintText: 'Message',
               ),
             ),
+          ),
+          IconButton(
+            icon: Icon(_isRecording ? Icons.stop : Icons.mic, color: const Color(0xFFFB662F)),
+            onPressed: _isRecording ? _stopRecording : _startRecording,
+          ),
+          IconButton(
+            icon: const Icon(Icons.send, color: Color(0xFFFB662F)),
+            onPressed: _sendMessage,
           ),
         ],
       ),
     );
   }
 
-  // Charger les messages depuis le backend
+  // -----------------------------
+  // 🔥 APPELS BACKEND CORRIGÉS
+  // -----------------------------
   Future<void> _loadMessages() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
-      final messages = await _chatService.getMessages(
-        producerId: widget.producerId,
-        consumerId: widget.consumerId,
+      final data = await _chatService.getMessages(
+        userId1: widget.consumerId,
+        userId2: widget.producerId,
       );
 
-      setState(() {
-        _messages.addAll(messages);
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur de chargement: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() => _messages.addAll(data));
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  // Envoyer un message au backend
-  Future<void> _sendMessageToBackend(String message,
-      {String type = 'text'}) async {
+  Future<void> _sendMessageToBackend(String message, {String type = 'text'}) async {
     try {
       await _chatService.sendMessage(
-        producerId: widget.producerId,
-        consumerId: widget.consumerId,
-        message: message,
-        type: type,
+        senderId: widget.consumerId,
+        receiverId: widget.producerId,
+        content: message,
+        // messageType: type,
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur d\'envoi: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint("Erreur lors de l'envoi du message : $e");
     }
   }
 }

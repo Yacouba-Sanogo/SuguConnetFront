@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         // Configuration des routes de navigation
         routes: {
           '/landing': (context) => const LandingPage(), // Page d'accueil
-          '/login': (context) => const LoginScreen(), // Connexion
+          '/login': (context) => const LoginScreen(role: null), // Connexion
           '/register': (context) => const RegisterScreen(), // Inscription
           '/role-selection': (context) => const RoleSelectionScreen(), // Sélection de rôle
           '/consumer': (context) => MainScreen(), // Interface consommateur

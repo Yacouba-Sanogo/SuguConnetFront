@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
         if (!authProvider.isAuthenticated) {
-          return const LoginScreen();
+          return const LoginScreen(role: null);
         }
 
         // Rediriger vers l'interface producteur uniquement

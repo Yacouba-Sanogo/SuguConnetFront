@@ -35,7 +35,17 @@ class User {
 }
 
 @JsonSerializable()
-class Producteur extends User {
+class Producteur {
+  final int id;
+  final String nom;
+  final String prenom;
+  final String email;
+  final String telephone;
+  final String adresse;
+  final String role;
+  final bool actif;
+  final DateTime dateCreation;
+  final DateTime? dateDerniereConnexion;
   final String nomEntreprise;
   final String description;
   final String specialite;
@@ -46,16 +56,16 @@ class Producteur extends User {
   final int nombreEvaluations;
 
   Producteur({
-    required super.id,
-    required super.nom,
-    required super.prenom,
-    required super.email,
-    required super.telephone,
-    required super.adresse,
-    required super.role,
-    required super.actif,
-    required super.dateCreation,
-    super.dateDerniereConnexion,
+    required this.id,
+    required this.nom,
+    required this.prenom,
+    required this.email,
+    required this.telephone,
+    required this.adresse,
+    required this.role,
+    required this.actif,
+    required this.dateCreation,
+    this.dateDerniereConnexion,
     required this.nomEntreprise,
     required this.description,
     required this.specialite,
@@ -71,17 +81,35 @@ class Producteur extends User {
   Map<String, dynamic> toJson() => _$ProducteurToJson(this);
 }
 
-@JsonSerializable()
-class Consommateur extends User {
+@JsonSerializable(fieldRename: FieldRename.none)
+class Consommateur {
+  @JsonKey(defaultValue: 0)
+  final int id;
+
   @JsonKey(defaultValue: '')
-  final String? preferences;
+  final String nom;
 
-  final String? allergies;
+  @JsonKey(defaultValue: '')
+  final String prenom;
 
-  @JsonKey(defaultValue: true)
-  final bool notificationsActives;
+  @JsonKey(defaultValue: '')
+  final String email;
 
-  @JsonKey(name: 'localisation', defaultValue: '')
+  @JsonKey(defaultValue: '')
+  final String telephone;
+
+  @JsonKey(defaultValue: '')
+  final String role;
+
+  @JsonKey(defaultValue: false)
+  final bool actif;
+
+  @JsonKey(name: 'dateCreation')
+  final DateTime? dateCreation;
+
+  final DateTime? dateDerniereConnexion;
+
+  @JsonKey(defaultValue: '')
   final String localisation;
 
   @JsonKey(defaultValue: 0.0)
@@ -90,47 +118,70 @@ class Consommateur extends User {
   @JsonKey(defaultValue: 0.0)
   final double latitude;
 
+  @JsonKey(defaultValue: '')
+  final String preferences;
+
+  final String? allergies;
+
+  @JsonKey(defaultValue: true)
+  final bool notificationsActives;
+
+  @JsonKey(defaultValue: 0)
+  final int nombreEvaluations;
+
   Consommateur({
-    required super.id,
-    required super.nom,
-    required super.prenom,
-    required super.email,
-    required super.telephone,
+    required this.id,
+    required this.nom,
+    required this.prenom,
+    required this.email,
+    required this.telephone,
+    required this.role,
+    required this.actif,
+    this.dateCreation,
+    this.dateDerniereConnexion,
     required this.localisation,
     required this.longitude,
     required this.latitude,
-    required super.role,
-    required super.actif,
-    required super.dateCreation,
-    super.dateDerniereConnexion,
-    this.preferences,
+    required this.preferences,
     this.allergies,
     required this.notificationsActives,
-  }) : super(
-          adresse: localisation, // Utiliser localisation comme adresse
-        );
+    required this.nombreEvaluations,
+  });
 
   factory Consommateur.fromJson(Map<String, dynamic> json) =>
       _$ConsommateurFromJson(json);
   Map<String, dynamic> toJson() => _$ConsommateurToJson(this);
+
+  String get nomComplet => '$prenom $nom';
+  bool get estActif => actif;
 }
 
 @JsonSerializable()
-class Admin extends User {
+class Admin {
+  final int id;
+  final String nom;
+  final String prenom;
+  final String email;
+  final String telephone;
+  final String adresse;
+  final String role;
+  final bool actif;
+  final DateTime dateCreation;
+  final DateTime? dateDerniereConnexion;
   final String? departement;
   final String? fonction;
 
   Admin({
-    required super.id,
-    required super.nom,
-    required super.prenom,
-    required super.email,
-    required super.telephone,
-    required super.adresse,
-    required super.role,
-    required super.actif,
-    required super.dateCreation,
-    super.dateDerniereConnexion,
+    required this.id,
+    required this.nom,
+    required this.prenom,
+    required this.email,
+    required this.telephone,
+    required this.adresse,
+    required this.role,
+    required this.actif,
+    required this.dateCreation,
+    this.dateDerniereConnexion,
     this.departement,
     this.fonction,
   });

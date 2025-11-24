@@ -8,8 +8,8 @@ part of 'order.dart';
 
 ProduitCommande _$ProduitCommandeFromJson(Map<String, dynamic> json) =>
     ProduitCommande(
-      id: (json['id'] as num).toInt(),
-      nom: json['nom'] as String,
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      nom: json['nom'] as String? ?? '',
       prix: (json['prixUnitaire'] as num?)?.toDouble() ?? 0.0,
     );
 

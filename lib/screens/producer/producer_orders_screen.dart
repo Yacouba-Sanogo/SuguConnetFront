@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/models/order.dart';
+import 'package:suguconnect_mobile/screens/producer/order_detail_screen.dart'; // Ajout de l'import
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
 
@@ -23,7 +24,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this); // Changé de 4 à 3
   }
 
   @override
@@ -56,7 +57,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
             Tab(text: 'En attente'),
             Tab(text: 'Expédiée'),
             Tab(text: 'Livrée'),
-            Tab(text: 'Payées'), // Nouvel onglet
+            // Tab(text: 'Payées'), // Supprimé - les commandes payées sont dans "En attente"
           ],
         ),
       ),
@@ -110,7 +111,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
                 _buildOrderList('En attente'),
                 _buildOrderList('Expédiée'),
                 _buildOrderList('Livrée'),
-                _buildOrderList('Payées'), // Nouvel onglet
+                // _buildOrderList('Payées'), // Supprimé - les commandes payées sont dans "En attente"
               ],
             ),
           ),
@@ -127,8 +128,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
         return 'EN_LIVRAISON';
       case 'Livrée':
         return 'LIVREE';
-      case 'Payées':
-        return 'PAYEE'; // Nouveau statut pour les commandes payées
+      // Pour les commandes payées, on n'utilise pas un statut spécifique
+      // mais plutôt l'endpoint dédié /commandes/payees
       default:
         return '';
     }
@@ -142,87 +143,28 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
         return 'Expédiée';
       case 'LIVREE':
         return 'Livrée';
-      case 'PAYEE':
-        return 'Payées';
+      // Les commandes payées sont gérées via un endpoint spécifique
       default:
         return backend;
     }
   }
 
+  // Nouvelle méthode pour déterminer le statut à afficher pour les commandes payées
+  String _getPaidOrderStatus(Commande commande) {
+    // Si la commande a un paiement validé, elle est payée
+    if (commande.paiement != null && commande.paiement!.estPaye) {
+      return 'Payée';
+    }
+    // Sinon, utiliser le statut de la commande
+    return _statusToUi(commande.statut);
+  }
+
   Widget _buildOrderList(String status) {
+    print('Construction de la liste pour l\'onglet: $status');
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final producteurId = auth.currentUser?.id;
     if (producteurId == null) {
       return const Center(child: Text('Utilisateur non connecté'));
-    }
-
-    // Pour l'onglet "Payées", utiliser une méthode différente
-    if (status == 'Payées') {
-      return RefreshIndicator(
-        onRefresh: () async {
-          setState(() {});
-        },
-        child: FutureBuilder<List<Commande>>(
-          future: _orderService.getOrdersByProducerPaid(
-            producteurId,
-            search: _searchQuery.isNotEmpty ? _searchQuery : null,
-          ),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Erreur: ${snapshot.error}'));
-            }
-            final orders = snapshot.data ?? [];
-            if (orders.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.shopping_cart_outlined,
-                        size: 64, color: Colors.grey.shade300),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Aucune commande payée',
-                      style:
-                          TextStyle(fontSize: 18, color: Colors.grey.shade500),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(20),
-              itemCount: orders.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 16),
-              itemBuilder: (context, index) {
-                final c = orders[index];
-                final uiStatus = _statusToUi(c.statut);
-                final qty = c.detailsCommande.isNotEmpty
-                    ? c.detailsCommande.first.quantite.toString()
-                    : '-';
-                final productName = c.detailsCommande.isNotEmpty
-                    ? c.detailsCommande.first.produit.nom
-                    : 'Produit';
-                final price = c.montantTotal.toStringAsFixed(0) + ' fcfa';
-                return _ModernOrderCard(
-                  orderNumber: c.numeroCommande,
-                  product: '$productName • Qté: $qty • $price',
-                  quantity: qty,
-                  price: price,
-                  status: uiStatus,
-                  onTap: () {
-                    // Implémenter l'action lors du tap sur la commande
-                  },
-                );
-              },
-            );
-          },
-        ),
-      );
     }
 
     final backendStatus = _statusToBackend(status);
@@ -269,7 +211,12 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
               final c = orders[index];
-              final uiStatus = _statusToUi(c.statut);
+              // Pour l'onglet "En attente", vérifier si la commande est payée
+              final uiStatus = (status == 'En attente' &&
+                      c.paiement != null &&
+                      c.paiement!.estPaye)
+                  ? 'Payée'
+                  : _statusToUi(c.statut);
               final qty = c.detailsCommande.isNotEmpty
                   ? c.detailsCommande.first.quantite.toString()
                   : '-';
@@ -283,8 +230,21 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen>
                 quantity: qty,
                 price: price,
                 status: uiStatus,
-                onTap: () {
-                  // Implémenter l'action lors du tap sur la commande
+                onTap: () async {
+                  // Naviguer vers l'écran de détails de la commande
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OrderDetailScreen(order: c),
+                    ),
+                  );
+
+                  // Si on revient avec un résultat true (commande expédiée), rafraîchir la liste
+                  if (result == true) {
+                    setState(() {
+                      // Forcer le rafraîchissement de toutes les listes
+                    });
+                  }
                 },
               );
             },
@@ -652,6 +612,9 @@ class _ModernOrderCard extends StatelessWidget {
         break;
       case 'Livrée':
         statusColor = Colors.green;
+        break;
+      case 'Payée':
+        statusColor = Colors.purple;
         break;
       default:
         statusColor = Colors.grey;

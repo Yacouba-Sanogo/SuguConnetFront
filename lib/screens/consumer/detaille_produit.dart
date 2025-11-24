@@ -39,7 +39,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   @override
   void initState() {
     super.initState();
-
     // Initialisation de l'animation
     _animationController = AnimationController(
       duration: const Duration(seconds: 20),
@@ -149,74 +148,35 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
             'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1');
       }
 
-      // Générer des URLs potentielles pour des images supplémentaires
-      // Par exemple, si l'image principale est "image123.jpg", on peut essayer "image123_2.jpg"
-      if (mainImage != null && mainImage.isNotEmpty) {
-        final String baseName = mainImage.split('.').first;
-        final String extension = mainImage.split('.').last;
-
-        // Vérifier l'existence d'images supplémentaires
-        final potentialImages = [
-          '${baseName}_2.$extension',
-          '${baseName}_3.$extension',
-          '${baseName}2.$extension',
-          '${baseName}3.$extension',
-        ];
-
-        for (final potentialImage in potentialImages) {
-          try {
-            final fullUrl = await _apiService.buildImageUrl(potentialImage);
-            if (await _imageExists(fullUrl)) {
-              images.add(fullUrl);
-            }
-          } catch (e) {
-            print(
-                'Erreur lors de la vérification de l\'image $potentialImage: $e');
-          }
-        }
-      }
-
-      // Ajouter quelques placeholders si nous n'avons toujours qu'une seule image
-      if (images.length == 1) {
-        final String placeholder2 =
-            'https://placehold.co/600x400/FB8C00/FFFFFF?text=${widget.product!['name']}+2';
-        final String placeholder3 =
-            'https://placehold.co/600x400/F57C00/FFFFFF?text=${widget.product!['name']}+3';
-        images.add(placeholder2);
-        images.add(placeholder3);
-      }
-
-      if (mounted) {
-        setState(() {
-          _productImages = images;
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      setState(() {
+        _productImages = images;
+        _imagesLoading = false;
+      });
     } catch (e) {
       print('Erreur lors de la construction des URLs d\'images: $e');
-      // En cas d'erreur, utiliser une seule image
-      if (mounted) {
-        setState(() {
-          _productImages = [
-            'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
-          ];
-          _imagesLoading = false;
-        });
-
-        // Redémarrer le défilement automatique si nécessaire
-        _startAutoSlide();
-      }
+      // En cas d'erreur, utiliser des placeholders
+      setState(() {
+        _productImages = [
+          'https://placehold.co/600x400/FFA726/FFFFFF?text=${widget.product!['name']}+1',
+        ];
+        _imagesLoading = false;
+      });
     }
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _animationController.dispose(); // Dispose l'animation controller
+    _animationController.dispose();
     super.dispose();
+  }
+
+  void _updateQuantity(int change) {
+    setState(() {
+      if (_quantity + change > 0) {
+        _quantity += change;
+      }
+    });
   }
 
   Widget _buildImageSlider() {
@@ -373,14 +333,6 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       ),
       centerTitle: true,
     );
-  }
-
-  void _updateQuantity(int change) {
-    setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
-      }
-    });
   }
 
   Widget _buildProductHeader() {
@@ -620,7 +572,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
+                        builder: (context) => const LoginScreen(role: null)),
                   );
                   return;
                 }

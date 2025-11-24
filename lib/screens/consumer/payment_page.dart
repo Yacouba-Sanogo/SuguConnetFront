@@ -37,7 +37,8 @@ class _PaymentPageState extends State<PaymentPage> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          MaterialPageRoute(
+              builder: (context) => const LoginScreen(role: null)),
         );
       });
 
@@ -592,6 +593,12 @@ class _PaymentPageState extends State<PaymentPage> {
       print('Numéro de téléphone: ${_phoneController.text}');
       print('Méthode de paiement: ${_getPaymentMethodName()}');
 
+      // Récupérer l'ID du consommateur
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final consommateurId = authProvider.currentUser?.id;
+
+      print('Consommateur ID: $consommateurId');
+
       // Créer un paiement
       final paymentService = PaymentService();
       print('Service de paiement instancié');
@@ -653,7 +660,14 @@ class _PaymentPageState extends State<PaymentPage> {
       case PaymentMethod.card:
         return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
       case PaymentMethod.mobile:
-        return 'ORANGE_MONEY'; // Ou 'MOOV_MONEY' selon l'opérateur sélectionné
+        // Retourner la méthode en fonction de l'opérateur sélectionné
+        if (_selectedOperator == 'Orange money') {
+          return 'ORANGE_MONEY';
+        } else if (_selectedOperator == 'Moov money') {
+          return 'MOOV_MONEY';
+        } else {
+          return 'ORANGE_MONEY'; // Par défaut
+        }
       case PaymentMethod.paypal:
         return 'ORANGE_MONEY'; // Pour le moment, utilisons ORANGE_MONEY comme valeur par défaut
       default:

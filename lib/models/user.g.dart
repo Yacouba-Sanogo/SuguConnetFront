@@ -82,23 +82,26 @@ Map<String, dynamic> _$ProducteurToJson(Producteur instance) =>
     };
 
 Consommateur _$ConsommateurFromJson(Map<String, dynamic> json) => Consommateur(
-      id: (json['id'] as num).toInt(),
-      nom: json['nom'] as String,
-      prenom: json['prenom'] as String,
-      email: json['email'] as String,
-      telephone: json['telephone'] as String,
-      localisation: json['localisation'] as String? ?? '',
-      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
-      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
-      role: json['role'] as String,
-      actif: json['actif'] as bool,
-      dateCreation: DateTime.parse(json['dateCreation'] as String),
+      id: (json['id'] as num?)?.toInt() ?? 0,
+      nom: json['nom'] as String? ?? '',
+      prenom: json['prenom'] as String? ?? '',
+      email: json['email'] as String? ?? '',
+      telephone: json['telephone'] as String? ?? '',
+      role: json['role'] as String? ?? '',
+      actif: json['actif'] as bool? ?? false,
+      dateCreation: json['dateCreation'] == null
+          ? null
+          : DateTime.parse(json['dateCreation'] as String),
       dateDerniereConnexion: json['dateDerniereConnexion'] == null
           ? null
           : DateTime.parse(json['dateDerniereConnexion'] as String),
+      localisation: json['localisation'] as String? ?? '',
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
       preferences: json['preferences'] as String? ?? '',
       allergies: json['allergies'] as String?,
       notificationsActives: json['notificationsActives'] as bool? ?? true,
+      nombreEvaluations: (json['nombreEvaluations'] as num?)?.toInt() ?? 0,
     );
 
 Map<String, dynamic> _$ConsommateurToJson(Consommateur instance) =>
@@ -110,15 +113,16 @@ Map<String, dynamic> _$ConsommateurToJson(Consommateur instance) =>
       'telephone': instance.telephone,
       'role': instance.role,
       'actif': instance.actif,
-      'dateCreation': instance.dateCreation.toIso8601String(),
+      'dateCreation': instance.dateCreation?.toIso8601String(),
       'dateDerniereConnexion':
           instance.dateDerniereConnexion?.toIso8601String(),
-      'preferences': instance.preferences,
-      'allergies': instance.allergies,
-      'notificationsActives': instance.notificationsActives,
       'localisation': instance.localisation,
       'longitude': instance.longitude,
       'latitude': instance.latitude,
+      'preferences': instance.preferences,
+      'allergies': instance.allergies,
+      'notificationsActives': instance.notificationsActives,
+      'nombreEvaluations': instance.nombreEvaluations,
     };
 
 Admin _$AdminFromJson(Map<String, dynamic> json) => Admin(

@@ -3,32 +3,27 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'register_screen.dart';
 import 'producer_register_screen.dart';
+import 'consumer_register_screen.dart';
 import '../consumer/main_screen.dart';
 import '../producer/producer_main_screen.dart';
 import '../../services/auth_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../constantes.dart';
 
-// Écran de connexion pour les utilisateurs existants
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  final String? role;
+  const LoginScreen({super.key, this.role});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Clé pour la validation du formulaire
   final _formKey = GlobalKey<FormState>();
-  
-  // Contrôleurs pour les champs de connexion
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  // États pour la visibilité du mot de passe et le chargement
   bool _isPasswordVisible = false;
   bool _isLoading = false;
-  
-  // Plus d'indicatif pays dans l'UI de connexion (maquette minimaliste)
 
   @override
   void dispose() {
@@ -37,10 +32,8 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  // Texte d'aide simple pour le numéro
   String _getPhoneHint() => 'Numéro de téléphone';
 
-  // Normalise pour le backend: on envoie uniquement le numéro local (chiffres)
   String _normalizePhoneNumber(String phone) {
     final digitsOnly = phone.replaceAll(RegExp(r'[^0-9]'), '');
     return digitsOnly;
@@ -54,16 +47,13 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // Test de connexion à l'API
       final isConnected = await AuthService.testConnection();
       if (!isConnected) {
         throw Exception('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
 
-      // Normalise le numéro de téléphone avant l'envoi
       final normalizedPhone = _normalizePhoneNumber(_phoneController.text.trim());
 
-      // Appel de l'AuthProvider
       await Provider.of<AuthProvider>(context, listen: false).login(
         normalizedPhone,
         _passwordController.text,
@@ -78,13 +68,11 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
 
-        // Redirection selon le rôle
         final role = Provider.of<AuthProvider>(context, listen: false).userRole.toUpperCase();
         Widget destination;
         if (role == 'PRODUCTEUR') {
           destination = const ProducerMainScreen();
         } else {
-          // Par défaut CONSOMMATEUR ou ADMIN redirigés vers l'interface consommateur
           destination = MainScreen();
         }
 
@@ -127,22 +115,50 @@ class _LoginScreenState extends State<LoginScreen> {
               left: 0,
               right: 0,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.fromLTRB(20.0, 0.0, 20.0, 5.0),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios_new, size: 20),
-                      onPressed: () => Navigator.pop(context),
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 20),
+                            onPressed: () => Navigator.pop(context),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Text(
-                        'Heureux de vous revoir 🌻',
-                        style: GoogleFonts.itim(fontSize: 20, fontWeight: FontWeight.w600),
+                    const SizedBox(height: 2),
+                    Container(
+                      width: 140,
+                      height: 140,
+                      child: Image.asset(
+                        Constantes.logoPath,
+                        width: 120,
+                        height: 120,
+                        fit: BoxFit.contain,
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Text(
+                            'Heureux de vous revoir 🌻',
+                            style: GoogleFonts.itim(fontSize: 18, fontWeight: FontWeight.w600),
+                            textAlign: TextAlign.left,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -171,7 +187,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: <Widget>[
-                        // Tabs header
                         Container(
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
@@ -196,10 +211,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               Expanded(
                                 child: GestureDetector(
                                   onTap: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const ProducerRegisterScreen()),
-                                    );
+                                    if (widget.role == 'producteur') {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ProducerRegisterScreen()),
+                                      );
+                                    } else {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const ConsumerRegisterScreen()),
+                                      );
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(vertical: 10),
@@ -215,10 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ],
                           ),
                         ),
-
                         const SizedBox(height: 16),
-
-                        // Champ Numéro
                         TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
@@ -252,10 +271,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 12),
-
-                        // Champ Mot de passe
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !_isPasswordVisible,
@@ -288,10 +304,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             return null;
                           },
                         ),
-
                         const SizedBox(height: 16),
-
-                        // Bouton Se connecter
                         SizedBox(
                           width: double.infinity,
                           height: 52,
@@ -327,3 +340,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

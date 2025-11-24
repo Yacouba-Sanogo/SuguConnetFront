@@ -322,7 +322,6 @@ class OrderService {
   }) async {
     try {
       final qp = {
-        'producteurId': producteurId.toString(),
         'nouveauStatut': nouveauStatut,
         if (motifRejet != null && motifRejet.isNotEmpty)
           'motifRejet': motifRejet,
@@ -336,13 +335,14 @@ class OrderService {
               .join('&');
 
       final response = await _apiService.put<Map<String, dynamic>>(
-        '/producteur/commande/$commandeId/statut$query',
+        '/producteur/$producteurId/commande/$commandeId/statut$query',
       );
 
       if (response.statusCode == 200) {
         return Commande.fromJson(response.data!);
       } else {
-        throw Exception('Erreur lors du changement de statut');
+        throw Exception(
+            'Erreur lors du changement de statut: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Erreur lors du changement de statut: $e');
@@ -402,17 +402,20 @@ class OrderService {
   }
 
   /// Mettre à jour le statut d'une commande
-  Future<Commande> updateOrderStatus(int id, String statut) async {
+  Future<void> updateOrderStatus(
+      int commandeId, int producteurId, String nouveauStatut) async {
     try {
-      final response = await _apiService.put<Map<String, dynamic>>(
-        '/commandes/$id/statut',
-        data: {'statut': statut},
+      final response = await _apiService.put(
+        '/commande/$commandeId/statut',
+        queryParameters: {
+          'producteurId': producteurId,
+          'nouveauStatut': nouveauStatut,
+        },
       );
 
-      if (response.statusCode == 200) {
-        return Commande.fromJson(response.data!);
-      } else {
-        throw Exception('Erreur lors de la mise à jour du statut');
+      if (response.statusCode != 200) {
+        throw Exception(
+            'Erreur lors de la mise à jour du statut: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Erreur lors de la mise à jour du statut: $e');

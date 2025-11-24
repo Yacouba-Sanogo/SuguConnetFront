@@ -6,7 +6,10 @@ part 'order.g.dart';
 
 @JsonSerializable()
 class ProduitCommande {
+  @JsonKey(defaultValue: 0)
   final int id;
+
+  @JsonKey(defaultValue: '')
   final String nom;
 
   @JsonKey(name: 'prixUnitaire', defaultValue: 0.0)
@@ -155,7 +158,7 @@ class Paiement {
   Map<String, dynamic> toJson() => _$PaiementToJson(this);
 
   String get montantFormate => '${montant.toStringAsFixed(2)} €';
-  bool get estPaye => statut == 'PAYE';
+  bool get estPaye => statut == 'VALIDE' || statut == 'PAYE';
 }
 
 @JsonSerializable(fieldRename: FieldRename.none)

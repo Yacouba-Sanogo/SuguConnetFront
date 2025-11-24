@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
-import 'register_screen.dart';
 import 'producer_register_screen.dart';
-// Consumer screens removed
+import 'consumer_register_screen.dart';
 
-// Écran de sélection de rôle (Producteur/Consommateur) avec design moderne
 class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
@@ -15,7 +12,6 @@ class RoleSelectionScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Éléments décoratifs orange
             Positioned(
               top: -50,
               right: -50,
@@ -40,15 +36,12 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
               ),
             ),
-            
-            // Contenu principal
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bouton retour
-                  IconButton(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: Container(
                       width: 40,
@@ -64,114 +57,77 @@ class RoleSelectionScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
-                  const SizedBox(height: 80),
-                  
-                  // Bannière de titre
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F5DC), // Beige/crème
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Bienvenue chez SUGUConnect',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 100),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF5F5DC),
+                  ),
+                  child: const Column(
+                    children: [
+                      Text(
+                        'Bienvenue chez SUGUConnect',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Veuillez choisir votre rôle',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.normal,
-                            color: Colors.black,
-                          ),
-                          textAlign: TextAlign.center,
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Veiller choisir votre rôle',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        _buildRoleCard(
+                          context: context,
+                          icon: Icons.people,
+                          title: 'Producteur',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ProducerRegisterScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        _buildRoleCard(
+                          context: context,
+                          icon: Icons.shopping_cart,
+                          title: 'Consommateur',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ConsumerRegisterScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
-                  
-                  const SizedBox(height: 10),
-                  
-                  // Options de sélection de rôle
-                  Expanded(
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          // Carte Producteur
-                          _buildRoleCard(
-                            context: context,
-                            icon: Icons.people,
-                            title: 'Producteur',
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ProducerRegisterScreen(),
-                                ),
-                              );
-                            },
-                          ),
-                          
-                          const SizedBox(height: 20),
-                          
-                          // Consommateur supprimé
-                          
-                          // Bouton de connexion
-                          GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const LoginScreen(),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey[300]!),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.login,
-                                    color: Colors.grey[600],
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'Déjà un compte ? Se connecter',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -189,14 +145,20 @@ class RoleSelectionScreen extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey[300]!),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: Colors.grey.withValues(alpha: 0.3),
+              spreadRadius: 2,
+              blurRadius: 8,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.15),
               spreadRadius: 1,
               blurRadius: 4,
               offset: const Offset(0, 2),
@@ -205,25 +167,17 @@ class RoleSelectionScreen extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: Colors.black,
-                size: 24,
-              ),
+            Icon(
+              icon,
+              color: Colors.black,
+              size: 40,
             ),
-            const SizedBox(width: 16),
+            const SizedBox(width: 24),
             Text(
               title,
               style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+                fontSize: 28,
+                fontWeight: FontWeight.normal,
                 color: Colors.black,
               ),
             ),
@@ -233,3 +187,4 @@ class RoleSelectionScreen extends StatelessWidget {
     );
   }
 }
+

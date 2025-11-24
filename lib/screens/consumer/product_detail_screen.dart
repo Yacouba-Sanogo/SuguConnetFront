@@ -424,15 +424,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: OutlinedButton(
               onPressed: () {
                 if (_produitDetail != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ChatPageSimple(
-                        producerName: _produitDetail!.producteurFullName,
-                        producerAvatar: 'assets/images/improfil.png',
-                      ),
-                    ),
-                  );
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //     builder: (_) => ChatPageSimple(
+                  //       producerName: _produitDetail!.producteurFullName,
+                  //       producerAvatar: 'assets/images/improfil.png',
+                  //     ),
+                  //   ),
+                  // );
                 }
               },
               style: OutlinedButton.styleFrom(
