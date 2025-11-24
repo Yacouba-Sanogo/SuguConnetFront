@@ -392,12 +392,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   // Méthode pour obtenir l'URL de l'image du produit
   Future<String> _getImageUrl(ProduitCommande produit) async {
     try {
-      final apiService = ApiService();
-      // Utiliser une image par défaut qui fonctionne
-      return 'https://placehold.co/100x100?text=Produit';
+      // Utiliser une image placeholder qui fonctionne avec Flutter
+      return 'https://via.placeholder.com/100x100/FFA500/FFFFFF?text=Produit';
     } catch (e) {
       // En cas d'erreur, retourner une URL par défaut qui fonctionne
-      return 'https://placehold.co/100x100?text=Image';
+      return 'https://via.placeholder.com/100x100/CCCCCC/FFFFFF?text=Image';
     }
   }
 }
