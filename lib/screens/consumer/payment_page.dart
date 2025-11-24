@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:suguconnect_mobile/services/payment_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
+import '../../widgets/network_image_with_fallback.dart';
 
 // La page de paiement
 class PaymentPage extends StatefulWidget {
@@ -50,27 +52,21 @@ class _PaymentPageState extends State<PaymentPage> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F9F9),
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Effectuer un paiement',
-              style: TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16),
-            ),
-            const SizedBox(height: 12),
-            _buildOrderSummary(),
+            const SizedBox(height: 16),
+            _buildPaymentSection(),
             const SizedBox(height: 24),
-            _buildPaymentMethodSelector(),
+            _buildOrderSection(),
+            const SizedBox(height: 24),
+            _buildTotalSection(),
             const SizedBox(height: 24),
             _buildPaymentDetails(),
-            const SizedBox(height: 40),
+            const SizedBox(height: 100),
           ],
         ),
       ),
@@ -81,30 +77,249 @@ class _PaymentPageState extends State<PaymentPage> {
   // Construit la barre d'application
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color(0xFFFB662F).withOpacity(0.1),
       elevation: 0,
       leading: GestureDetector(
         onTap: () => Navigator.of(context).pop(),
         child: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey.shade200,
+            color: const Color(0xFFFEE8E3),
             shape: BoxShape.circle,
           ),
           child: const Icon(Icons.arrow_back_ios_new,
-              color: Colors.black54, size: 20),
+              color: Colors.black, size: 20),
         ),
       ),
-      title: const Text(
-        'Confirmation de payement',
-        style: TextStyle(
-            color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 20),
+      title: Text(
+        'Confirmation de paiement',
+        style: GoogleFonts.itim(
+            color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
       ),
       centerTitle: true,
     );
   }
 
-  // Widget pour le résumé de la commande
+  // Widget pour la section Paiement
+  Widget _buildPaymentSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Paiement',
+              style: GoogleFonts.itim(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.phone_android, color: Colors.black, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Orange money, Moov money, Wave',
+                    style: GoogleFonts.itim(
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget pour la section Commande
+  Widget _buildOrderSection() {
+    final orderItems = widget.orderData['items'] as List<dynamic>? ?? [];
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.1),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Commande',
+                  style: GoogleFonts.itim(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    // TODO: Navigation vers la page de détails de commande
+                  },
+                  child: Row(
+                    children: [
+                      Text(
+                        'Voir tout',
+                        style: GoogleFonts.itim(
+                          color: Colors.black,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 20),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Affichage des produits avec images et informations
+            if (orderItems.isNotEmpty) ...[
+              ...orderItems.map((item) {
+                final itemName = item['name'] ?? 'Produit';
+                final itemPriceValue = item['price'] is num
+                    ? item['price']
+                    : double.tryParse(item['price']?.toString() ?? '0.0') ?? 0.0;
+                final itemQuantity = item['quantity'] ?? 1;
+                final itemImage = item['image'] ?? '';
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    children: [
+                      // Image du produit (plus petite)
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey.shade200,
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: itemImage.isNotEmpty
+                              ? FutureBuilder<String>(
+                                  future: _apiService.buildImageUrl(itemImage),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                      return Center(child: CircularProgressIndicator(strokeWidth: 2));
+                                    }
+                                    if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                                      return Icon(Icons.image, size: 30, color: Colors.grey);
+                                    }
+                                    return Image.network(
+                                      snapshot.data!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Icon(Icons.image, size: 30, color: Colors.grey);
+                                      },
+                                    );
+                                  },
+                                )
+                              : Icon(Icons.image, size: 30, color: Colors.grey),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Informations du produit
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              itemName,
+                              style: GoogleFonts.itim(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Qté: $itemQuantity • ${itemPriceValue.toStringAsFixed(0)} FCFA/unité',
+                              style: GoogleFonts.itim(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ] else ...[
+              Text(
+                'Aucun produit dans la commande',
+                style: GoogleFonts.itim(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Widget pour la section Total
+  Widget _buildTotalSection() {
+    final orderAmountValue = widget.orderData['amount'] is num
+        ? widget.orderData['amount']
+        : double.tryParse(widget.orderData['amount']?.toString() ?? '0.0') ?? 0.0;
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFFCBD99B).withOpacity(0.3), // CBD99B à 30%
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Total',
+            style: GoogleFonts.itim(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            '${orderAmountValue.toStringAsFixed(0)} fcfa',
+            style: GoogleFonts.itim(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget pour le résumé de la commande (ancien, à supprimer ou garder pour référence)
   Widget _buildOrderSummary() {
     // S'assurer que orderAmount est un nombre
     final orderAmountValue = widget.orderData['amount'] is num
@@ -373,39 +588,56 @@ class _PaymentPageState extends State<PaymentPage> {
   // Widget pour les détails du paiement (change en fonction de la méthode)
   Widget _buildPaymentDetails() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.grey.withOpacity(0.1),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Détails du paiement',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 16),
-          // Affiche les champs en fonction de la méthode sélectionnée
-          if (_selectedMethod == PaymentMethod.mobile) ...[
-            const Text('Choisir l\'opérateur',
-                style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
-            _buildOperatorDropdown(),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Détails du paiement',
+              style: GoogleFonts.itim(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black,
+              ),
+            ),
             const SizedBox(height: 16),
-            const Text('Votre numéro de téléphone',
-                style: TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
-            _buildPhoneNumberInput(),
-          ] else if (_selectedMethod == PaymentMethod.card) ...[
-            const Center(child: Text("Paiement par carte bancaire")),
-          ] else if (_selectedMethod == PaymentMethod.paypal) ...[
-            const Center(child: Text("Paiement par PayPal")),
+            // Affiche les champs en fonction de la méthode sélectionnée
+            if (_selectedMethod == PaymentMethod.mobile) ...[
+              Text(
+                'Choisir l\'opérateur',
+                style: GoogleFonts.itim(
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildOperatorDropdown(),
+              const SizedBox(height: 16),
+              Text(
+                'Numéro de téléphone',
+                style: GoogleFonts.itim(
+                  color: Colors.black,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              _buildPhoneNumberInput(),
+            ] else if (_selectedMethod == PaymentMethod.card) ...[
+              const Center(child: Text("Paiement par carte bancaire")),
+            ] else if (_selectedMethod == PaymentMethod.paypal) ...[
+              const Center(child: Text("Paiement par PayPal")),
+            ],
           ],
-          const SizedBox(height: 20),
-          _buildSecurePaymentBanner(),
-          const SizedBox(height: 20),
-          _buildCostSummary(),
-        ],
+        ),
       ),
     );
   }
@@ -413,8 +645,9 @@ class _PaymentPageState extends State<PaymentPage> {
   // Widget pour le dropdown des opérateurs
   Widget _buildOperatorDropdown() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
       decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
@@ -422,11 +655,15 @@ class _PaymentPageState extends State<PaymentPage> {
         child: DropdownButton<String>(
           value: _selectedOperator,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down),
+          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.black),
+          style: GoogleFonts.itim(
+            color: Colors.black,
+            fontSize: 14,
+          ),
           items: _operators.map((String value) {
             return DropdownMenuItem<String>(
               value: value,
-              child: Text(value),
+              child: Text(value, style: GoogleFonts.itim()),
             );
           }).toList(),
           onChanged: (newValue) {
@@ -444,22 +681,32 @@ class _PaymentPageState extends State<PaymentPage> {
     return Row(
       children: [
         Container(
+          width: 80,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
           decoration: BoxDecoration(
+            color: Colors.white,
             borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(8), bottomLeft: Radius.circular(8)),
             border: Border.all(color: Colors.grey.shade300),
           ),
           child: Row(
-            children: const [
-              Text('+223'),
-              Icon(Icons.keyboard_arrow_down),
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+                Text(
+                  '223',
+                  style: GoogleFonts.itim(
+                    color: Colors.black,
+                    fontSize: 14,
+                  ),
+                ),
+              Icon(Icons.keyboard_arrow_down, color: Colors.black, size: 20),
             ],
           ),
         ),
         Expanded(
           child: Container(
             decoration: BoxDecoration(
+              color: Colors.white,
               border: Border.all(color: Colors.grey.shade300),
               borderRadius: const BorderRadius.only(
                   topRight: Radius.circular(8),
@@ -468,10 +715,18 @@ class _PaymentPageState extends State<PaymentPage> {
             child: TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              style: GoogleFonts.itim(
+                color: Colors.black,
+                fontSize: 14,
+              ),
+              decoration: InputDecoration(
                 hintText: '12345678',
+                hintStyle: GoogleFonts.itim(
+                  color: Colors.grey,
+                  fontSize: 14,
+                ),
                 border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
               ),
             ),
           ),
@@ -508,17 +763,10 @@ class _PaymentPageState extends State<PaymentPage> {
         ? widget.orderData['amount']
         : double.tryParse(widget.orderData['amount']?.toString() ?? '0.0') ??
             0.0;
-    final processingFee = 0.0; // Pour l'instant, pas de frais
-    final totalAmount = orderAmountValue + processingFee;
 
     return Column(
       children: [
-        _buildCostRow('Montant', '${orderAmountValue.toStringAsFixed(0)} fcfa'),
-        const SizedBox(height: 8),
-        _buildCostRow(
-            'Frais de traitement', '${processingFee.toStringAsFixed(0)} fcfa'),
-        const Divider(height: 24),
-        _buildCostRow('Total', '${totalAmount.toStringAsFixed(0)} fcfa',
+        _buildCostRow('Total', '${orderAmountValue.toStringAsFixed(0)} fcfa',
             isTotal: true),
       ],
     );
@@ -544,26 +792,39 @@ class _PaymentPageState extends State<PaymentPage> {
 
   // Widget pour le bouton de confirmation
   Widget _buildConfirmButton() {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.all(16.0),
-      child: ElevatedButton(
-        onPressed: _isProcessing ? null : _processPayment,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFB662F),
-          minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
           ),
-        ),
-        child: _isProcessing
-            ? const CircularProgressIndicator(color: Colors.white)
-            : const Text(
-                'Confirmer le paiement',
-                style: TextStyle(
-                    fontSize: 18,
+        ],
+      ),
+      child: SafeArea(
+        child: ElevatedButton(
+          onPressed: _isProcessing ? null : _processPayment,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFB662F),
+            minimumSize: const Size(double.infinity, 56),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          child: _isProcessing
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Text(
+                  'Confirmer le paiement',
+                  style: GoogleFonts.inter(
+                    fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white),
-              ),
+                    color: Colors.white,
+                  ),
+                ),
+        ),
       ),
     );
   }

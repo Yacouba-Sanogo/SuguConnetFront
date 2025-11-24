@@ -68,7 +68,7 @@ class _ProducerMainScreenState extends State<ProducerMainScreen> {
                 ),
                 // Bouton Commandes
                 _buildNavItem(
-                  icon: Icons.receipt_long_outlined,
+                  icon: Icons.article,
                   label: 'Commandes',
                   index: 2,
                 ),

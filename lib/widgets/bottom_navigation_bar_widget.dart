@@ -53,7 +53,7 @@ class BottomNavigationBarWidget extends StatelessWidget {
               ),
               // Bouton Commandes
               _buildNavItem(
-                icon: Icons.receipt_long_outlined,
+                icon: Icons.article,
                 label: 'Commandes',
                 index: 2,
                 isSelected: currentIndex == 2,

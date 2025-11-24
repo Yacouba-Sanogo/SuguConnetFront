@@ -3,6 +3,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
@@ -466,9 +468,9 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
                     elevation: 2,
                     shadowColor: AppTheme.primaryColor.withOpacity(0.3),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Ajouter produit',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -647,7 +649,16 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
 
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final user = auth.currentUser;
-    final token = auth.token;
+    
+    // Charger le token depuis SharedPreferences pour s'assurer qu'il est à jour
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token') ?? auth.token;
+    
+    print('=== DEBUG AJOUT PRODUIT ===');
+    print('User ID: ${user?.id}');
+    print('Token présent: ${token != null}');
+    print('Token (premiers caractères): ${token != null ? token.substring(0, 20) : "null"}...');
+    
     if (user?.id == null || token == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Utilisateur non connecté'), backgroundColor: Colors.red),
@@ -667,8 +678,14 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
       }
 
       final uri = Uri.parse('$base/producteur/${user!.id}/produit');
+      print('URL de la requête: $uri');
+      
       final request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
+      // Ne pas définir Content-Type manuellement pour MultipartRequest
+      // Le système le gère automatiquement avec le bon boundary
+      
+      print('Headers envoyés: ${request.headers}');
 
       // Mapping unités UI -> backend enum Unite
       String mapUnite(String u) {
@@ -708,6 +725,7 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
       request.fields['unite'] = mapUnite(_unit);
       request.fields['quantite'] = (_qtyCtrl.text.trim().isEmpty ? '0' : _qtyCtrl.text.trim());
       request.fields['categorieId'] = mapCategorieId(_category).toString();
+      request.fields['est_bio'] = _isBio.toString();
 
       // Photos (max 4)
       final images = _selectedImages.take(4).toList();

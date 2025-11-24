@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 /// Widget réutilisable pour les boutons orange principaux
 class PrimaryButton extends StatelessWidget {
@@ -52,7 +53,7 @@ class PrimaryButton extends StatelessWidget {
                   ],
                   Text(
                     text,
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       color: Colors.white,
                       fontSize: fontSize,
                       fontWeight: FontWeight.bold,
