@@ -1,7 +1,7 @@
 class ProduitPopulaire {
   final int produitId;
   final String nomProduit;
-  final String description;
+  final String? description;
   final double prixUnitaire;
   final String unite;
   final String photoUrl;
@@ -14,7 +14,7 @@ class ProduitPopulaire {
   ProduitPopulaire({
     required this.produitId,
     required this.nomProduit,
-    required this.description,
+    this.description,
     required this.prixUnitaire,
     required this.unite,
     required this.photoUrl,
@@ -29,7 +29,7 @@ class ProduitPopulaire {
     return ProduitPopulaire(
       produitId: json['produitId'] as int,
       nomProduit: json['nomProduit'] as String,
-      description: json['description'] as String,
+      description: json['description'] as String?,
       prixUnitaire: (json['prixUnitaire'] as num).toDouble(),
       unite: json['unite'] as String,
       photoUrl: json['photoUrl'] as String,

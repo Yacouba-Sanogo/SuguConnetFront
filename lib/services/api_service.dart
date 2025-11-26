@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'auth_service.dart';
 
 // URL de base de l'API - à modifier selon l'environnement
-const String BASE_API_URL = 'http://10.175.47.42:8080';
+const String BASE_API_URL = 'http://localhost:8080';
 
 const String BASE_URL = '$BASE_API_URL/suguconnect';
 
@@ -38,9 +38,25 @@ class ApiService {
       onRequest: (options, handler) async {
         print(
             'Requête envoyée: ${options.method} ${options.baseUrl}${options.path}');
-        if (_token != null) {
-          options.headers['Authorization'] = 'Bearer $_token';
+
+        // Ne pas ajouter le token pour les endpoints publics
+        final isPublicEndpoint =
+            options.path.contains('/api/produits/populaires') ||
+                options.path.contains('/categorie');
+
+        if (!isPublicEndpoint) {
+          await _loadToken(); // Recharger le token à chaque requête
+          if (_token != null) {
+            options.headers['Authorization'] = 'Bearer $_token';
+            print(
+                'Token ajouté: ${_token!.substring(0, _token!.length > 20 ? 20 : _token!.length)}...');
+          } else {
+            print('ATTENTION: Aucun token disponible pour cette requête');
+          }
+        } else {
+          print('Endpoint public - pas de token ajouté');
         }
+
         handler.next(options);
       },
       onError: (error, handler) {
@@ -56,6 +72,12 @@ class ApiService {
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('auth_token');
+    if (_token != null) {
+      print(
+          'Token chargé depuis SharedPreferences: ${_token!.substring(0, _token!.length > 20 ? 20 : _token!.length)}...');
+    } else {
+      print('ATTENTION: Aucun token trouvé dans SharedPreferences');
+    }
   }
 
   Future<void> _saveToken(String token) async {
@@ -80,6 +102,25 @@ class ApiService {
 
     // Log pour le débogage
     print('=== Requête GET ===');
+    print('Path: $path');
+    print('Query parameters: $queryParameters');
+
+    return _dio!.get<T>(
+      path,
+      queryParameters: queryParameters,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> getPublic<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    await _ensureClient();
+
+    // Log pour le débogage
+    print('=== Requête GET Public ===');
     print('Path: $path');
     print('Query parameters: $queryParameters');
 

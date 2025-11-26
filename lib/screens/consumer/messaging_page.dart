@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'chat_page.dart'; // Remplacement de chat_page_simple.dart par chat_page.dart
 import 'notifications_page.dart';
+import '../producer/producer_refunds_screen.dart';
+import '../producer/producer_payments_screen.dart';
+import '../producer/producer_orders_screen.dart';
+import 'driver_list_screen.dart';
 
-// Page principale de messagerie avec liste des conversations
+// Page principale de notifications
 class MessagingPage extends StatefulWidget {
   @override
   _MessagingPageState createState() => _MessagingPageState();
@@ -12,44 +15,32 @@ class _MessagingPageState extends State<MessagingPage> {
   String _selectedFilter = 'TOUS';
   final TextEditingController _searchController = TextEditingController();
 
-  // Liste des conversations
-  final List<Map<String, dynamic>> _contacts = [
-    {
-      'id': '1',
-      'name': 'Mamadou Diallo',
-      'lastMessage': 'Bonjour, votre commande est prête',
-      'time': '14:30',
-      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
-      'isOnline': true,
-      'role': 'Producteur',
-    },
-    {
-      'id': '2',
-      'name': 'Aicha Koné',
-      'lastMessage': 'Merci pour votre achat !',
-      'time': '12:15',
-      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
-      'isOnline': false,
-      'role': 'Producteur',
-    },
-    {
-      'id': '3',
-      'name': 'Ibrahim Touré',
-      'lastMessage': 'Votre livraison arrive dans 30 min',
-      'time': '10:45',
-      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
-      'isOnline': true,
-      'role': 'Livreur',
-    },
-    {
-      'id': '4',
-      'name': 'Fatou Diop',
-      'lastMessage': 'Pouvez-vous préciser l\'adresse ?',
-      'time': '09:20',
-      'avatar': 'assets/images/improfil.png', // Utiliser une image existante
-      'isOnline': false,
-      'role': 'Producteur',
-    },
+  // Liste des notifications
+  final List<NotificationItem> _notifications = [
+    NotificationItem(
+      title: "Commande",
+      description: "Lorem ipsum dolor sit amet, elit.",
+      time: "10:20",
+      icon: Icons.receipt,
+      iconColor: Colors.blue,
+      cardColor: const Color(0xFFE8EAF6), // Lavande clair
+    ),
+    NotificationItem(
+      title: "Livraison",
+      description: "Lorem ipsum dolor sit amet, elit.",
+      time: "Hier",
+      icon: Icons.local_shipping,
+      iconColor: Colors.orange,
+      cardColor: const Color(0xFFFFF3E0), // Orange clair
+    ),
+    NotificationItem(
+      title: "Paiement",
+      description: "Lorem ipsum dolor sit amet, elit.",
+      time: "10:20",
+      icon: Icons.account_balance_wallet,
+      iconColor: const Color(0xFF8FA31E), // Olive green
+      cardColor: const Color(0xFFE8F5E8), // Vert clair
+    ),
   ];
 
   @override
@@ -60,8 +51,8 @@ class _MessagingPageState extends State<MessagingPage> {
       body: Column(
         children: [
           _buildSearchBar(),
-          _buildFilterButtons(),
-          _buildConversationsList(),
+          _buildNotificationsTitle(),
+          _buildNotificationsList(),
         ],
       ),
     );
@@ -70,7 +61,7 @@ class _MessagingPageState extends State<MessagingPage> {
   // Construit la barre d'application
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFFB662F).withOpacity(0.1),
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -84,38 +75,7 @@ class _MessagingPageState extends State<MessagingPage> {
           fontSize: 20,
         ),
       ),
-      actions: [
-        Container(
-          margin: const EdgeInsets.only(right: 16),
-          child: GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
-              );
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.black54,
-                  size: 24,
-                ),
-                const Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      centerTitle: true,
     );
   }
 
@@ -140,171 +100,142 @@ class _MessagingPageState extends State<MessagingPage> {
     );
   }
 
-  // Construit les boutons de filtre
-  Widget _buildFilterButtons() {
+  // Construit le titre des notifications
+  Widget _buildNotificationsTitle() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          _buildFilterButton('TOUS', _selectedFilter == 'TOUS'),
-          const SizedBox(width: 12),
-          _buildFilterButton('Non lus', _selectedFilter == 'Non lus'),
-          const Spacer(),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
-              );
-            },
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: Colors.black54,
-                  size: 20,
-                ),
-                const Text(
-                  'Notifications',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 10,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: const Text(
+        'Notifications',
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black,
+        ),
+        textAlign: TextAlign.left,
       ),
     );
   }
 
-  // Construit un bouton de filtre
-  Widget _buildFilterButton(String text, bool isSelected) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedFilter = text;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFB662F) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFFFB662F) : Colors.grey[300]!,
-          ),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Construit la liste des conversations
-  Widget _buildConversationsList() {
+  // Construit la liste des notifications
+  Widget _buildNotificationsList() {
     return Expanded(
-      child: ListView.separated(
+      child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _contacts.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemCount: _notifications.length,
         itemBuilder: (context, index) {
-          final conversation = _contacts[index];
-          return _buildConversationItem(conversation);
+          final notification = _notifications[index];
+          return GestureDetector(
+            onTap: () {
+              if (notification.title == "Commande") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProducerOrdersScreen(),
+                  ),
+                );
+              } else if (notification.title == "Livraison") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const DriverListScreen(),
+                  ),
+                );
+              } else if (notification.title == "Demandes de remboursement") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProducerRefundsScreen(),
+                  ),
+                );
+              } else if (notification.title == "Paiement") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProducerPaymentsScreen(),
+                  ),
+                );
+              }
+            },
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: notification.cardColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Icône de la notification
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: notification.iconColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        notification.icon,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    
+                    const SizedBox(width: 16),
+                    
+                    // Contenu de la notification
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            notification.title,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            notification.description,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Timestamp
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        notification.time,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
         },
       ),
-    );
-  }
-
-  // Construit un élément de conversation
-  Widget _buildConversationItem(Map<String, dynamic> conversation) {
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(vertical: 8),
-      leading: Stack(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundImage: AssetImage(conversation['avatar']),
-            child: conversation['avatar'] == null
-                ? const Icon(Icons.person, color: Colors.white)
-                : null,
-          ),
-          if (conversation['unread'])
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFFB662F),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-        ],
-      ),
-      title: Text(
-        conversation['name'],
-        style: const TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-      subtitle: Text(
-        conversation['lastMessage'],
-        style: TextStyle(
-          color: Colors.grey[600],
-          fontSize: 14,
-        ),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            conversation['time'],
-            style: TextStyle(
-              color: Colors.grey[500],
-              fontSize: 12,
-            ),
-          ),
-          if (conversation['isOnline'])
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: Colors.green,
-                shape: BoxShape.circle,
-              ),
-            ),
-        ],
-      ),
-      onTap: () {
-        // Navigation vers la page de chat
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ChatPage(
-              producerId: int.tryParse(conversation['id']) ??
-                  1, // Conversion de l'ID en int
-              producerName: conversation['name'],
-              producerAvatar: conversation['avatar'],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -313,4 +244,23 @@ class _MessagingPageState extends State<MessagingPage> {
     _searchController.dispose();
     super.dispose();
   }
+}
+
+// Modèle de données pour les notifications
+class NotificationItem {
+  final String title;
+  final String description;
+  final String time;
+  final IconData icon;
+  final Color iconColor;
+  final Color cardColor;
+
+  NotificationItem({
+    required this.title,
+    required this.description,
+    required this.time,
+    required this.icon,
+    required this.iconColor,
+    required this.cardColor,
+  });
 }

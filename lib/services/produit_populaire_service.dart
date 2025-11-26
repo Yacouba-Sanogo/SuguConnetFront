@@ -10,7 +10,7 @@ class ProduitPopulaireService {
   /// Récupère les produits les plus populaires
   Future<List<ProduitPopulaire>> getProduitsPopulaires() async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
+      final response = await _apiService.getPublic<List<dynamic>>(
         '/api/produits/populaires',
       );
 
@@ -33,7 +33,7 @@ class ProduitPopulaireService {
   /// Récupère les N produits les plus populaires
   Future<List<ProduitPopulaire>> getTopProduitsPopulaires(int limit) async {
     try {
-      final response = await _apiService.get<List<dynamic>>(
+      final response = await _apiService.getPublic<List<dynamic>>(
         '/api/produits/populaires/top/$limit',
       );
 

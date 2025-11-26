@@ -57,6 +57,9 @@ class OrderService {
       if (response.statusCode == 200) {
         print('Commande créée avec succès');
         return response.data!;
+      } else if (response.statusCode == 403) {
+        throw Exception(
+            'Vous n\'êtes pas autorisé à passer une commande pour ce consommateur. Veuillez vous déconnecter et vous reconnecter.');
       } else {
         throw Exception(
             'Erreur lors de la création de la commande: ${response.statusCode}');

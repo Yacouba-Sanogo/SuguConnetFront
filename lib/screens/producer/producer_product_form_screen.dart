@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io';
 import '../../providers/auth_provider.dart';
 import '../../services/auth_service.dart';
+import '../constantes.dart';
 
 class ProducerProductFormScreen extends StatefulWidget {
   const ProducerProductFormScreen({super.key});
@@ -59,6 +60,7 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
+        centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.black87),
       ),
       body: SingleChildScrollView(
@@ -227,11 +229,68 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
               
               // Photos du produit (jusqu'à 4)
               _ModernSection(
-                title: 'Photos du produit (max 4)',
+                title: 'Photo du produit',
                 child: Column(
                   children: [
-                    // Grille des images
-                    if (_selectedImages.isNotEmpty)
+                    // Zone d'upload avec bordure pointillée
+                    GestureDetector(
+                      onTap: _selectedImages.length < 4 ? _pickImage : null,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.grey.shade300,
+                            width: 2,
+                            style: BorderStyle.solid,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            // Icône caméra
+                            Icon(
+                              Icons.camera_alt_outlined,
+                              size: 64,
+                              color: Colors.black87,
+                            ),
+                            const SizedBox(height: 16),
+                            // Texte d'instruction
+                            Text(
+                              'Ajouter des images pour votre produit(4 photos maximum)',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.black87,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            // Bouton "Choisir une image"
+                            if (_selectedImages.length < 4)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: orangePrincipal.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  'Choisir une image',
+                                  style: TextStyle(
+                                    color: orangePrincipal,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    
+                    // Grille des images sélectionnées
+                    if (_selectedImages.isNotEmpty) ...[
+                      const SizedBox(height: 16),
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
@@ -281,46 +340,7 @@ class _ProducerProductFormScreenState extends State<ProducerProductFormScreen> {
                           );
                         },
                       ),
-                    
-                    const SizedBox(height: 12),
-                    
-                    // Bouton ajouter image
-                    if (_selectedImages.length < 4)
-                      GestureDetector(
-                        onTap: _pickImage,
-                        child: Container(
-                          height: 100,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: AppTheme.primaryColor,
-                              width: 2,
-                              style: BorderStyle.solid,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.add_photo_alternate,
-                                color: AppTheme.primaryColor,
-                                size: 32,
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Ajouter une photo (${_selectedImages.length}/4)',
-                                style: TextStyle(
-                                  color: AppTheme.primaryColor,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    ],
                   ],
                 ),
               ),
@@ -832,6 +852,101 @@ class _ModernQtyBtn extends StatelessWidget {
       ),
     );
   }
+}
+
+// Painter pour bordure pointillée
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double borderRadius;
+  final double dashWidth;
+  final double dashSpace;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 2.0,
+    this.borderRadius = 12.0,
+    this.dashWidth = 5.0,
+    this.dashSpace = 3.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    // Dessiner les lignes pointillées pour les côtés
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(0, borderRadius),
+      Offset(0, size.height - borderRadius),
+    );
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(borderRadius, 0),
+      Offset(size.width - borderRadius, 0),
+    );
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(size.width, borderRadius),
+      Offset(size.width, size.height - borderRadius),
+    );
+    _drawDashedLine(
+      canvas,
+      paint,
+      Offset(borderRadius, size.height),
+      Offset(size.width - borderRadius, size.height),
+    );
+
+    // Dessiner les coins arrondis avec des arcs pointillés
+    _drawDashedArc(canvas, paint, Offset(borderRadius, borderRadius), borderRadius, 1.5 * 3.14159, 3.14159 / 2);
+    _drawDashedArc(canvas, paint, Offset(size.width - borderRadius, borderRadius), borderRadius, 0, 3.14159 / 2);
+    _drawDashedArc(canvas, paint, Offset(size.width - borderRadius, size.height - borderRadius), borderRadius, 3.14159 / 2, 3.14159 / 2);
+    _drawDashedArc(canvas, paint, Offset(borderRadius, size.height - borderRadius), borderRadius, 3.14159, 3.14159 / 2);
+  }
+
+  void _drawDashedLine(Canvas canvas, Paint paint, Offset start, Offset end) {
+    final path = Path();
+    final distance = (end - start).distance;
+    if (distance == 0) return;
+    final dashCount = (distance / (dashWidth + dashSpace)).floor();
+    final unit = (end - start) / distance;
+
+    for (int i = 0; i < dashCount; i++) {
+      final dashStart = start + unit * (i * (dashWidth + dashSpace));
+      final dashEnd = start + unit * (i * (dashWidth + dashSpace) + dashWidth);
+      path.moveTo(dashStart.dx, dashStart.dy);
+      path.lineTo(dashEnd.dx, dashEnd.dy);
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  void _drawDashedArc(Canvas canvas, Paint paint, Offset center, double radius, double startAngle, double sweepAngle) {
+    final path = Path();
+    final circumference = radius * sweepAngle;
+    final dashCount = (circumference / (dashWidth + dashSpace)).floor();
+    if (dashCount == 0) return;
+    final angleStep = sweepAngle / dashCount;
+
+    for (int i = 0; i < dashCount; i++) {
+      final angle1 = startAngle + i * angleStep;
+      final angle2 = startAngle + i * angleStep + (dashWidth / radius);
+      path.addArc(
+        Rect.fromCircle(center: center, radius: radius),
+        angle1,
+        (angle2 - angle1).clamp(0.0, sweepAngle - (i * angleStep)),
+      );
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 

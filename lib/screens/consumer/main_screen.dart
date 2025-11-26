@@ -4,16 +4,28 @@ import 'acceuil.dart';
 import 'favoris_page.dart';
 import 'commandes_page.dart';
 import 'profil_page.dart';
+import '../../widgets/entete_widget.dart';
+import '../../widgets/bottom_navigation_bar_widget.dart';
 
 // Écran principal de l'interface consommateur avec navigation par onglets
 class MainScreen extends StatefulWidget {
+  final int? initialIndex;
+  
+  const MainScreen({super.key, this.initialIndex});
+
   @override
   _MainScreenState createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
   // Index de la page actuellement sélectionnée
-  int _currentIndex = 0;
+  late int _currentIndex;
+  
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex ?? 0;
+  }
 
   // Liste des pages disponibles dans l'interface consommateur
   final List<Widget> _pages = [
@@ -25,12 +37,25 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Déterminer si la page actuelle doit avoir un appBar
+    final bool showAppBar = _currentIndex == 1 || _currentIndex == 2; // Favoris ou Commandes
+    
     return Scaffold(
+      appBar: showAppBar ? const EnteteWidget() : null,
       // Animated switcher for smooth page transitions when tapping bottom items
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 320),
         transitionBuilder: (child, animation) => FadeTransition(opacity: animation, child: ScaleTransition(scale: animation, child: child)),
-        child: _pages[_currentIndex],
+        child: Container(
+          key: ValueKey(_currentIndex),
+          child: _currentIndex == 1 
+            ? FavorisPage(showAppBar: false)
+            : _currentIndex == 2
+              ? CommandesPage(showAppBar: false)
+              : _currentIndex == 3
+                ? ProfilPage(showAppBar: false)
+                : _pages[_currentIndex],
+        ),
         layoutBuilder: (currentChild, previousChildren) {
           return Stack(
             alignment: Alignment.center,
@@ -53,97 +78,9 @@ class _MainScreenState extends State<MainScreen> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
 
       // BottomNavigationBar simple et propre comme dans l'image
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.08),
-              blurRadius: 18,
-              spreadRadius: 1,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Container(
-            height: 58,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Bouton Accueil
-                _buildNavItem(
-                  icon: Icons.home_outlined,
-                  label: 'Accueil',
-                  index: 0,
-                ),
-                // Bouton Produits
-                _buildNavItem(
-                  icon: Icons.favorite_border,
-                  label: 'Favoris',
-                  index: 1,
-                ),
-                // Bouton Commandes
-                _buildNavItem(
-                  icon: Icons.receipt_long_outlined,
-                  label: 'Commandes',
-                  index: 2,
-                ),
-                // Bouton Profil
-                _buildNavItem(
-                  icon: Icons.person_outline,
-                  label: 'Profil',
-                  index: 3,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Widget pour créer un élément de navigation
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-  }) {
-    final isSelected = _currentIndex == index;
-    return Expanded(
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => setState(() => _currentIndex = index),
-          splashColor: Color(0xFFFB662F).withOpacity(0.2),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 6),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  icon,
-                  size: 22,
-                  color: isSelected ? Color(0xFFFB662F) : Colors.black,
-                ),
-                SizedBox(height: 3),
-                Text(
-                  label,
-                  style: GoogleFonts.itim(
-                    fontSize: 11,
-                    color: isSelected ? Color(0xFFFB662F) : Colors.black,
-                    fontWeight: FontWeight.normal,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+      bottomNavigationBar: BottomNavigationBarWidget(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
       ),
     );
   }

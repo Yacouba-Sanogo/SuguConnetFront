@@ -11,6 +11,7 @@ import '../../services/product_service.dart'; // Ajout du service produit
 import '../../models/product.dart'; // Ajout du modèle produit
 import 'category_products_page.dart'; // Ajout de la nouvelle page
 import '../consumer/panier.dart';
+import '../../widgets/entete_accueil.dart'; // Widget d'en-tête
 
 // Page d'accueil principale de l'application consommateur
 class AccueilPage extends StatefulWidget {
@@ -115,95 +116,12 @@ class _AccueilPageState extends State<AccueilPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'SuguConnect',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Color.fromARGB(255, 245, 140, 2)),
-            onPressed: () {
-              // Navigation vers la page de notifications
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationsPage(),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-      // Corps de la page avec défilement vertical
       body: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // Alignement à gauche
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Section image principale avec texte en overlay
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0), // Marges latérales
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20), // Coins arrondis
-                child: Stack(
-                  children: [
-                    // Image de fond de la page d'accueil
-                    SizedBox(
-                      width: double.infinity, // Largeur complète
-                      height: 200, // Hauteur fixe
-                      child: Image.asset(
-                        'assets/images/imagedelapagecusumerhome.png',
-                        fit: BoxFit.cover, // Couvrir tout l'espace
-                      ),
-                    ),
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withOpacity(0.35),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 200,
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Text(
-                            'Découvrez nos produits frais',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 22,
-                              fontWeight: FontWeight.w700,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black26,
-                                  offset: Offset(0, 2),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // Section image principale avec le widget d'en-tête
+            const EnteteAccueil(),
 
             SizedBox(height: 20),
 
@@ -270,23 +188,31 @@ class _AccueilPageState extends State<AccueilPage> {
       );
     }
 
-    // Mapping des catégories avec leurs icônes et images
+    // Mapping des catégories avec leurs icônes, images et couleurs
     final categoryData = {
       'Fruits': {
-        'icon': 'assets/images/Fruits.svg',
-        'image': 'assets/images/pommes.png'
-      },
-      'Céréales': {
-        'icon': 'assets/images/Cereales.svg',
-        'image': 'assets/images/mais.png'
+        'icon': 'assets/icons/fruits.png',
+        'image': 'assets/images/fruits.jpg',
+        'backgroundColor': Color(0x4DF97A00), // F97A00 à 30%
+        'iconColor': Color(0xFFF97A00), // Orange pour l'icône
       },
       'Légumes': {
-        'icon': 'assets/images/Legumes.svg',
-        'image': 'assets/images/carottes.png'
+        'icon': 'assets/icons/legumes.png',
+        'image': 'assets/images/legumes.jpg',
+        'backgroundColor': Color(0x4D8FA31E),
+        'iconColor': Color(0xFF8FA31E), // Vert pour l'icône
+      },
+      'Céréales': {
+        'icon': 'assets/icons/cereales.png',
+        'image': 'assets/images/cereales.jpg',
+        'backgroundColor': Color(0x33FFFF00),
+        'iconColor': Color(0xFFFFAA00), // Orange pour l'icône
       },
       'Épices': {
-        'icon': 'assets/images/Epices.svg',
-        'image': 'assets/images/Oignons.png'
+        'icon': 'assets/icons/epices.png',
+        'image': 'assets/images/epices.jpg',
+        'backgroundColor': Color(0x4CDC143C),
+        'iconColor': Color(0xFFDC143C), // Rouge pour l'icône
       },
     };
 
@@ -302,16 +228,19 @@ class _AccueilPageState extends State<AccueilPage> {
         children: _categories.map((categorie) {
           final data = categoryData[categorie.nom] ??
               {
-                'icon': 'assets/images/Fruits.svg',
-                'image': 'assets/images/pommes.png'
+                'icon': 'assets/icons/fruits.png',
+                'image': 'assets/images/pommes.png',
+                'backgroundColor': Color(0x4DF97A00),
+                'iconColor': Color(0xFFF97A00),
               };
 
           return _buildCategoryCard(
             context,
             categorie.nom,
-            data['icon']!,
-            data['image']!,
-            Colors.deepOrange,
+            data['icon'] as String,
+            data['image'] as String,
+            data['iconColor'] as Color,
+            data['backgroundColor'] as Color,
           );
         }).toList(),
       ),
@@ -377,7 +306,7 @@ class _AccueilPageState extends State<AccueilPage> {
                 'producerId': produit.producteurId
                     .toString(), // Ajout de l'ID du producteur
                 'producerAvatar': 'assets/images/improfil.png',
-                'description': produit.description,
+                'description': produit.description ?? '',
               };
 
               return GestureDetector(
@@ -517,7 +446,7 @@ class _AccueilPageState extends State<AccueilPage> {
   }
 
   Widget _buildCategoryCard(BuildContext context, String title, String iconPath,
-      String headerImage, Color color) {
+      String headerImage, Color iconColor, Color backgroundColor) {
     return GestureDetector(
       onTap: () {
         // Trouver la catégorie correspondante
@@ -542,15 +471,14 @@ class _AccueilPageState extends State<AccueilPage> {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: color.withOpacity(0.9), width: 1.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.08),
-              spreadRadius: 1,
-              blurRadius: 6,
-              offset: Offset(0, 4),
+              color: Colors.black.withOpacity(0.1),
+              spreadRadius: 0,
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
           ],
         ),
@@ -558,47 +486,45 @@ class _AccueilPageState extends State<AccueilPage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: FutureBuilder<bool>(
-                  future: _assetExists(iconPath),
-                  builder: (context, snapshot) {
-                    final exists = snapshot.data ?? false;
-                    if (iconPath.toLowerCase().endsWith('.svg') && exists) {
-                      return SvgPicture.asset(
-                        iconPath,
-                        width: 34,
-                        height: 34,
-                        color: color,
-                      );
-                    }
-                    // fallback to headerImage (raster) or to a placeholder
-                    if (headerImage.isNotEmpty) {
-                      return Image.asset(
-                        headerImage,
-                        width: 34,
-                        height: 34,
-                        color: color,
-                        fit: BoxFit.contain,
-                      );
-                    }
-                    return Icon(Icons.image, color: color, size: 34);
-                  },
-                ),
-              ),
+            FutureBuilder<bool>(
+              future: _assetExists(iconPath),
+              builder: (context, snapshot) {
+                final exists = snapshot.data ?? false;
+                if (iconPath.toLowerCase().endsWith('.svg') && exists) {
+                  return SvgPicture.asset(
+                    iconPath,
+                    width: 64,
+                    height: 64,
+                    color: iconColor,
+                  );
+                }
+                // Pour les PNG, utiliser iconPath directement
+                if (exists && iconPath.toLowerCase().endsWith('.png')) {
+                  return Image.asset(
+                    iconPath,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.contain,
+                  );
+                }
+                // fallback to headerImage (raster) or to a placeholder
+                if (headerImage.isNotEmpty) {
+                  return Image.asset(
+                    headerImage,
+                    width: 64,
+                    height: 64,
+                    fit: BoxFit.contain,
+                  );
+                }
+                return Icon(Icons.image, color: iconColor, size: 64);
+              },
             ),
             const SizedBox(height: 10),
             Text(
               title,
               style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+                fontSize: 22,
+                fontWeight: FontWeight.normal,
                 color: Colors.black87,
               ),
             ),

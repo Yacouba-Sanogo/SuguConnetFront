@@ -12,7 +12,7 @@ class AuthService {
 
   // Génère la liste des hôtes candidats selon l'environnement
   static List<String> _candidateHosts() {
-    const lanIp = '10.175.47.42'; // Utilisation de votre adresse IP réelle
+    const lanIp = '192.168.1.133'; // Adresse IP de l'ordinateur
     const port = 8080;
     const contextPath = 'suguconnect';
 

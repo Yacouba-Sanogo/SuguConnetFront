@@ -8,8 +8,9 @@ class ProductService {
   /// Récupérer tous les produits (endpoint public consommateur)
   Future<List<Produit>> getAllProducts() async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/consommateur/produits');
-      
+      final response =
+          await _apiService.get<List<dynamic>>('/consommateur/produits');
+
       if (response.statusCode == 200) {
         return response.data!
             .map((json) => Produit.fromJson(json as Map<String, dynamic>))
@@ -25,8 +26,9 @@ class ProductService {
   /// Récupérer un produit par ID
   Future<Produit> getProductById(int id) async {
     try {
-      final response = await _apiService.get<Map<String, dynamic>>('/produits/$id');
-      
+      final response =
+          await _apiService.get<Map<String, dynamic>>('/produits/$id');
+
       if (response.statusCode == 200) {
         return Produit.fromJson(response.data!);
       } else {
@@ -40,14 +42,16 @@ class ProductService {
   /// Récupérer les produits d'un producteur
   Future<List<Produit>> getProductsByProducer(int producteurId) async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/produits/producteur/$producteurId');
-      
+      final response = await _apiService
+          .get<List<dynamic>>('/produits/producteur/$producteurId');
+
       if (response.statusCode == 200) {
         return response.data!
             .map((json) => Produit.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw Exception('Erreur lors de la récupération des produits du producteur');
+        throw Exception(
+            'Erreur lors de la récupération des produits du producteur');
       }
     } catch (e) {
       throw Exception('Erreur lors de la récupération des produits: $e');
@@ -61,7 +65,7 @@ class ProductService {
         '/produits/producteur/$producteurId',
         data: produit.toJson(),
       );
-      
+
       if (response.statusCode == 201) {
         return Produit.fromJson(response.data!);
       } else {
@@ -79,7 +83,7 @@ class ProductService {
         '/produits/$id',
         data: produit.toJson(),
       );
-      
+
       if (response.statusCode == 200) {
         return Produit.fromJson(response.data!);
       } else {
@@ -94,7 +98,7 @@ class ProductService {
   Future<void> deleteProduct(int id) async {
     try {
       final response = await _apiService.delete('/produits/$id');
-      
+
       if (response.statusCode != 200 && response.statusCode != 204) {
         throw Exception('Erreur lors de la suppression du produit');
       }
@@ -106,8 +110,8 @@ class ProductService {
   /// Récupérer toutes les catégories
   Future<List<Categorie>> getAllCategories() async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/categories');
-      
+      final response = await _apiService.getPublic<List<dynamic>>('/categorie');
+
       if (response.statusCode == 200) {
         return response.data!
             .map((json) => Categorie.fromJson(json as Map<String, dynamic>))
@@ -123,8 +127,9 @@ class ProductService {
   /// Récupérer les évaluations d'un producteur
   Future<List<Evaluation>> getEvaluationsByProducer(int producteurId) async {
     try {
-      final response = await _apiService.get<List<dynamic>>('/evaluations/producteur/$producteurId');
-      
+      final response = await _apiService
+          .get<List<dynamic>>('/evaluations/producteur/$producteurId');
+
       if (response.statusCode == 200) {
         return response.data!
             .map((json) => Evaluation.fromJson(json as Map<String, dynamic>))
@@ -144,7 +149,7 @@ class ProductService {
         '/evaluations',
         data: evaluation.toJson(),
       );
-      
+
       if (response.statusCode == 201) {
         return Evaluation.fromJson(response.data!);
       } else {

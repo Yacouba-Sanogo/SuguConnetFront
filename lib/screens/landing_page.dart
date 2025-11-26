@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../constantes.dart';
+import '../constantes.dart';
 import 'auth/login_screen.dart';
 import 'auth/role_selection_screen.dart';
 
@@ -51,7 +51,8 @@ class LandingPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const LoginScreen(role: null),
+                                builder: (context) =>
+                                    const LoginScreen(role: null),
                               ),
                             );
                           },
@@ -63,7 +64,7 @@ class LandingPage extends StatelessWidget {
                             ),
                             elevation: 8,
                             shadowColor:
-                            const Color(0xFFFF6B35).withOpacity(0.3),
+                                const Color(0xFFFF6B35).withOpacity(0.3),
                           ),
                           child: Text(
                             'Connexion',
@@ -83,7 +84,8 @@ class LandingPage extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const RoleSelectionScreen(),
+                                builder: (context) =>
+                                    const RoleSelectionScreen(),
                               ),
                             );
                           },

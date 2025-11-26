@@ -79,34 +79,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          // Bouton de messagerie
-          IconButton(
-            icon: const Icon(Icons.message_outlined, color: Colors.black54),
-            onPressed: () {
-              // Navigation vers la page de messagerie
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MessagingPage(),
-                ),
-              );
-            },
-          ),
-          // Bouton de notifications (déjà sur la page)
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black54),
-            onPressed: () {
-              // Déjà sur la page des notifications
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Vous êtes déjà sur la page des notifications'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [

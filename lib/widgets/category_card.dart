@@ -1,78 +1,103 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'card_container.dart';
 
+/// Widget réutilisable pour une carte de catégorie
 class CategoryCard extends StatelessWidget {
-  final String title;
+  final String name;
   final String iconPath;
+  final String imagePath;
+  final Color backgroundColor;
+  final Color iconColor;
   final VoidCallback? onTap;
+  final double? height;
+  final double? width;
 
   const CategoryCard({
     super.key,
-    required this.title,
+    required this.name,
     required this.iconPath,
+    required this.imagePath,
+    required this.backgroundColor,
+    required this.iconColor,
     this.onTap,
+    this.height,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+    return GestureDetector(
+      onTap: onTap,
+      child: CardContainer(
+        padding: EdgeInsets.zero,
+        backgroundColor: backgroundColor,
+        borderRadius: 12,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+            spreadRadius: 0,
+          ),
+        ],
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FutureBuilder<bool>(
-              future: _assetExists(iconPath),
-              builder: (context, snapshot) {
-                final exists = snapshot.data ?? false;
-                if (iconPath.toLowerCase().endsWith('.svg') && exists) {
-                  return SvgPicture.asset(
-                    iconPath,
-                    height: 40,
-                    width: 40,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFFFF6B35),
-                      BlendMode.srcIn,
+            // Image de fond
+            Expanded(
+              flex: 3,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage(imagePath),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: backgroundColor,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
                     ),
-                  );
-                }
-                // fallback to a raster asset with same base name, or a default icon
-                try {
-                  final pngPath = iconPath.replaceAll(RegExp(r'\.svg\$'), '.png');
-                  return Image.asset(pngPath, height: 40, width: 40, fit: BoxFit.contain);
-                } catch (_) {
-                  return const Icon(Icons.image, size: 40, color: Color(0xFFFF6B35));
-                }
-              },
+                  ),
+                  child: Center(
+                    child: Image.asset(
+                      iconPath,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: GoogleFonts.itim(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+            // Nom de la catégorie
+            Expanded(
+              flex: 1,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.normal,
+                      color: Colors.black87,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ),
             ),
           ],
         ),
       ),
     );
-  }
-
-  Future<bool> _assetExists(String assetPath) async {
-    try {
-      await rootBundle.load(assetPath);
-      return true;
-    } catch (_) {
-      return false;
-    }
   }
 }
