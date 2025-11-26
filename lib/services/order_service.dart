@@ -160,14 +160,15 @@ class OrderService {
   Future<List<Commande>> getOrdersByConsumer(int consommateurId) async {
     try {
       final response = await _apiService
-          .get<List<dynamic>>('/commandes/consommateur/$consommateurId');
+          .get<List<dynamic>>('/consommateur/$consommateurId/commandes');
 
       if (response.statusCode == 200) {
         return response.data!
             .map((json) => Commande.fromJson(json as Map<String, dynamic>))
             .toList();
       } else {
-        throw Exception('Erreur lors de la récupération des commandes');
+        throw Exception(
+            'Erreur lors de la récupération des commandes: ${response.statusCode}');
       }
     } catch (e) {
       throw Exception('Erreur lors de la récupération des commandes: $e');

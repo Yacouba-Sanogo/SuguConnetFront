@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../constantes.dart';
 import '../../services/api_service.dart';
+import '../../services/order_service.dart';
+import '../../providers/auth_provider.dart';
 
 // Page de détail d'une commande spécifique
-class OrderDetailPage extends StatelessWidget {
+class OrderDetailPage extends StatefulWidget {
   final String orderId;
   final String client;
   final String status;
@@ -29,38 +32,117 @@ class OrderDetailPage extends StatelessWidget {
     this.unitPrice,
   });
 
+  @override
+  _OrderDetailPageState createState() => _OrderDetailPageState();
+}
+
+class _OrderDetailPageState extends State<OrderDetailPage> {
+  // Variable pour suivre l'état de la commande
+  late String _currentStatus;
+  bool _receptionValidee = false;
+  bool _isLoading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentStatus = widget.status;
+  }
+
   // Détermine l'étape actuelle basée sur le statut
   int _getCurrentStep() {
-    final statusUpper = status.toUpperCase();
-    if (statusUpper.contains('PAYE') || statusUpper.contains('PAYÉ')) {
-      return 0; // Paiement
+    final statusUpper = _currentStatus.toUpperCase();
+    if (statusUpper.contains('EN ATTENTE') ||
+        statusUpper.contains('ATTENTE') ||
+        statusUpper.contains('VALIDEE')) {
+      return 0; // En attente (paiement validé)
     }
-    if (statusUpper.contains('EXPEDIE') || 
-        statusUpper.contains('EXPÉDIÉ') || 
+    if (statusUpper.contains('EXPEDIE') ||
+        statusUpper.contains('EXPÉDIÉ') ||
         statusUpper.contains('EN COURS') ||
         statusUpper.contains('EN_COURS')) {
       return 1; // Expédition
     }
-    if (statusUpper.contains('LIVREE') || 
-        statusUpper.contains('LIVRÉE') || 
-        statusUpper.contains('RECU') ||
-        statusUpper.contains('REÇU')) {
+    if (statusUpper.contains('LIVREE') || statusUpper.contains('LIVRÉE')) {
       return 2; // Réception
     }
-    if (statusUpper.contains('NOTE') || 
-        statusUpper.contains('EVALUE') || 
+    if (statusUpper.contains('NOTE') ||
+        statusUpper.contains('EVALUE') ||
         statusUpper.contains('ÉVALUÉ')) {
       return 3; // Note
     }
-    // Par défaut, on considère que le paiement est fait
-    return 1; // Expédition par défaut
+    // Par défaut, on considère que le paiement est validé
+    return 0; // En attente par défaut
+  }
+
+  // Confirmer l'expédition de la commande
+  Future<void> _confirmExpedition() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      // TODO: Implémenter la confirmation d'expédition côté backend
+      await Future.delayed(const Duration(seconds: 1)); // Simulation
+      setState(() {
+        _currentStatus = 'Expédié';
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Expédition confirmée')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors de la confirmation: $e';
+        _isLoading = false;
+      });
+    }
+  }
+
+  // Confirmer la réception de la commande
+  Future<void> _confirmReception() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final orderService = OrderService();
+
+      await orderService.validateOrderReception(
+        orderId: int.parse(widget.orderId),
+        consumerId: authProvider.currentUser!.id!,
+      );
+
+      setState(() {
+        _currentStatus = 'Livrée';
+        _receptionValidee = true;
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Réception confirmée')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors de la confirmation: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final currentStep = _getCurrentStep();
-    final steps = ['Paiement', 'Expédition', 'Réception', 'Note'];
-    
+    final steps = ['En attente', 'Expédition', 'Réception', 'Note'];
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -102,10 +184,10 @@ class OrderDetailPage extends StatelessWidget {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(4, (index) {
+                children: List.generate(steps.length, (index) {
                   final isActive = index == currentStep;
                   final isCompleted = index < currentStep;
-                  
+
                   return Expanded(
                     child: Column(
                       children: [
@@ -139,7 +221,7 @@ class OrderDetailPage extends StatelessWidget {
                               ),
                             ),
                             // Ligne après (sauf pour le dernier)
-                            if (index < 3)
+                            if (index < steps.length - 1)
                               Expanded(
                                 child: Container(
                                   height: 2,
@@ -154,14 +236,14 @@ class OrderDetailPage extends StatelessWidget {
                         Text(
                           steps[index],
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 10,
                             color: isActive
                                 ? const Color(0xFFFB662F)
                                 : Colors.grey.shade600,
-                            fontWeight: isActive
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                            fontWeight:
+                                isActive ? FontWeight.bold : FontWeight.normal,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -170,22 +252,26 @@ class OrderDetailPage extends StatelessWidget {
               ),
             ),
 
-            // Bouton d'action
-            if (currentStep == 1) // Afficher seulement si on est à l'étape Expédition
+            // Afficher les erreurs s'il y en a
+            if (_error != null)
+              Container(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+
+            // Boutons d'action selon l'étape
+            if (currentStep == 0 &&
+                !_isLoading) // En attente - afficher bouton confirmer expédition
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: SizedBox(
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Action pour confirmer l'expédition
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Expédition confirmée'),
-                        ),
-                      );
-                    },
+                    onPressed: _confirmExpedition,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFB662F),
                       foregroundColor: Colors.white,
@@ -195,7 +281,7 @@ class OrderDetailPage extends StatelessWidget {
                       elevation: 0,
                     ),
                     child: const Text(
-                      "Confirmer l'expedition de la commande",
+                      "Confirmer l'expédition de la commande",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -203,6 +289,38 @@ class OrderDetailPage extends StatelessWidget {
                     ),
                   ),
                 ),
+              )
+            else if (currentStep == 1 &&
+                !_isLoading) // Expédition - afficher bouton confirmer réception
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _confirmReception,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFB662F),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "Confirmer la réception de la commande",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Center(child: CircularProgressIndicator()),
               ),
 
             // Carte de détails de la commande
@@ -226,7 +344,7 @@ class OrderDetailPage extends StatelessWidget {
                 children: [
                   // Numéro de commande
                   Text(
-                    'Commande n°$orderId',
+                    'Commande n°${widget.orderId}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -234,7 +352,7 @@ class OrderDetailPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Informations du produit
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,11 +365,12 @@ class OrderDetailPage extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                           color: Colors.grey.shade200,
                         ),
-                        child: productImage != null
+                        child: widget.productImage != null
                             ? ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
                                 child: FutureBuilder<String>(
-                                  future: ApiService().buildImageUrl(productImage!),
+                                  future: ApiService()
+                                      .buildImageUrl(widget.productImage!),
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
@@ -261,11 +380,13 @@ class OrderDetailPage extends StatelessWidget {
                                         ),
                                       );
                                     }
-                                    if (snapshot.hasData && snapshot.data != null) {
+                                    if (snapshot.hasData &&
+                                        snapshot.data != null) {
                                       return Image.network(
                                         snapshot.data!,
                                         fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
                                           return const Icon(
                                             Icons.image,
                                             color: Colors.grey,
@@ -289,14 +410,14 @@ class OrderDetailPage extends StatelessWidget {
                               ),
                       ),
                       const SizedBox(width: 16),
-                      
+
                       // Détails du produit
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Producteur : ${producerName ?? "N/A"}',
+                              'Producteur : ${widget.producerName ?? "N/A"}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.black87,
@@ -304,7 +425,7 @@ class OrderDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Produit : ${productName ?? "N/A"}',
+                              'Produit : ${widget.productName ?? "N/A"}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.black87,
@@ -312,7 +433,7 @@ class OrderDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Quantité : ${quantity ?? 0}',
+                              'Quantité : ${widget.quantity ?? 0}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.black87,
@@ -320,7 +441,7 @@ class OrderDetailPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Prix unitaire : ${_formatPrice(unitPrice ?? 0)}',
+                              'Prix unitaire : ${_formatPrice(widget.unitPrice ?? 0)}',
                               style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.black87,
@@ -331,19 +452,49 @@ class OrderDetailPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 16),
-                  
+
                   // Prix total
                   Align(
                     alignment: Alignment.centerRight,
                     child: Text(
-                      'Prix total : ${_formatPrice(total)}',
+                      'Prix total : ${_formatPrice(widget.total)}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFFFB662F),
                       ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Statut de la commande
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: _getStatusColor(_currentStatus, _receptionValidee),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Statut:',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _getStatusText(_currentStatus, _receptionValidee),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -353,6 +504,33 @@ class OrderDetailPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Détermine la couleur du statut
+  Color _getStatusColor(String status, bool receptionValidee) {
+    if (status == 'LIVREE' && receptionValidee) {
+      return const Color(0xFF4CAF50); // Vert pour livré et réception confirmée
+    } else if (status == 'VALIDEE' || status == 'EN_ATTENTE') {
+      return Colors.orange; // Orange pour en attente
+    } else if (status == 'LIVREE') {
+      return const Color(
+          0xFFFB662F); // Orange foncé pour livré mais pas confirmé
+    } else {
+      return Colors.grey; // Gris pour les autres statuts
+    }
+  }
+
+  // Détermine le texte du statut
+  String _getStatusText(String status, bool receptionValidee) {
+    if (status == 'LIVREE' && receptionValidee) {
+      return 'Livrée et réception confirmée';
+    } else if (status == 'VALIDEE' || status == 'EN_ATTENTE') {
+      return 'En attente d\'expédition';
+    } else if (status == 'LIVREE') {
+      return 'Livrée (à confirmer)';
+    } else {
+      return status;
+    }
   }
 
   String _formatPrice(double price) {

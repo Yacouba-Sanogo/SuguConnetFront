@@ -1,77 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'order_detail_page.dart';
 import '../../widgets/entete_widget.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/order_service.dart';
+import '../../models/order.dart';
 
 // Page des commandes avec design moderne et onglets de filtrage
 class CommandesPage extends StatefulWidget {
   const CommandesPage({super.key, this.showAppBar = true});
-  
+
   final bool showAppBar;
-  
+
   @override
   _CommandesPageState createState() => _CommandesPageState();
 }
 
-class _CommandesPageState extends State<CommandesPage> with SingleTickerProviderStateMixin {
+class _CommandesPageState extends State<CommandesPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   String _selectedFilter = 'Tous'; // Filtre sélectionné
-
-  // Données fictives des commandes
-  final List<Map<String, dynamic>> _orders = [
-    {
-      'id': '12345',
-      'client': 'Ali Touré',
-      'status': 'Expédié',
-      'date': '2024-01-15',
-      'total': 120000.0,
-      'producerName': 'Ali Touré',
-      'productName': 'Orange',
-      'productImage': null,
-      'quantity': 3,
-      'unitPrice': 40000.0,
-    },
-    {
-      'id': '12346',
-      'client': 'Fatou Diallo',
-      'status': 'En attente',
-      'date': '2024-01-16',
-      'total': 8500.0,
-      'producerName': 'Fatou Diallo',
-      'productName': 'Tomate',
-      'productImage': null,
-      'quantity': 2,
-      'unitPrice': 4250.0,
-    },
-    {
-      'id': '12347',
-      'client': 'Moussa Keita',
-      'status': 'Livrée',
-      'date': '2024-01-17',
-      'total': 15200.0,
-      'producerName': 'Moussa Keita',
-      'productName': 'Riz',
-      'productImage': null,
-      'quantity': 1,
-      'unitPrice': 15200.0,
-    },
-    {
-      'id': '12348',
-      'client': 'Aminata Traoré',
-      'status': 'Livrée',
-      'date': '2024-01-18',
-      'total': 9800.0,
-      'producerName': 'Aminata Traoré',
-      'productName': 'Mangue',
-      'productImage': null,
-      'quantity': 5,
-      'unitPrice': 1960.0,
-    },
-  ];
+  List<Commande> _orders = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _loadOrders();
+  }
+
+  // Charger les commandes depuis le backend
+  Future<void> _loadOrders() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.currentUser?.id != null) {
+        final orderService = OrderService();
+        final orders = await orderService
+            .getOrdersByConsumer(authProvider.currentUser!.id!);
+        setState(() {
+          _orders = orders;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors du chargement des commandes: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -90,7 +73,7 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
           children: [
             _buildFilterTabs(),
             Expanded(
-              child: _buildOrdersList(),
+              child: _buildOrdersContent(),
             ),
           ],
         ),
@@ -102,7 +85,7 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
           children: [
             _buildFilterTabs(),
             Expanded(
-              child: _buildOrdersList(),
+              child: _buildOrdersContent(),
             ),
           ],
         ),
@@ -154,15 +137,63 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
     );
   }
 
+  // Construit le contenu des commandes (chargement, erreur ou liste)
+  Widget _buildOrdersContent() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(_error!),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadOrders,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return _buildOrdersList();
+  }
+
   // Construit la liste des commandes
   Widget _buildOrdersList() {
     // Filtrer les commandes selon le filtre sélectionné
-    List<Map<String, dynamic>> filteredOrders = _orders.where((order) {
-      if (_selectedFilter == 'Tous') return true;
-      if (_selectedFilter == 'En attente') return order['status'] == 'En attente';
-      if (_selectedFilter == 'Livrées') return order['status'] == 'Livrée';
+    List<Commande> filteredOrders = _orders.where((order) {
+      if (_selectedFilter == 'Tous') {
+        // Afficher uniquement les commandes qui seraient dans 'En attente' ou 'Livrées'
+        final bool isInEnAttente = order.paiement?.statut == 'VALIDE' ||
+            order.paiement?.statut == 'PAYE';
+        final bool isInLivrees =
+            order.statut == 'LIVREE' && order.receptionValidee;
+        return isInEnAttente || isInLivrees;
+      }
+      if (_selectedFilter == 'En attente') {
+        // Commandes dont le paiement est validé
+        return order.paiement?.statut == 'VALIDE' ||
+            order.paiement?.statut == 'PAYE';
+      }
+      if (_selectedFilter == 'Livrées') {
+        // Commandes livrées et réception confirmée
+        return order.statut == 'LIVREE' && order.receptionValidee;
+      }
       return true;
     }).toList();
+
+    if (filteredOrders.isEmpty) {
+      return const Center(
+        child: Text(
+          'Aucune commande trouvée',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
 
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -175,7 +206,28 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
   }
 
   // Construit une carte de commande
-  Widget _buildOrderCard(Map<String, dynamic> order) {
+  Widget _buildOrderCard(Commande order) {
+    // Obtenir le premier produit pour l'affichage (comme dans le code original)
+    String productName = 'Produit';
+    String producerName = 'Producteur';
+    int quantity = 0;
+    double unitPrice = 0.0;
+    String? productImage;
+
+    if (order.detailsCommande.isNotEmpty) {
+      final detail = order.detailsCommande.first;
+      productName = detail.produit.nom;
+      producerName = order.consommateur.nom;
+      quantity = detail.quantite;
+      unitPrice = detail.prixUnitaire;
+      // Récupérer l'image du produit si disponible
+      if (order.detailsCommande.first.produit is ProduitCommande) {
+        // Pour l'instant, nous n'avons pas d'image directe dans ProduitCommande
+        // Nous pourrions faire une requête API pour obtenir l'image complète du produit
+        productImage = null;
+      }
+    }
+
     return GestureDetector(
       onTap: () {
         // Navigation vers la page de détail de la commande
@@ -183,16 +235,16 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
           context,
           MaterialPageRoute(
             builder: (context) => OrderDetailPage(
-              orderId: order['id'],
-              client: order['client'],
-              status: order['status'],
-              total: order['total'],
-              date: order['date'],
-              producerName: order['producerName'],
-              productName: order['productName'],
-              productImage: order['productImage'],
-              quantity: order['quantity'],
-              unitPrice: order['unitPrice'],
+              orderId: order.id.toString(),
+              client: '${order.consommateur.prenom} ${order.consommateur.nom}',
+              status: order.statut,
+              total: order.montantTotal,
+              date: order.dateCommande.toString(),
+              producerName: producerName,
+              productName: productName,
+              productImage: productImage,
+              quantity: quantity,
+              unitPrice: unitPrice,
             ),
           ),
         );
@@ -220,7 +272,7 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Commande n°${order['id']}',
+                    'Commande n°${order.id}',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -236,27 +288,25 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
                             context,
                             MaterialPageRoute(
                               builder: (context) => OrderDetailPage(
-                                orderId: order['id'],
-                                client: order['client'],
-                                status: order['status'],
-                                total: order['total'],
-                                date: order['date'],
-                                producerName: order['producerName'],
-                                productName: order['productName'],
-                                productImage: order['productImage'],
-                                quantity: order['quantity'],
-                                unitPrice: order['unitPrice'],
+                                orderId: order.id.toString(),
+                                client:
+                                    '${order.consommateur.prenom} ${order.consommateur.nom}',
+                                status: order.statut,
+                                total: order.montantTotal,
+                                date: order.dateCommande.toString(),
+                                producerName: producerName,
+                                productName: productName,
+                                productImage: productImage,
+                                quantity: quantity,
+                                unitPrice: unitPrice,
                               ),
                             ),
                           );
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.grey),
-                        onPressed: () {
-                          // Supprimer la commande
-                          _showDeleteDialog(order['id']);
-                        },
+                        icon: const Icon(Icons.refresh, color: Colors.grey),
+                        onPressed: _loadOrders,
                       ),
                     ],
                   ),
@@ -264,26 +314,91 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
               ),
               const SizedBox(height: 8),
               Text(
-                'Client: ${order['client']}',
+                'Prdtr: ${order.consommateur.prenom} ${order.consommateur.nom}',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontSize: 14,
                 ),
               ),
               const SizedBox(height: 12),
+              // Afficher l'image du produit et les détails
+              if (order.detailsCommande.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Image du produit
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.grey.shade200,
+                      ),
+                      child: productImage != null
+                          ? ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                productImage,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.image,
+                                    color: Colors.grey,
+                                    size: 30,
+                                  );
+                                },
+                              ),
+                            )
+                          : const Icon(
+                              Icons.image,
+                              color: Colors.grey,
+                              size: 30,
+                            ),
+                    ),
+                    const SizedBox(width: 12),
+                    // Détails du produit
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            productName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${quantity} x ${unitPrice.toStringAsFixed(0)} FCFA',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: order['status'] == 'Livrée' 
-                          ? const Color(0xFFFB662F) 
-                          : Colors.orange,
+                      color:
+                          _getStatusColor(order.statut, order.receptionValidee),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      order['status'],
+                      _getStatusText(order.statut, order.receptionValidee),
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,
@@ -292,7 +407,7 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
                     ),
                   ),
                   Text(
-                    '${order['total'].toStringAsFixed(0)} FCFA',
+                    '${order.montantTotal.toStringAsFixed(0)} FCFA',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -308,35 +423,31 @@ class _CommandesPageState extends State<CommandesPage> with SingleTickerProvider
     );
   }
 
-  // Affiche une boîte de dialogue de confirmation de suppression
-  void _showDeleteDialog(String orderId) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Supprimer la commande'),
-          content: const Text('Êtes-vous sûr de vouloir supprimer cette commande ?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _orders.removeWhere((order) => order['id'] == orderId);
-                });
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Commande supprimée')),
-                );
-              },
-              child: const Text('Supprimer', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
+  // Détermine la couleur du statut
+  Color _getStatusColor(String status, bool receptionValidee) {
+    if (status == 'LIVREE' && receptionValidee) {
+      return const Color(0xFF4CAF50); // Vert pour livré et réception confirmée
+    } else if (status == 'VALIDEE' || status == 'EN_ATTENTE') {
+      return Colors.orange; // Orange pour en attente
+    } else if (status == 'LIVREE') {
+      return const Color(
+          0xFFFB662F); // Orange foncé pour livré mais pas confirmé
+    } else {
+      return Colors.grey; // Gris pour les autres statuts
+    }
+  }
+
+  // Détermine le texte du statut
+  String _getStatusText(String status, bool receptionValidee) {
+    if (status == 'LIVREE' && receptionValidee) {
+      return 'Livrée';
+    } else if (status == 'VALIDEE' || status == 'EN_ATTENTE') {
+      return 'En attente';
+    } else if (status == 'LIVREE') {
+      return 'Livrée (à confirmer)';
+    } else {
+      return status;
+    }
   }
 
   // Construit la barre de navigation inférieure
