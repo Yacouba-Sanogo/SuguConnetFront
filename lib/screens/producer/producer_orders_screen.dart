@@ -122,7 +122,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
   Widget _buildOrdersList() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final producteurId = auth.currentUser?.id;
-    
+
     if (producteurId == null) {
       return const Center(child: Text('Utilisateur non connecté'));
     }
@@ -153,12 +153,13 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
             return Center(child: Text('Erreur: ${snapshot.error}'));
           }
           final orders = snapshot.data ?? [];
-          
+
           // Filtrer les commandes selon le filtre sélectionné
           List<Commande> filteredOrders = orders.where((order) {
             if (_selectedFilter == 'Tous') return true;
             final uiStatus = _statusToUi(order.statut);
-            if (_selectedFilter == 'En attente') return uiStatus == 'En attente';
+            if (_selectedFilter == 'En attente')
+              return uiStatus == 'En attente';
             if (_selectedFilter == 'Livrées') return uiStatus == 'Livrée';
             return true;
           }).toList();
@@ -224,11 +225,6 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
               status: uiStatus,
               total: order.montantTotal,
               date: order.dateCommande.toString().split(' ')[0],
-              producerName: clientName,
-              productName: productName,
-              productImage: productImage,
-              quantity: quantity,
-              unitPrice: unitPrice,
             ),
           ),
         );
@@ -277,12 +273,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
                                 client: clientName,
                                 status: uiStatus,
                                 total: order.montantTotal,
-                                date: order.dateCommande.toString().split(' ')[0],
-                                producerName: clientName,
-                                productName: productName,
-                                productImage: productImage,
-                                quantity: quantity,
-                                unitPrice: unitPrice,
+                                date:
+                                    order.dateCommande.toString().split(' ')[0],
                               ),
                             ),
                           );
@@ -305,7 +297,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: uiStatus == 'Livrée'
                           ? const Color(0xFFFB662F)

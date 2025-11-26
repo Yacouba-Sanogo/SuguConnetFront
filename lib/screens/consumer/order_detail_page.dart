@@ -4,6 +4,7 @@ import '../../constantes.dart';
 import '../../services/api_service.dart';
 import '../../services/order_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/order.dart';
 
 // Page de détail d'une commande spécifique
 class OrderDetailPage extends StatefulWidget {
@@ -12,11 +13,6 @@ class OrderDetailPage extends StatefulWidget {
   final String status;
   final double total;
   final String date;
-  final String? producerName;
-  final String? productName;
-  final String? productImage;
-  final int? quantity;
-  final double? unitPrice;
 
   const OrderDetailPage({
     super.key,
@@ -25,11 +21,6 @@ class OrderDetailPage extends StatefulWidget {
     required this.status,
     required this.total,
     required this.date,
-    this.producerName,
-    this.productName,
-    this.productImage,
-    this.quantity,
-    this.unitPrice,
   });
 
   @override
@@ -42,11 +33,38 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
   bool _receptionValidee = false;
   bool _isLoading = false;
   String? _error;
+  Commande? _orderDetails;
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.status;
+    _loadOrderDetails();
+  }
+
+  // Charger les détails complets de la commande
+  Future<void> _loadOrderDetails() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final orderService = OrderService();
+      final order = await orderService.getOrderById(int.parse(widget.orderId));
+
+      setState(() {
+        _orderDetails = order;
+        _currentStatus = order.statut;
+        _receptionValidee = order.receptionValidee;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Erreur lors du chargement des détails: $e';
+        _isLoading = false;
+      });
+    }
   }
 
   // Détermine l'étape actuelle basée sur le statut
@@ -171,330 +189,315 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Indicateur de progression
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFEE8E3), // Light peach background
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: List.generate(steps.length, (index) {
-                  final isActive = index == currentStep;
-                  final isCompleted = index < currentStep;
-
-                  return Expanded(
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            // Ligne avant (sauf pour le premier)
-                            if (index > 0)
-                              Expanded(
-                                child: Container(
-                                  height: 2,
-                                  color: isCompleted
-                                      ? const Color(0xFFFB662F)
-                                      : Colors.grey.shade300,
-                                ),
-                              ),
-                            // Cercle de l'étape
-                            Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: isActive || isCompleted
-                                    ? const Color(0xFFFB662F)
-                                    : Colors.white,
-                                border: Border.all(
-                                  color: isActive || isCompleted
-                                      ? const Color(0xFFFB662F)
-                                      : Colors.grey.shade300,
-                                  width: 2,
-                                ),
-                              ),
-                            ),
-                            // Ligne après (sauf pour le dernier)
-                            if (index < steps.length - 1)
-                              Expanded(
-                                child: Container(
-                                  height: 2,
-                                  color: isCompleted
-                                      ? const Color(0xFFFB662F)
-                                      : Colors.grey.shade300,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          steps[index],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isActive
-                                ? const Color(0xFFFB662F)
-                                : Colors.grey.shade600,
-                            fontWeight:
-                                isActive ? FontWeight.bold : FontWeight.normal,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-              ),
-            ),
-
-            // Afficher les erreurs s'il y en a
-            if (_error != null)
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  _error!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ),
-
-            // Boutons d'action selon l'étape
-            if (currentStep == 0 &&
-                !_isLoading) // En attente - afficher bouton confirmer expédition
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _confirmExpedition,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFB662F),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Confirmer l'expédition de la commande",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else if (currentStep == 1 &&
-                !_isLoading) // Expédition - afficher bouton confirmer réception
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: _confirmReception,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFB662F),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Confirmer la réception de la commande",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              )
-            else if (_isLoading)
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-
-            // Carte de détails de la commande
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    spreadRadius: 1,
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Numéro de commande
-                  Text(
-                    'Commande n°${widget.orderId}',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Informations du produit
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Image du produit
-                      Container(
-                        width: 100,
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.grey.shade200,
-                        ),
-                        child: widget.productImage != null
-                            ? ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: FutureBuilder<String>(
-                                  future: ApiService()
-                                      .buildImageUrl(widget.productImage!),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                        ),
-                                      );
-                                    }
-                                    if (snapshot.hasData &&
-                                        snapshot.data != null) {
-                                      return Image.network(
-                                        snapshot.data!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.image,
-                                            color: Colors.grey,
-                                            size: 40,
-                                          );
-                                        },
-                                      );
-                                    }
-                                    return const Icon(
-                                      Icons.image,
-                                      color: Colors.grey,
-                                      size: 40,
-                                    );
-                                  },
-                                ),
-                              )
-                            : const Icon(
-                                Icons.image,
-                                color: Colors.grey,
-                                size: 40,
-                              ),
-                      ),
-                      const SizedBox(width: 16),
-
-                      // Détails du produit
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Producteur : ${widget.producerName ?? "N/A"}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Produit : ${widget.productName ?? "N/A"}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Quantité : ${widget.quantity ?? 0}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Prix unitaire : ${_formatPrice(widget.unitPrice ?? 0)}',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Prix total
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: Text(
-                      'Prix total : ${_formatPrice(widget.total)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFB662F),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Statut de la commande
+                  // Indicateur de progression
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(_currentStatus, _receptionValidee),
-                      borderRadius: BorderRadius.circular(8),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 24, horizontal: 16),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFEE8E3), // Light peach background
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Statut:',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                      children: List.generate(steps.length, (index) {
+                        final isActive = index == currentStep;
+                        final isCompleted = index < currentStep;
+
+                        return Expanded(
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  // Ligne avant (sauf pour le premier)
+                                  if (index > 0)
+                                    Expanded(
+                                      child: Container(
+                                        height: 2,
+                                        color: isCompleted
+                                            ? const Color(0xFFFB662F)
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                  // Cercle de l'étape
+                                  Container(
+                                    width: 20,
+                                    height: 20,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: isActive || isCompleted
+                                          ? const Color(0xFFFB662F)
+                                          : Colors.white,
+                                      border: Border.all(
+                                        color: isActive || isCompleted
+                                            ? const Color(0xFFFB662F)
+                                            : Colors.grey.shade300,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  // Ligne après (sauf pour le dernier)
+                                  if (index < steps.length - 1)
+                                    Expanded(
+                                      child: Container(
+                                        height: 2,
+                                        color: isCompleted
+                                            ? const Color(0xFFFB662F)
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                steps[index],
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isActive
+                                      ? const Color(0xFFFB662F)
+                                      : Colors.grey.shade600,
+                                  fontWeight: isActive
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+
+                  // Afficher les erreurs s'il y en a
+                  if (_error != null)
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                  // Boutons d'action selon l'étape
+                  if (currentStep == 0 &&
+                      !_isLoading) // En attente - afficher bouton confirmer expédition
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _confirmExpedition,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFB662F),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            "Confirmer l'expédition de la commande",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+                      ),
+                    )
+                  else if (currentStep == 1 &&
+                      !_isLoading) // Expédition - afficher bouton confirmer réception
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: _confirmReception,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFB662F),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            "Confirmer la réception de la commande",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+
+                  // Carte de détails de la commande
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(alpha: 0.1),
+                          spreadRadius: 1,
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Numéro de commande
                         Text(
-                          _getStatusText(_currentStatus, _receptionValidee),
+                          'Commande n°${widget.orderId}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Afficher tous les produits de la commande
+                        if (_orderDetails != null) ...[
+                          ..._orderDetails!.detailsCommande.map((detail) {
+                            return _buildProductItem(detail);
+                          }).toList(),
+                        ] else ...[
+                          // Affichage par défaut si les détails ne sont pas encore chargés
+                          _buildDefaultProductItem(),
+                        ],
+
+                        const SizedBox(height: 16),
+
+                        // Prix total
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Text(
+                            'Prix total : ${_formatPrice(_orderDetails?.montantTotal ?? widget.total)}',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFFB662F),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Statut de la commande
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(
+                                _currentStatus, _receptionValidee),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'Statut:',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                _getStatusText(
+                                    _currentStatus, _receptionValidee),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  // Construit un élément de produit
+  Widget _buildProductItem(DetailCommande detail) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image du produit (affichage générique pour l'instant)
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey.shade200,
+              ),
+              child: const Icon(
+                Icons.image,
+                color: Colors.grey,
+                size: 40,
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // Détails du produit
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Producteur : ${_orderDetails?.consommateur.nom ?? "N/A"}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Produit : ${detail.produit.nom}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Quantité : ${detail.quantite}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Prix unitaire : ${_formatPrice(detail.prixUnitaire)}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.black87,
                     ),
                   ),
                 ],
@@ -502,7 +505,74 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 16),
+        const Divider(),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // Construit l'élément de produit par défaut (utilisé avant le chargement des détails)
+  Widget _buildDefaultProductItem() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Image du produit
+        Container(
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.grey.shade200,
+          ),
+          child: const Icon(
+            Icons.image,
+            color: Colors.grey,
+            size: 40,
+          ),
+        ),
+        const SizedBox(width: 16),
+
+        // Détails du produit
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Producteur : N/A',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Produit : N/A',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Quantité : 0',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Prix unitaire : 0 fcfa',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

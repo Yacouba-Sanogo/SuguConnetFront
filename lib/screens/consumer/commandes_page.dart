@@ -57,6 +57,35 @@ class _CommandesPageState extends State<CommandesPage>
     }
   }
 
+  // Fonction pour supprimer une commande
+  Future<void> _deleteOrder(int orderId) async {
+    try {
+      final orderService = OrderService();
+      await orderService.cancelOrder(orderId);
+
+      // Recharger les commandes après suppression
+      await _loadOrders();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Commande supprimée avec succès'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la suppression: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -186,6 +215,65 @@ class _CommandesPageState extends State<CommandesPage>
       return true;
     }).toList();
 
+    // Regrouper les commandes par ID de commande pour l'onglet "En attente"
+    if (_selectedFilter == 'En attente') {
+      // Créer un map pour regrouper les commandes par ID
+      Map<int, List<Commande>> groupedOrders = {};
+
+      for (var order in filteredOrders) {
+        int key = order.id;
+        if (groupedOrders.containsKey(key)) {
+          groupedOrders[key]!.add(order);
+        } else {
+          groupedOrders[key] = [order];
+        }
+      }
+
+      // Convertir le map en liste de commandes uniques avec tous les produits
+      List<Commande> uniqueOrders = [];
+      groupedOrders.forEach((id, orders) {
+        if (orders.isNotEmpty) {
+          // Prendre la première commande comme base
+          Commande baseOrder = orders.first;
+
+          // Si nous avons plusieurs commandes avec le même ID (ce qui ne devrait pas arriver),
+          // nous combinons les détails
+          if (orders.length > 1) {
+            List<DetailCommande> combinedDetails = [];
+            double totalAmount = 0.0;
+
+            for (var order in orders) {
+              combinedDetails.addAll(order.detailsCommande);
+              totalAmount += order.montantTotal;
+            }
+
+            // Créer une nouvelle commande avec les détails combinés
+            baseOrder = Commande(
+              id: baseOrder.id,
+              numeroCommande: baseOrder.numeroCommande,
+              dateCommande: baseOrder.dateCommande,
+              dateLivraison: baseOrder.dateLivraison,
+              montantTotal: totalAmount,
+              statut: baseOrder.statut,
+              motifRejet: baseOrder.motifRejet,
+              receptionValidee: baseOrder.receptionValidee,
+              dateReceptionValidee: baseOrder.dateReceptionValidee,
+              modePaiement: baseOrder.modePaiement,
+              consommateur: baseOrder.consommateur,
+              detailsCommande: combinedDetails,
+              paiement: baseOrder.paiement,
+              livraison: baseOrder.livraison,
+              remboursement: baseOrder.remboursement,
+            );
+          }
+
+          uniqueOrders.add(baseOrder);
+        }
+      });
+
+      filteredOrders = uniqueOrders;
+    }
+
     if (filteredOrders.isEmpty) {
       return const Center(
         child: Text(
@@ -212,7 +300,8 @@ class _CommandesPageState extends State<CommandesPage>
     String producerName = 'Producteur';
     int quantity = 0;
     double unitPrice = 0.0;
-    String? productImage;
+    int productCount =
+        order.detailsCommande.length; // Nombre de produits dans la commande
 
     if (order.detailsCommande.isNotEmpty) {
       final detail = order.detailsCommande.first;
@@ -220,12 +309,6 @@ class _CommandesPageState extends State<CommandesPage>
       producerName = order.consommateur.nom;
       quantity = detail.quantite;
       unitPrice = detail.prixUnitaire;
-      // Récupérer l'image du produit si disponible
-      if (order.detailsCommande.first.produit is ProduitCommande) {
-        // Pour l'instant, nous n'avons pas d'image directe dans ProduitCommande
-        // Nous pourrions faire une requête API pour obtenir l'image complète du produit
-        productImage = null;
-      }
     }
 
     return GestureDetector(
@@ -240,11 +323,6 @@ class _CommandesPageState extends State<CommandesPage>
               status: order.statut,
               total: order.montantTotal,
               date: order.dateCommande.toString(),
-              producerName: producerName,
-              productName: productName,
-              productImage: productImage,
-              quantity: quantity,
-              unitPrice: unitPrice,
             ),
           ),
         );
@@ -294,19 +372,40 @@ class _CommandesPageState extends State<CommandesPage>
                                 status: order.statut,
                                 total: order.montantTotal,
                                 date: order.dateCommande.toString(),
-                                producerName: producerName,
-                                productName: productName,
-                                productImage: productImage,
-                                quantity: quantity,
-                                unitPrice: unitPrice,
                               ),
                             ),
                           );
                         },
                       ),
                       IconButton(
-                        icon: const Icon(Icons.refresh, color: Colors.grey),
-                        onPressed: _loadOrders,
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          // Confirmation de suppression
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Confirmer la suppression'),
+                                content: const Text(
+                                    'Êtes-vous sûr de vouloir supprimer cette commande ?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: const Text('Annuler'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                      _deleteOrder(order.id);
+                                    },
+                                    child: const Text('Supprimer'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -320,72 +419,18 @@ class _CommandesPageState extends State<CommandesPage>
                   fontSize: 14,
                 ),
               ),
-              const SizedBox(height: 12),
-              // Afficher l'image du produit et les détails
-              if (order.detailsCommande.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Image du produit
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey.shade200,
-                      ),
-                      child: productImage != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                productImage,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.image,
-                                    color: Colors.grey,
-                                    size: 30,
-                                  );
-                                },
-                              ),
-                            )
-                          : const Icon(
-                              Icons.image,
-                              color: Colors.grey,
-                              size: 30,
-                            ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Détails du produit
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            productName,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${quantity} x ${unitPrice.toStringAsFixed(0)} FCFA',
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+              // Afficher le nombre de produits si supérieur à 1
+              if (productCount > 1) ...[
+                const SizedBox(height: 4),
+                Text(
+                  '$productCount produits',
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontSize: 12,
+                  ),
                 ),
-                const SizedBox(height: 8),
               ],
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

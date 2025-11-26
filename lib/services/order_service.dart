@@ -156,6 +156,22 @@ class OrderService {
     }
   }
 
+  /// Récupérer une commande par ID
+  Future<Commande> getOrderById(int id) async {
+    try {
+      final response = await _apiService
+          .get<Map<String, dynamic>>('/consommateur/commande/$id');
+
+      if (response.statusCode == 200) {
+        return Commande.fromJson(response.data!);
+      } else {
+        throw Exception('Commande non trouvée');
+      }
+    } catch (e) {
+      throw Exception('Erreur lors de la récupération de la commande: $e');
+    }
+  }
+
   /// Récupérer toutes les commandes d'un consommateur
   Future<List<Commande>> getOrdersByConsumer(int consommateurId) async {
     try {
@@ -368,22 +384,6 @@ class OrderService {
       }
     } catch (e) {
       throw Exception('Erreur lors de la récupération des commandes: $e');
-    }
-  }
-
-  /// Récupérer une commande par ID
-  Future<Commande> getOrderById(int id) async {
-    try {
-      final response =
-          await _apiService.get<Map<String, dynamic>>('/commandes/$id');
-
-      if (response.statusCode == 200) {
-        return Commande.fromJson(response.data!);
-      } else {
-        throw Exception('Commande non trouvée');
-      }
-    } catch (e) {
-      throw Exception('Erreur lors de la récupération de la commande: $e');
     }
   }
 
