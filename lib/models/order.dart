@@ -15,10 +15,14 @@ class ProduitCommande {
   @JsonKey(name: 'prixUnitaire', defaultValue: 0.0)
   final double prix;
 
+  @JsonKey(name: 'imageUrl')
+  final String? imageUrl;
+
   ProduitCommande({
     required this.id,
     required this.nom,
     required this.prix,
+    this.imageUrl,
   });
 
   factory ProduitCommande.fromJson(Map<String, dynamic> json) =>

@@ -78,8 +78,9 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
     if (statusUpper.contains('EXPEDIE') ||
         statusUpper.contains('EXPÉDIÉ') ||
         statusUpper.contains('EN COURS') ||
-        statusUpper.contains('EN_COURS')) {
-      return 1; // Expédition
+        statusUpper.contains('EN_COURS') ||
+        statusUpper.contains('EN_LIVRAISON')) {
+      return 1; // Expédition / En cours de livraison
     }
     if (statusUpper.contains('LIVREE') || statusUpper.contains('LIVRÉE')) {
       return 2; // Réception
@@ -132,27 +133,59 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final orderService = OrderService();
 
+      if (authProvider.currentUser == null || authProvider.currentUser!.id == null) {
+        throw Exception('Utilisateur non connecté');
+      }
+
       await orderService.validateOrderReception(
         orderId: int.parse(widget.orderId),
         consumerId: authProvider.currentUser!.id!,
       );
 
-      setState(() {
-        _currentStatus = 'Livrée';
-        _receptionValidee = true;
-        _isLoading = false;
-      });
+      // Recharger les détails de la commande pour avoir les données à jour
+      await _loadOrderDetails();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Réception confirmée')),
+          const SnackBar(
+            content: Text('Réception confirmée avec succès !'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       setState(() {
-        _error = 'Erreur lors de la confirmation: $e';
         _isLoading = false;
+        // Extraire le message d'erreur si c'est une Map
+        String errorMessage = 'Erreur lors de la confirmation';
+        if (e.toString().contains('error')) {
+          try {
+            // Essayer d'extraire le message d'erreur du backend
+            final errorStr = e.toString();
+            if (errorStr.contains('Impossible de valider')) {
+              errorMessage = errorStr.split('Impossible de valider')[1].trim();
+            } else if (errorStr.contains('non autorisé')) {
+              errorMessage = 'Vous n\'êtes pas autorisé à valider cette commande';
+            } else {
+              errorMessage = errorStr;
+            }
+          } catch (_) {
+            errorMessage = e.toString();
+          }
+        } else {
+          errorMessage = e.toString();
+        }
+        _error = errorMessage;
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_error ?? 'Erreur lors de la confirmation'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -448,7 +481,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image du produit (affichage générique pour l'instant)
+            // Image du produit - icône par défaut
             Container(
               width: 100,
               height: 100,
@@ -457,7 +490,7 @@ class _OrderDetailPageState extends State<OrderDetailPage> {
                 color: Colors.grey.shade200,
               ),
               child: const Icon(
-                Icons.image,
+                Icons.shopping_basket,
                 color: Colors.grey,
                 size: 40,
               ),

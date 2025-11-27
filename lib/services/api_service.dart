@@ -155,12 +155,24 @@ class ApiService {
   }) async {
     await _ensureClient();
     await _loadToken();
-    return _dio!.put<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
+    try {
+      final response = await _dio!.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      // Log pour déboguer
+      if (response.statusCode == 200) {
+        print('PUT Response - Status: ${response.statusCode}');
+        print('PUT Response - Data type: ${response.data.runtimeType}');
+        print('PUT Response - Data: ${response.data}');
+      }
+      return response;
+    } catch (e) {
+      print('Erreur dans PUT: $e');
+      rethrow;
+    }
   }
 
   Future<Response<T>> delete<T>(

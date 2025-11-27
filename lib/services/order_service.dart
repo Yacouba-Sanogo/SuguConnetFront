@@ -138,7 +138,7 @@ class OrderService {
     required int consumerId,
   }) async {
     try {
-      final response = await _apiService.post<Map<String, dynamic>>(
+      final response = await _apiService.post<dynamic>(
         '/consommateur/commande/$orderId/valider-reception',
         queryParameters: {
           'consommateurId': consumerId,
@@ -146,12 +146,46 @@ class OrderService {
       );
 
       if (response.statusCode == 200) {
-        return response.data!;
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        } else {
+          // Si la réponse n'est pas un Map, retourner un Map vide ou la réponse telle quelle
+          return {'success': true, 'data': response.data};
+        }
       } else {
-        throw Exception(
-            'Erreur lors de la validation de la commande: ${response.statusCode}');
+        // Extraire le message d'erreur du backend si disponible
+        String errorMessage = 'Erreur lors de la validation de la commande';
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            final errorData = response.data as Map<String, dynamic>;
+            errorMessage = errorData['error']?.toString() ?? 
+                         errorData['message']?.toString() ?? 
+                         errorMessage;
+          } else {
+            errorMessage = response.data.toString();
+          }
+        }
+        throw Exception(errorMessage);
       }
     } catch (e) {
+      // Si c'est une DioException, extraire le message d'erreur
+      if (e.toString().contains('DioException')) {
+        // Essayer d'extraire le message d'erreur du backend
+        final errorStr = e.toString();
+        if (errorStr.contains('Impossible de valider')) {
+          final startIndex = errorStr.indexOf('Impossible de valider');
+          final endIndex = errorStr.indexOf('\n', startIndex);
+          if (endIndex > startIndex) {
+            throw Exception(errorStr.substring(startIndex, endIndex));
+          }
+        } else if (errorStr.contains('ne pouvez valider')) {
+          final startIndex = errorStr.indexOf('ne pouvez valider');
+          final endIndex = errorStr.indexOf('\n', startIndex);
+          if (endIndex > startIndex) {
+            throw Exception(errorStr.substring(startIndex - 10, endIndex));
+          }
+        }
+      }
       throw Exception('Erreur lors de la validation de la commande: $e');
     }
   }
@@ -191,10 +225,10 @@ class OrderService {
     }
   }
 
-  /// Récupérer les commandes d'un producteur avec filtre de statut et recherche
+  /// Récupérer les commandes d'un producteur avec filtres
   Future<List<Commande>> getOrdersByProducerFiltered(
     int producteurId, {
-    String? statut, // ex: VALIDEE, EN_LIVRAISON, LIVREE
+    String? statut,
     String? search,
   }) async {
     try {
@@ -354,17 +388,61 @@ class OrderService {
                   Uri.encodeQueryComponent(e.value))
               .join('&');
 
-      final response = await _apiService.put<Map<String, dynamic>>(
-        '/producteur/$producteurId/commande/$commandeId/statut$query',
+      final response = await _apiService.put<dynamic>(
+        '/producteur/$producteurId/commandes/$commandeId/statut',
+        queryParameters: qp,
       );
 
       if (response.statusCode == 200) {
-        return Commande.fromJson(response.data!);
+        // Le backend retourne la commande mise à jour
+        try {
+          if (response.data != null) {
+            // Vérifier le type de la réponse
+            if (response.data is Map<String, dynamic>) {
+              return Commande.fromJson(response.data as Map<String, dynamic>);
+            } else if (response.data is List) {
+              // Si c'est une liste, prendre le premier élément
+              final list = response.data as List;
+              if (list.isNotEmpty && list[0] is Map<String, dynamic>) {
+                return Commande.fromJson(list[0] as Map<String, dynamic>);
+              }
+            }
+            // Si le format n'est pas reconnu, récupérer la commande
+            debugPrint('Format de réponse inattendu: ${response.data.runtimeType}');
+            return await getOrderById(commandeId);
+          } else {
+            // Si le backend ne retourne pas la commande, on la récupère
+            debugPrint('Réponse vide, récupération de la commande par ID');
+            return await getOrderById(commandeId);
+          }
+        } catch (parseError) {
+          debugPrint('Erreur lors du parsing de la réponse: $parseError');
+          debugPrint('Type de réponse: ${response.data.runtimeType}');
+          debugPrint('Contenu de la réponse: ${response.data}');
+          // En cas d'erreur de parsing, récupérer la commande
+          return await getOrderById(commandeId);
+        }
       } else {
+        final data = response.data;
+        String? message;
+        if (data is Map<String, dynamic>) {
+          message =
+              data['message']?.toString() ?? data['error']?.toString();
+        }
         throw Exception(
-            'Erreur lors du changement de statut: ${response.statusCode}');
+            message ?? 'Erreur lors du changement de statut (${response.statusCode})');
       }
     } catch (e) {
+      debugPrint('Erreur updateOrderStatusByProducer: $e');
+      // Si c'est une erreur de parsing, essayer de récupérer la commande quand même
+      if (e.toString().contains('type') && e.toString().contains('cast')) {
+        debugPrint('Erreur de type détectée, tentative de récupération de la commande');
+        try {
+          return await getOrderById(commandeId);
+        } catch (recoveryError) {
+          debugPrint('Impossible de récupérer la commande: $recoveryError');
+        }
+      }
       throw Exception('Erreur lors du changement de statut: $e');
     }
   }
@@ -373,7 +451,7 @@ class OrderService {
   Future<List<Commande>> getOrdersByProducer(int producteurId) async {
     try {
       final response = await _apiService
-          .get<List<dynamic>>('/commandes/producteur/$producteurId');
+          .get<List<dynamic>>('/producteur/$producteurId/commandes');
 
       if (response.statusCode == 200) {
         return response.data!

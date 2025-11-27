@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/services/order_service.dart';
 import 'package:suguconnect_mobile/providers/auth_provider.dart';
 import 'package:suguconnect_mobile/models/order.dart';
-import 'package:suguconnect_mobile/screens/producer/order_detail_screen.dart'; // Ajout de l'import
+import 'package:suguconnect_mobile/screens/producer/order_detail_screen.dart';
 import '../../widgets/entete_widget.dart';
 import '../consumer/order_detail_page.dart';
 
@@ -37,6 +37,7 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
   String _statusToUi(String backend) {
     switch (backend) {
       case 'VALIDEE':
+      case 'EN_ATTENTE':
         return 'En attente';
       case 'EN_LIVRAISON':
         return 'Expédié';
@@ -127,24 +128,12 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
       return const Center(child: Text('Utilisateur non connecté'));
     }
 
-    String? backendStatus;
-    if (_selectedFilter == 'En attente') {
-      backendStatus = _statusToBackend('En attente');
-    } else if (_selectedFilter == 'Livrées') {
-      backendStatus = _statusToBackend('Livrée');
-    }
-
     return RefreshIndicator(
       onRefresh: () async {
         setState(() {});
       },
       child: FutureBuilder<List<Commande>>(
-        future: _selectedFilter == 'Tous'
-            ? _orderService.getOrdersByProducer(producteurId)
-            : _orderService.getOrdersByProducerFiltered(
-                producteurId,
-                statut: backendStatus,
-              ),
+        future: _orderService.getOrdersByProducer(producteurId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -156,11 +145,35 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
 
           // Filtrer les commandes selon le filtre sélectionné
           List<Commande> filteredOrders = orders.where((order) {
-            if (_selectedFilter == 'Tous') return true;
-            final uiStatus = _statusToUi(order.statut);
-            if (_selectedFilter == 'En attente')
-              return uiStatus == 'En attente';
-            if (_selectedFilter == 'Livrées') return uiStatus == 'Livrée';
+            if (_selectedFilter == 'Tous') {
+              // Pour l'onglet "Tous", n'afficher que les commandes qui seraient dans "En attente" ou "Livrées"
+              final uiStatus = _statusToUi(order.statut);
+
+              // Vérifier si la commande serait dans "En attente" (paiement validé ou EN_LIVRAISON)
+              final bool isInEnAttente = ((uiStatus == 'En attente' || uiStatus == 'Expédié') &&
+                  (order.paiement?.statut == 'VALIDE' ||
+                      order.paiement?.statut == 'PAYE')) ||
+                  order.statut == 'EN_LIVRAISON';
+
+              // Vérifier si la commande serait dans "Livrées"
+              final bool isInLivrees = uiStatus == 'Livrée';
+
+              // Afficher si la commande est dans l'un des deux onglets
+              return isInEnAttente || isInLivrees;
+            }
+            if (_selectedFilter == 'En attente') {
+              // Pour l'onglet "En attente", inclure les commandes payées en attente ET en cours de livraison
+              final uiStatus = _statusToUi(order.statut);
+              final bool isPaidAndWaiting = (uiStatus == 'En attente') &&
+                  (order.paiement?.statut == 'VALIDE' ||
+                      order.paiement?.statut == 'PAYE');
+              final bool isInDelivery = order.statut == 'EN_LIVRAISON' || uiStatus == 'Expédié';
+              return isPaidAndWaiting || isInDelivery;
+            }
+            if (_selectedFilter == 'Livrées') {
+              final uiStatus = _statusToUi(order.statut);
+              return uiStatus == 'Livrée';
+            }
             return true;
           }).toList();
 
@@ -197,6 +210,8 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
   // Construit une carte de commande
   Widget _buildOrderCard(Commande order) {
     final uiStatus = _statusToUi(order.statut);
+    // Afficher "En cours de livraison" pour les commandes EN_LIVRAISON
+    final displayStatus = order.statut == 'EN_LIVRAISON' ? 'En cours de livraison' : uiStatus;
     final clientName = order.consommateur.prenom + ' ' + order.consommateur.nom;
     final productName = order.detailsCommande.isNotEmpty
         ? order.detailsCommande.first.produit.nom
@@ -212,22 +227,18 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
         : null;
 
     return GestureDetector(
-      onTap: () {
-        // Navigation vers la page de détail de la commande
-        Navigator.push(
+      onTap: () async {
+        // Navigation vers la page de détail de la commande (version producteur)
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => OrderDetailPage(
-              orderId: order.numeroCommande.isNotEmpty
-                  ? order.numeroCommande
-                  : order.id.toString(),
-              client: clientName,
-              status: uiStatus,
-              total: order.montantTotal,
-              date: order.dateCommande.toString().split(' ')[0],
-            ),
+            builder: (context) => OrderDetailScreen(order: order),
           ),
         );
+        // Rafraîchir la liste si une modification a été effectuée
+        if (result == true || mounted) {
+          setState(() {});
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
@@ -262,22 +273,18 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
                     children: [
                       IconButton(
                         icon: const Icon(Icons.visibility, color: Colors.grey),
-                        onPressed: () {
-                          Navigator.push(
+                        onPressed: () async {
+                          final result = await Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => OrderDetailPage(
-                                orderId: order.numeroCommande.isNotEmpty
-                                    ? order.numeroCommande
-                                    : order.id.toString(),
-                                client: clientName,
-                                status: uiStatus,
-                                total: order.montantTotal,
-                                date:
-                                    order.dateCommande.toString().split(' ')[0],
-                              ),
+                              builder: (context) =>
+                                  OrderDetailScreen(order: order),
                             ),
                           );
+                          // Rafraîchir la liste si une modification a été effectuée
+                          if (result == true || mounted) {
+                            setState(() {});
+                          }
                         },
                       ),
                     ],
@@ -300,13 +307,15 @@ class _ProducerOrdersScreenState extends State<ProducerOrdersScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: uiStatus == 'Livrée'
+                      color: displayStatus == 'Livrée'
                           ? const Color(0xFFFB662F)
-                          : Colors.orange,
+                          : displayStatus == 'En cours de livraison'
+                              ? Colors.orange
+                              : Colors.orange,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      uiStatus,
+                      displayStatus,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w500,

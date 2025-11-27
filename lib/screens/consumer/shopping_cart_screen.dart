@@ -15,7 +15,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
       'name': 'Tomates Bio',
       'price': 4500.0, // Prix en FCFA
       'quantity': 2,
-      'image': 'https://via.placeholder.com/100',
+      'image': 'assets/images/pommes.png',
       'producer': 'Ferme Martin'
     },
     {
@@ -23,7 +23,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
       'name': 'Salade Verte',
       'price': 3200.0, // Prix en FCFA
       'quantity': 1,
-      'image': 'https://via.placeholder.com/100',
+      'image': 'assets/images/pommes.png',
       'producer': 'Ferme Martin'
     },
   ];
@@ -105,23 +105,7 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                               // Image du produit
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  item['image'],
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Container(
-                                      width: 80,
-                                      height: 80,
-                                      color: Colors.grey.shade200,
-                                      child: const Icon(
-                                        Icons.image,
-                                        color: Colors.grey,
-                                      ),
-                                    );
-                                  },
-                                ),
+                                child: _buildProductImage(item['image']),
                               ),
 
                               const SizedBox(width: 12),
@@ -320,6 +304,46 @@ class _ShoppingCartScreenState extends State<ShoppingCartScreen> {
                 ),
               ],
             ),
+    );
+  }
+
+  Widget _buildProductImage(String path) {
+    final isNetwork =
+        path.startsWith('http://') || path.startsWith('https://');
+
+    final placeholder = Container(
+      width: 80,
+      height: 80,
+      color: Colors.grey.shade200,
+      child: const Icon(
+        Icons.image,
+        color: Colors.grey,
+      ),
+    );
+
+    if (isNetwork) {
+      return Image.network(
+        path,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            'assets/images/pommes.png',
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+          );
+        },
+      );
+    }
+
+    return Image.asset(
+      path,
+      width: 80,
+      height: 80,
+      fit: BoxFit.cover,
+      errorBuilder: (context, error, stackTrace) => placeholder,
     );
   }
 }

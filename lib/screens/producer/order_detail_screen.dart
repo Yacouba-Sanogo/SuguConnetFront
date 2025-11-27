@@ -16,6 +16,117 @@ class OrderDetailScreen extends StatefulWidget {
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   bool _isProcessing = false;
+  final ApiService _apiService = ApiService();
+  late Commande _currentOrder; // État local de la commande pour suivre les mises à jour
+
+  @override
+  void initState() {
+    super.initState();
+    _currentOrder = widget.order; // Initialiser avec la commande passée en paramètre
+  }
+
+  // Détermine l'étape actuelle basée sur le statut
+  int _getCurrentStep(String status) {
+    final statusUpper = status.toUpperCase();
+    if (statusUpper.contains('EN ATTENTE') ||
+        statusUpper.contains('ATTENTE') ||
+        statusUpper.contains('VALIDEE')) {
+      return 0; // En attente (paiement validé)
+    }
+    if (statusUpper.contains('EXPEDIE') ||
+        statusUpper.contains('EXPÉDIÉ') ||
+        statusUpper.contains('EN COURS') ||
+        statusUpper.contains('EN_COURS') ||
+        statusUpper.contains('EN_LIVRAISON')) {
+      return 1; // Expédition / En cours de livraison
+    }
+    if (statusUpper.contains('LIVREE') || statusUpper.contains('LIVRÉE')) {
+      return 2; // Réception
+    }
+    // Par défaut, on considère que le paiement est validé
+    return 0; // En attente par défaut
+  }
+
+  // Construit l'indicateur de progression
+  Widget _buildProgressIndicator(String status) {
+    final currentStep = _getCurrentStep(status);
+    final steps = ['En attente', 'Expédition', 'Livrée'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFEE8E3), // Light peach background
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(steps.length, (index) {
+          final isActive = index == currentStep;
+          final isCompleted = index < currentStep;
+
+          return Expanded(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Ligne avant (sauf pour le premier)
+                    if (index > 0)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: isCompleted
+                              ? const Color(0xFFFB662F)
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                    // Cercle de l'étape
+                    Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: isActive || isCompleted
+                            ? const Color(0xFFFB662F)
+                            : Colors.white,
+                        border: Border.all(
+                          color: isActive || isCompleted
+                              ? const Color(0xFFFB662F)
+                              : Colors.grey.shade300,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    // Ligne après (sauf pour le dernier)
+                    if (index < steps.length - 1)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: isCompleted
+                              ? const Color(0xFFFB662F)
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  steps[index],
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isActive
+                        ? const Color(0xFFFB662F)
+                        : Colors.grey.shade600,
+                    fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
 
   Future<void> _expedierCommande() async {
     if (_isProcessing) return;
@@ -42,22 +153,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final int userId = auth.currentUser!.id!;
 
       // Changer le statut de la commande à "EN_LIVRAISON" en utilisant la méthode correcte
-      await orderService.updateOrderStatusByProducer(
+      final updatedOrder = await orderService.updateOrderStatusByProducer(
         commandeId: widget.order.id,
         producteurId: userId,
         nouveauStatut: 'EN_LIVRAISON',
       );
 
       if (mounted) {
+        // Mettre à jour l'état local de la commande
+        setState(() {
+          _currentOrder = updatedOrder;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Produit expédié avec succès !'),
             backgroundColor: Colors.green,
           ),
         );
-
-        // Revenir à l'écran précédent avec un indicateur de succès pour rafraîchir la liste
-        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -102,22 +215,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       final int userId = auth.currentUser!.id!;
 
       // Changer le statut de la commande à "VALIDEE" (en attente) en utilisant la méthode correcte
-      await orderService.updateOrderStatusByProducer(
+      final updatedOrder = await orderService.updateOrderStatusByProducer(
         commandeId: widget.order.id,
         producteurId: userId,
         nouveauStatut: 'VALIDEE',
       );
 
       if (mounted) {
+        // Mettre à jour l'état local de la commande
+        setState(() {
+          _currentOrder = updatedOrder;
+        });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Expédition annulée avec succès !'),
             backgroundColor: Colors.green,
           ),
         );
-
-        // Revenir à l'écran précédent avec un indicateur de succès pour rafraîchir la liste
-        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -139,7 +254,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.order;
+    final order = _currentOrder; // Utiliser l'état local mis à jour
     final client = order.consommateur;
 
     return Scaffold(
@@ -153,6 +268,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Indicateur de progression
+            _buildProgressIndicator(order.statut),
+
+            const SizedBox(height: 20),
+
             // Informations du client
             Card(
               elevation: 2,
@@ -243,8 +363,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         child: Row(
                           children: [
                             // Image du produit
-                            FutureBuilder<String>(
-                              future: _getImageUrl(detail.produit),
+                            FutureBuilder<ImageProvider>(
+                              future: _getImageProvider(detail.produit),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
@@ -279,7 +399,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(8),
                                     image: DecorationImage(
-                                      image: NetworkImage(snapshot.data!),
+                                      image: snapshot.data!,
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -341,37 +461,34 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             const SizedBox(height: 30),
 
-            // Bouton d'expédition (uniquement si la commande est payée et en attente)
-            if (order.statut == 'EN_ATTENTE' &&
-                order.paiement != null &&
-                order.paiement!.estPaye) ...[
+            // Bouton d'expédition (visible pour les commandes payées)
+            if (order.paiement != null && order.paiement!.estPaye) ...[
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
-                  onPressed: _isProcessing ? null : _expedierCommande,
+                  onPressed: (order.statut == 'VALIDEE' || order.statut == 'EN_ATTENTE') && !_isProcessing
+                      ? _expedierCommande
+                      : null, // Désactiver si déjà expédié ou en cours de traitement
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFFB662F),
+                    backgroundColor: (order.statut == 'VALIDEE' || order.statut == 'EN_ATTENTE')
+                        ? const Color(0xFFFB662F)
+                        : Colors.grey.shade400, // Griser si déjà expédié
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
+                    disabledBackgroundColor: Colors.grey.shade400,
                   ),
                   child: _isProcessing
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text(
-                          'Expédier',
-                          style: TextStyle(
+                      : Text(
+                          order.statut == 'EN_LIVRAISON'
+                              ? 'En cours de livraison'
+                              : 'Expédier',
+                          style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                         ),
-                ),
-              ),
-            ] else if (order.statut == 'EN_LIVRAISON') ...[
-              const Center(
-                child: Chip(
-                  label: Text('En cours de livraison'),
-                  backgroundColor: Colors.orange,
-                  labelStyle: TextStyle(color: Colors.white),
                 ),
               ),
             ] else if (order.statut == 'LIVREE') ...[
@@ -382,21 +499,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   labelStyle: TextStyle(color: Colors.white),
                 ),
               ),
-            ],
+            ]
           ],
         ),
       ),
     );
   }
 
-  // Méthode pour obtenir l'URL de l'image du produit
-  Future<String> _getImageUrl(ProduitCommande produit) async {
+  // Méthode pour récupérer l'image du produit avec fallback local
+  Future<ImageProvider> _getImageProvider(ProduitCommande produit) async {
     try {
-      // Utiliser une image placeholder qui fonctionne avec Flutter
-      return 'https://via.placeholder.com/100x100/FFA500/FFFFFF?text=Produit';
+      if (produit.imageUrl != null && produit.imageUrl!.isNotEmpty) {
+        final resolvedUrl =
+            await _apiService.buildImageUrl(produit.imageUrl!);
+        return NetworkImage(resolvedUrl);
+      }
     } catch (e) {
-      // En cas d'erreur, retourner une URL par défaut qui fonctionne
-      return 'https://via.placeholder.com/100x100/CCCCCC/FFFFFF?text=Image';
+      debugPrint('Impossible de charger l\'image distante: $e');
     }
+    return const AssetImage('assets/images/pommes.png');
   }
 }
