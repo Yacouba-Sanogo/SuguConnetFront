@@ -6,14 +6,17 @@ import 'package:suguconnect_mobile/screens/auth/login_screen.dart';
 import 'package:suguconnect_mobile/screens/consumer/chat_page.dart';
 import 'package:suguconnect_mobile/screens/consumer/payment_page.dart';
 import 'package:suguconnect_mobile/services/api_service.dart';
+import 'package:suguconnect_mobile/services/produit_detail_service.dart';
+import 'package:suguconnect_mobile/models/produit_detail.dart';
 import 'package:dio/dio.dart';
 import 'dart:async';
 
 // La page de détails du produit
 class ProductDetailsPage extends StatefulWidget {
   final Map<String, String>? product;
+  final int? productId; // ID du produit pour charger depuis le backend
 
-  const ProductDetailsPage({super.key, this.product});
+  const ProductDetailsPage({super.key, this.product, this.productId});
 
   @override
   State<ProductDetailsPage> createState() => _ProductDetailsPageState();
@@ -27,6 +30,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   int _currentPage = 0;
   final PageController _pageController = PageController();
   final ApiService _apiService = ApiService();
+  final ProduitDetailService _produitDetailService = ProduitDetailService();
 
   // Animation pour l'image unique
   late AnimationController _animationController;
@@ -35,6 +39,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   // Liste d'images pour le carrousel
   late List<String> _productImages;
   bool _imagesLoading = true;
+  bool _isLoading = false;
+  ProduitDetail? _produitDetail;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -61,28 +68,28 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       'https://placehold.co/600x400/FFA726/FFFFFF?text=Chargement...',
     ];
 
-    // Utiliser les données du produit ou des valeurs par défaut
-    if (widget.product != null) {
-      // Afficher les données du produit pour le débogage
-      print('Product data in initState: ${widget.product}');
-
-      // Extraire le prix et le convertir en nombre
-      final priceString = widget.product!['price']?.toString() ?? '0';
-      print('Price string: $priceString');
-
-      // Nettoyer la chaîne de caractères pour ne garder que les chiffres
-      final cleanedPriceString = priceString.replaceAll(RegExp(r'[^\d.]'), '');
-      print('Cleaned price string: $cleanedPriceString');
-
-      // Convertir en double
-      _price = double.tryParse(cleanedPriceString) ?? 0.0;
-      print('Parsed price: $_price');
-
-      // Construire les URLs d'images
-      _buildImageUrls();
+    // Charger depuis le backend si productId est fourni directement ou depuis widget.product
+    if (widget.productId != null) {
+      _loadProductFromBackend();
+    } else if (widget.product != null) {
+      // Essayer d'extraire l'ID du produit depuis le Map et charger depuis le backend
+      final productIdStr = widget.product!['id'];
+      if (productIdStr != null) {
+        final productId = int.tryParse(productIdStr.toString());
+        if (productId != null && productId > 0) {
+          // Charger depuis le backend avec l'ID extrait
+          _loadProductFromBackendWithId(productId);
+        } else {
+          // Utiliser les données du produit passées en paramètre (ancienne méthode)
+          _loadProductFromMap();
+        }
+      } else {
+        // Utiliser les données du produit passées en paramètre (ancienne méthode)
+        _loadProductFromMap();
+      }
     } else {
       _price = 40000.0;
-      _imagesLoading = false; // Pas de chargement nécessaire
+      _imagesLoading = false;
       _productImages = [
         'https://placehold.co/600x400/FFA726/FFFFFF?text=Orange+1',
       ];
@@ -90,6 +97,101 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
 
     // Démarrer le timer seulement si nous avons plus d'une image
     _startAutoSlide();
+  }
+
+  // Charger le produit depuis le backend avec l'ID du widget
+  Future<void> _loadProductFromBackend() async {
+    if (widget.productId == null) return;
+    await _loadProductFromBackendWithId(widget.productId!);
+  }
+
+  // Charger le produit depuis le backend avec un ID spécifique
+  Future<void> _loadProductFromBackendWithId(int productId) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _imagesLoading = true;
+    });
+
+    try {
+      final produitDetail = await _produitDetailService.getProduitDetailById(productId);
+      
+      // Log pour déboguer
+      print('=== Produit chargé depuis le backend ===');
+      print('Product ID: ${produitDetail.id}');
+      print('Producteur ID: ${produitDetail.producteurId}');
+      print('Nom producteur: ${produitDetail.nomProducteur}');
+      print('Prénom producteur: ${produitDetail.prenomProducteur}');
+      print('Localisation: ${produitDetail.localisationProducteur}');
+      
+      // Vérifier que le producteur est valide
+      if (produitDetail.producteurId <= 0) {
+        print('⚠️ ATTENTION: Producteur ID invalide (${produitDetail.producteurId})');
+      }
+      if (produitDetail.nomProducteur.isEmpty && produitDetail.prenomProducteur.isEmpty) {
+        print('⚠️ ATTENTION: Nom et prénom du producteur vides');
+      }
+      
+      // Construire les images depuis les photos du produit
+      List<String> images = [];
+      if (produitDetail.photos.isNotEmpty) {
+        for (var photo in produitDetail.photos) {
+          try {
+            final imageUrl = await _apiService.buildImageUrl(photo);
+            images.add(imageUrl);
+          } catch (e) {
+            print('Erreur lors de la construction de l\'URL de l\'image: $e');
+          }
+        }
+      }
+      
+      if (images.isEmpty) {
+        images = ['assets/images/pommes.png'];
+      }
+      
+      setState(() {
+        _produitDetail = produitDetail;
+        _price = produitDetail.prixUnitaire;
+        _productImages = images;
+        _isLoading = false;
+        _imagesLoading = false;
+      });
+    } catch (e) {
+      print('Erreur lors du chargement du produit depuis le backend: $e');
+      // Si on a des données dans widget.product, les utiliser comme fallback
+      if (widget.product != null) {
+        print('Utilisation des données du Map comme fallback');
+        _loadProductFromMap();
+      } else {
+        setState(() {
+          _errorMessage = 'Erreur de chargement: $e';
+          _isLoading = false;
+          _imagesLoading = false;
+          _productImages = ['assets/images/pommes.png'];
+        });
+      }
+    }
+  }
+
+  // Charger le produit depuis le Map (ancienne méthode)
+  void _loadProductFromMap() {
+    // Afficher les données du produit pour le débogage
+    print('Product data in initState: ${widget.product}');
+
+    // Extraire le prix et le convertir en nombre
+    final priceString = widget.product!['price']?.toString() ?? '0';
+    print('Price string: $priceString');
+
+    // Nettoyer la chaîne de caractères pour ne garder que les chiffres
+    final cleanedPriceString = priceString.replaceAll(RegExp(r'[^\d.]'), '');
+    print('Cleaned price string: $cleanedPriceString');
+
+    // Convertir en double
+    _price = double.tryParse(cleanedPriceString) ?? 0.0;
+    print('Parsed price: $_price');
+
+    // Construire les URLs d'images
+    _buildImageUrls();
   }
 
   // Fonction pour démarrer le défilement automatique
@@ -173,8 +275,20 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
 
   void _updateQuantity(int change) {
     setState(() {
-      if (_quantity + change > 0) {
-        _quantity += change;
+      final newQuantity = _quantity + change;
+      if (newQuantity > 0) {
+        // Limiter la quantité au stock disponible si le produit est chargé depuis le backend
+        if (_produitDetail != null && newQuantity > _produitDetail!.stockDisponible) {
+          _quantity = _produitDetail!.stockDisponible;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Stock disponible: ${_produitDetail!.stockDisponible}'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        } else {
+          _quantity = newQuantity;
+        }
       }
     });
   }
@@ -259,6 +373,46 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(context),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(context),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  if (widget.productId != null) {
+                    _loadProductFromBackend();
+                  }
+                },
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(context),
@@ -326,12 +480,13 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   }
 
   Widget _buildProductHeader() {
+    final productName = _produitDetail?.nom ?? widget.product?['name'] ?? 'Poires du Maroc';
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Text(
-            widget.product?['name'] ?? 'Poires du Maroc',
+            productName,
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -356,10 +511,30 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   }
 
   Widget _buildProducerInfo() {
-    final producerName = widget.product?['producerName'] ?? 'Sory Coulibaly';
-    final producerAvatar =
-        widget.product?['producerAvatar'] ?? 'assets/images/improfil.png';
-    final producerLocation = widget.product?['location'] ?? 'Djoliba, Koulikoro';
+    // Construire le nom du producteur
+    String producerName;
+    if (_produitDetail != null) {
+      final nom = _produitDetail!.nomProducteur.trim();
+      final prenom = _produitDetail!.prenomProducteur.trim();
+      if (nom.isNotEmpty || prenom.isNotEmpty) {
+        producerName = '$prenom $nom'.trim();
+      } else {
+        producerName = 'Producteur';
+      }
+    } else {
+      producerName = widget.product?['producerName'] ?? 'Producteur';
+    }
+    
+    final producerAvatar = widget.product?['producerAvatar'] ?? 'assets/images/improfil.png';
+    
+    // Construire la localisation
+    String producerLocation;
+    if (_produitDetail != null && _produitDetail!.localisationProducteur.isNotEmpty) {
+      producerLocation = _produitDetail!.localisationProducteur;
+    } else {
+      producerLocation = widget.product?['location'] ?? 'Local';
+    }
+    
     final farmName = 'Djoliba'; // Vous pouvez ajouter ce champ au produit si nécessaire
 
     ImageProvider avatarProvider;
@@ -436,7 +611,7 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
           children: [
             Expanded(
               child: Text(
-                'Prix : ${widget.product?['price'] ?? '${_price.toStringAsFixed(0)} fcfa'}',
+                'Prix : ${_produitDetail?.prixFormate ?? '${_price.toStringAsFixed(0)} fcfa'}',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -447,9 +622,22 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _buildTag('Le carton', Colors.orange.shade100, Colors.orange.shade700),
+                if (_produitDetail?.unite != null)
+                  _buildTag('Le ${_produitDetail!.unite.toLowerCase()}', Colors.orange.shade100, Colors.orange.shade700),
+                if (_produitDetail?.unite == null && widget.product != null)
+                  _buildTag('Le carton', Colors.orange.shade100, Colors.orange.shade700),
                 const SizedBox(height: 8),
-                _buildTag('Disponible', Colors.green.shade50, Colors.green.shade700),
+                _buildTag(
+                  _produitDetail?.enStock == true || (_produitDetail == null && widget.product != null)
+                      ? 'Disponible' 
+                      : 'Indisponible',
+                  (_produitDetail?.enStock == true || (_produitDetail == null && widget.product != null))
+                      ? Colors.green.shade50 
+                      : Colors.red.shade50,
+                  (_produitDetail?.enStock == true || (_produitDetail == null && widget.product != null))
+                      ? Colors.green.shade700 
+                      : Colors.red.shade700,
+                ),
               ],
             ),
           ],
@@ -533,8 +721,9 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
   }
 
   Widget _buildDescription() {
-    final description = widget.product?['description'] ?? 
-        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
+    final description = _produitDetail?.description ?? 
+                        widget.product?['description'] ?? 
+                        'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.';
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -680,15 +869,99 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
                 ),
                 onTap: () {
                   Navigator.pop(context);
+                  
+                  // Extraire le producerId correctement
+                  int? producerId;
+                  print('=== Débogage extraction producerId (menu) ===');
+                  print('_produitDetail est null: ${_produitDetail == null}');
+                  if (_produitDetail != null) {
+                    print('ProducteurId depuis ProduitDetail: ${_produitDetail!.producteurId}');
+                    producerId = _produitDetail!.producteurId > 0 ? _produitDetail!.producteurId : null;
+                  } else if (widget.product != null) {
+                    print('Données widget.product: ${widget.product}');
+                    print('Clés disponibles: ${widget.product!.keys.toList()}');
+                    final producerIdStr = widget.product!['producerId'] ?? widget.product!['producteurId'];
+                    print('producerIdStr depuis Map: $producerIdStr');
+                    producerId = producerIdStr != null ? int.tryParse(producerIdStr.toString()) : null;
+                    
+                    // Si le producerId n'est pas dans le Map, essayer de charger depuis le backend
+                    if (producerId == null || producerId <= 0) {
+                      final productIdStr = widget.product!['id'];
+                      if (productIdStr != null) {
+                        final productId = int.tryParse(productIdStr.toString());
+                        if (productId != null && productId > 0) {
+                          print('Tentative de chargement depuis le backend avec productId: $productId');
+                          // Charger depuis le backend de manière synchrone (afficher un loader)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Chargement des informations du producteur...'),
+                              backgroundColor: Colors.blue,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          _loadProductFromBackendWithId(productId).then((_) {
+                            // Réessayer après le chargement
+                            if (mounted && _produitDetail != null && _produitDetail!.producteurId > 0) {
+                              final producerName = _produitDetail!.producteurFullName;
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ChatPage(
+                                    producerId: _produitDetail!.producteurId,
+                                    producerName: producerName,
+                                    producerAvatar: widget.product?['producerAvatar'] ??
+                                        'assets/images/improfil.png',
+                                  ),
+                                ),
+                              );
+                            }
+                          });
+                          return;
+                        }
+                      }
+                    }
+                  }
+                  
+                  print('producerId final: $producerId');
+                  
+                  if (producerId == null || producerId <= 0) {
+                    // Afficher une erreur si le producerId est invalide
+                    print('❌ ERREUR: Producteur ID invalide - producerId: $producerId');
+                    print('   ProduitDetail: ${_produitDetail?.id}');
+                    print('   ProducteurId depuis ProduitDetail: ${_produitDetail?.producteurId}');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Impossible de contacter le producteur. ${_produitDetail != null ? "Le producteur n\'est pas associé à ce produit." : "Les informations du producteur ne sont pas disponibles."}'),
+                        backgroundColor: Colors.red,
+                        duration: const Duration(seconds: 4),
+                      ),
+                    );
+                    return;
+                  }
+                  
+                  // À ce point, producerId est garanti non-null et > 0
+                  final validProducerId = producerId!;
+                  
+                  // Construire le nom du producteur
+                  String producerName;
+                  if (_produitDetail != null) {
+                    final nom = _produitDetail!.nomProducteur.trim();
+                    final prenom = _produitDetail!.prenomProducteur.trim();
+                    if (nom.isNotEmpty || prenom.isNotEmpty) {
+                      producerName = '$prenom $nom'.trim();
+                    } else {
+                      producerName = 'Producteur';
+                    }
+                  } else {
+                    producerName = widget.product?['producerName'] ?? 'Producteur';
+                  }
+                  
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ChatPage(
-                        producerId:
-                            int.tryParse(widget.product?['producerId'] ?? '1') ??
-                                1,
-                        producerName:
-                            widget.product?['producerName'] ?? 'Producteur local',
+                        producerId: validProducerId,
+                        producerName: producerName,
                         producerAvatar: widget.product?['producerAvatar'] ??
                             'assets/images/improfil.png',
                       ),
@@ -747,7 +1020,8 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       }
 
       // Récupérer l'ID du produit
-      final productId = widget.product?['id'];
+      final productId = _produitDetail?.id ?? 
+                       (widget.product?['id'] != null ? int.tryParse(widget.product!['id']!) : null);
       if (productId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -767,9 +1041,10 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       print('Réponse d\'ajout au panier: ${response.statusCode} - ${response.data}');
       if (response.statusCode == 200) {
         if (mounted) {
+          final productName = _produitDetail?.nom ?? widget.product?['name'] ?? 'Produit';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${widget.product?['name'] ?? 'Produit'} ajouté au panier'),
+              content: Text('$productName ajouté au panier'),
               backgroundColor: Colors.green,
             ),
           );
@@ -797,14 +1072,98 @@ class _ProductDetailsPageState extends State<ProductDetailsPage>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ElevatedButton.icon(
         onPressed: () {
+          // Extraire le producerId correctement
+          int? producerId;
+          print('=== Débogage extraction producerId ===');
+          print('_produitDetail est null: ${_produitDetail == null}');
+          if (_produitDetail != null) {
+            print('ProducteurId depuis ProduitDetail: ${_produitDetail!.producteurId}');
+            producerId = _produitDetail!.producteurId > 0 ? _produitDetail!.producteurId : null;
+          } else if (widget.product != null) {
+            print('Données widget.product: ${widget.product}');
+            print('Clés disponibles: ${widget.product!.keys.toList()}');
+            final producerIdStr = widget.product!['producerId'] ?? widget.product!['producteurId'];
+            print('producerIdStr depuis Map: $producerIdStr');
+            producerId = producerIdStr != null ? int.tryParse(producerIdStr.toString()) : null;
+            
+            // Si le producerId n'est pas dans le Map, essayer de charger depuis le backend
+            if (producerId == null || producerId <= 0) {
+              final productIdStr = widget.product!['id'];
+              if (productIdStr != null) {
+                final productId = int.tryParse(productIdStr.toString());
+                if (productId != null && productId > 0) {
+                  print('Tentative de chargement depuis le backend avec productId: $productId');
+                  // Charger depuis le backend de manière synchrone (afficher un loader)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Chargement des informations du producteur...'),
+                      backgroundColor: Colors.blue,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
+                  _loadProductFromBackendWithId(productId).then((_) {
+                    // Réessayer après le chargement
+                    if (mounted && _produitDetail != null && _produitDetail!.producteurId > 0) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatPage(
+                            producerId: _produitDetail!.producteurId,
+                            producerName: _produitDetail!.producteurFullName,
+                            producerAvatar: widget.product!['producerAvatar'] ??
+                                'assets/images/improfil.png',
+                          ),
+                        ),
+                      );
+                    }
+                  });
+                  return;
+                }
+              }
+            }
+          }
+          
+          print('producerId final: $producerId');
+          
+          if (producerId == null || producerId <= 0) {
+            // Afficher une erreur si le producerId est invalide
+            print('❌ ERREUR: Producteur ID invalide - producerId: $producerId');
+            print('   ProduitDetail: ${_produitDetail?.id}');
+            print('   ProducteurId depuis ProduitDetail: ${_produitDetail?.producteurId}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Impossible de contacter le producteur. ${_produitDetail != null ? "Le producteur n\'est pas associé à ce produit." : "Les informations du producteur ne sont pas disponibles."}'),
+                backgroundColor: Colors.red,
+                duration: const Duration(seconds: 4),
+              ),
+            );
+            return;
+          }
+          
+          // À ce point, producerId est garanti non-null et > 0
+          final validProducerId = producerId!;
+          
+          // Construire le nom du producteur
+          String producerName;
+          if (_produitDetail != null) {
+            final nom = _produitDetail!.nomProducteur.trim();
+            final prenom = _produitDetail!.prenomProducteur.trim();
+            if (nom.isNotEmpty || prenom.isNotEmpty) {
+              producerName = '$prenom $nom'.trim();
+            } else {
+              producerName = 'Producteur';
+            }
+          } else {
+            producerName = widget.product!['producerName'] ?? 'Producteur';
+          }
+          
           // Navigation vers la page de chat
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => ChatPage(
-                producerId:
-                    int.tryParse(widget.product!['producerId'] ?? '1') ?? 1,
-                producerName: widget.product!['producerName'] ?? 'Producteur',
+                producerId: validProducerId,
+                producerName: producerName,
                 producerAvatar: widget.product!['producerAvatar'] ??
                     'assets/images/improfil.png',
               ),

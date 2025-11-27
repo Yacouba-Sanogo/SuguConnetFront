@@ -80,6 +80,13 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
                         (producteur['nom'] ?? '')))
                 .toString())
             : (m['nomProducteur'] ?? 'Producteur').toString();
+        // Extraire l'ID du producteur
+        int? producerId;
+        if (producteur != null && producteur['id'] != null) {
+          producerId = (producteur['id'] as num).toInt();
+        } else if (m['producteurId'] != null) {
+          producerId = (m['producteurId'] as num).toInt();
+        }
         final localite = (m['localite'] ??
                 m['localité'] ??
                 producteur?[r'localite'] ??
@@ -133,6 +140,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
           available: stock > 0 || (m['disponible'] ?? true) == true,
           category: cat,
           producerName: nomProd,
+          producerId: producerId,
           description: (m['description'] ?? '').toString(),
           locality: localite,
         );
@@ -536,6 +544,7 @@ class _CategoryProductsPageState extends State<CategoryProductsPage> {
           'location': product.locality ?? 'Local',
           'image': product.image,
           'producerName': product.producerName,
+          if (product.producerId != null) 'producerId': product.producerId.toString(),
           'producerAvatar': 'assets/images/improfil.png',
           'description': product.description ?? '',
         };
@@ -707,6 +716,7 @@ class _ConsumerProduct {
   final bool available;
   final String category;
   final String producerName;
+  final int? producerId;
   final String? description;
   final String? locality;
 
@@ -719,6 +729,7 @@ class _ConsumerProduct {
     required this.available,
     required this.category,
     required this.producerName,
+    this.producerId,
     required this.description,
     required this.locality,
   });

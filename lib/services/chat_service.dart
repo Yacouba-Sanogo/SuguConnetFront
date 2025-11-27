@@ -13,7 +13,12 @@ class ChatService {
     required String content,
   }) async {
     try {
-      final response = await _apiService.post<Map<String, dynamic>>(
+      print('=== Envoi de message ===');
+      print('senderId: $senderId');
+      print('receiverId: $receiverId');
+      print('content: $content');
+      
+      final response = await _apiService.post<dynamic>(
         '/messages',
         data: {
           'senderId': senderId,
@@ -23,13 +28,48 @@ class ChatService {
         },
       );
 
+      print('Réponse - Status: ${response.statusCode}');
+      print('Réponse - Data type: ${response.data.runtimeType}');
+      print('Réponse - Data: ${response.data}');
+
       if (response.statusCode == 201) {
-        return response.data!;
+        if (response.data is Map<String, dynamic>) {
+          return response.data as Map<String, dynamic>;
+        } else {
+          // Si la réponse n'est pas un Map, créer un Map avec les données
+          return {'success': true, 'data': response.data};
+        }
       } else {
-        throw Exception(
-            'Erreur lors de l\'envoi du message: ${response.statusCode}');
+        // Extraire le message d'erreur du backend si disponible
+        String errorMessage = 'Erreur lors de l\'envoi du message';
+        if (response.data != null) {
+          if (response.data is Map<String, dynamic>) {
+            final errorData = response.data as Map<String, dynamic>;
+            errorMessage = errorData['error']?.toString() ?? 
+                         errorData['message']?.toString() ?? 
+                         errorMessage;
+          } else {
+            errorMessage = response.data.toString();
+          }
+        }
+        throw Exception(errorMessage);
       }
     } catch (e) {
+      print('=== ERREUR sendMessage ===');
+      print('Erreur: $e');
+      // Si c'est une DioException, essayer d'extraire le message d'erreur
+      if (e.toString().contains('DioException')) {
+        final errorStr = e.toString();
+        if (errorStr.contains('400')) {
+          throw Exception('Données invalides. Vérifiez que tous les champs sont corrects.');
+        } else if (errorStr.contains('401')) {
+          throw Exception('Non autorisé. Veuillez vous reconnecter.');
+        } else if (errorStr.contains('403')) {
+          throw Exception('Accès refusé.');
+        } else if (errorStr.contains('404')) {
+          throw Exception('Endpoint non trouvé.');
+        }
+      }
       throw Exception('Erreur lors de l\'envoi du message: $e');
     }
   }
