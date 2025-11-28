@@ -42,10 +42,14 @@ class _ChatPageState extends State<ChatPage> {
   // Messages de la conversation
   final List<Map<String, dynamic>> _messages = [];
 
+  Timer? _refreshTimer; // Timer pour rafraîchir les messages automatiquement
+
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    // Démarrer le rafraîchissement automatique toutes les 3 secondes (comme WhatsApp)
+    _startAutoRefresh();
   }
 
   @override
@@ -54,7 +58,75 @@ class _ChatPageState extends State<ChatPage> {
     _scrollController.dispose();
     _audioPlayer.dispose();
     _typingTimer?.cancel();
+    _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  // Démarrer le rafraîchissement automatique des messages
+  void _startAutoRefresh() {
+    _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      if (mounted) {
+        _refreshMessages();
+      }
+    });
+  }
+
+  // Rafraîchir les messages sans réinitialiser la liste complète
+  Future<void> _refreshMessages() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final userId = authProvider.currentUser?.id;
+
+      if (userId == null || userId <= 0 || widget.producerId <= 0) {
+        return;
+      }
+
+      final messages = await _chatService.getMessages(
+        userId1: userId,
+        userId2: widget.producerId,
+      );
+
+      // Vérifier s'il y a de nouveaux messages
+      final currentMessageIds = _messages.map((m) => m['id']).toSet();
+      final newMessages = messages.where((msg) => 
+        !currentMessageIds.contains(msg['id']?.toString())
+      ).toList();
+
+      if (newMessages.isNotEmpty) {
+        // Traiter les nouveaux messages
+        final processedNewMessages = await Future.wait(newMessages.map((msg) async {
+          String? fullPath;
+          if (msg['filePath'] != null) {
+            fullPath = await _apiService.buildImageUrl(msg['filePath']);
+          }
+
+          return {
+            'id': msg['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            'text': msg['content'] ?? msg['contenu'] ?? '',
+            'isMe': (msg['senderId'] ?? msg['expediteurId']) == userId,
+            'time': _formatTimeString(msg['timestamp'] ?? msg['dateEnvoi']),
+            'type': (msg['type'] ?? msg['typeMessage'] ?? 'TEXT').toString().toLowerCase(),
+            'path': fullPath ?? msg['filePath'] ?? msg['cheminFichier'],
+          };
+        }).toList());
+
+        if (mounted) {
+          setState(() {
+            _messages.addAll(processedNewMessages);
+            // Trier par timestamp pour maintenir l'ordre chronologique
+            _messages.sort((a, b) {
+              final timeA = a['time'] ?? '00:00';
+              final timeB = b['time'] ?? '00:00';
+              return timeA.compareTo(timeB);
+            });
+          });
+          _scrollToBottom();
+        }
+      }
+    } catch (e) {
+      // Ignorer les erreurs silencieusement pour ne pas perturber l'utilisateur
+      print('Erreur lors du rafraîchissement: $e');
+    }
   }
 
   // Charger les messages
@@ -103,19 +175,35 @@ class _ChatPageState extends State<ChatPage> {
       final processedMessages = await Future.wait(messages.map((msg) async {
         // Construire l'URL complète pour les fichiers
         String? fullPath;
-        if (msg['filePath'] != null) {
-          fullPath = await _apiService.buildImageUrl(msg['filePath']);
+        final filePath = msg['filePath'] ?? msg['cheminFichier'];
+        if (filePath != null && filePath.toString().isNotEmpty) {
+          fullPath = await _apiService.buildImageUrl(filePath.toString());
         }
 
+        // Gérer différents formats de réponse (DTO ou Entity directe)
+        final messageId = msg['id'] ?? msg['idMessage'];
+        final content = msg['content'] ?? msg['contenu'] ?? '';
+        final senderId = msg['senderId'] ?? msg['expediteurId'];
+        final timestamp = msg['timestamp'] ?? msg['dateEnvoi'];
+        final type = msg['type'] ?? msg['typeMessage'] ?? 'TEXT';
+
         return {
-          'id': msg['id'].toString(),
-          'text': msg['content'],
-          'isMe': msg['senderId'] == userId,
-          'time': _formatTimeString(msg['timestamp']),
-          'type': msg['type']?.toLowerCase() ?? 'text',
-          'path': fullPath ?? msg['filePath'], // Pour les fichiers/images
+          'id': messageId?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+          'text': content,
+          'isMe': senderId == userId,
+          'time': _formatTimeString(timestamp?.toString()),
+          'type': type.toString().toLowerCase(),
+          'path': fullPath ?? filePath?.toString(), // Pour les fichiers/images
+          'isRead': msg['isRead'] ?? msg['lu'] ?? false,
         };
       }).toList());
+
+      // Trier les messages par timestamp pour garantir l'ordre chronologique
+      processedMessages.sort((a, b) {
+        final timeA = a['time'] ?? '00:00';
+        final timeB = b['time'] ?? '00:00';
+        return timeA.compareTo(timeB);
+      });
 
       setState(() {
         _messages.clear();
@@ -199,17 +287,23 @@ class _ChatPageState extends State<ChatPage> {
           content: _messageController.text.trim(),
         );
 
+        // Ajouter le message à la liste localement
+        final messageContent = _messageController.text.trim();
+        _messageController.clear();
+
         setState(() {
           _messages.add({
-            'id': message['id'].toString(),
-            'text': message['content'],
+            'id': message['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+            'text': message['content'] ?? messageContent,
             'isMe': true,
-            'time': _formatTimeString(message['timestamp']),
+            'time': _formatTimeString(message['timestamp'] ?? DateTime.now().toString()),
             'type': 'text',
+            'isRead': false,
           });
         });
 
-        _messageController.clear();
+        // Recharger les messages pour obtenir la version complète du serveur
+        await _refreshMessages();
         _scrollToBottom();
       } catch (e) {
         print('=== ERREUR D\'ENVOI DE MESSAGE ===');
