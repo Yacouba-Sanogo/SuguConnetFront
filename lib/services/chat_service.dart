@@ -231,6 +231,84 @@ class ChatService {
     }
   }
 
+  /// Récupérer les conversations d'un producteur
+  Future<List<Map<String, dynamic>>> getProducerConversations(int producteurId) async {
+    try {
+      print('=== getProducerConversations appelé ===');
+      print('producteurId: $producteurId');
+
+      // Essayer d'abord avec le nouvel endpoint basé sur les messages (inclut tous les messages)
+      try {
+        final response = await _apiService.get<List<dynamic>>(
+          '/api/chat/conversations/producteur/$producteurId/messages',
+        );
+
+        print('Réponse du backend (messages) - Status: ${response.statusCode}');
+        print('Réponse du backend (messages) - Data: ${response.data}');
+
+        if (response.statusCode == 200 && response.data != null) {
+          return response.data!
+              .map((item) => item as Map<String, dynamic>)
+              .toList();
+        }
+      } catch (e) {
+        print('Erreur avec /api/chat/conversations/producteur/$producteurId/messages: $e');
+        // Essayer avec l'endpoint classique si le nouvel endpoint échoue
+        try {
+          final response = await _apiService.get<List<dynamic>>(
+            '/api/chat/conversations/producteur/$producteurId',
+          );
+
+          print('Réponse du backend (classique) - Status: ${response.statusCode}');
+          print('Réponse du backend (classique) - Data: ${response.data}');
+
+          if (response.statusCode == 200 && response.data != null) {
+            return response.data!
+                .map((item) => item as Map<String, dynamic>)
+                .toList();
+          }
+        } catch (e2) {
+          print('Erreur avec /api/chat/conversations/producteur/$producteurId: $e2');
+          // Essayer avec /chat si /api/chat échoue
+          try {
+            final response = await _apiService.get<List<dynamic>>(
+              '/chat/conversations/producteur/$producteurId',
+            );
+
+            if (response.statusCode == 200 && response.data != null) {
+              return response.data!
+                  .map((item) => item as Map<String, dynamic>)
+                  .toList();
+            }
+          } catch (e3) {
+            print('Erreur avec /chat/conversations/producteur/$producteurId: $e3');
+          }
+        }
+      }
+      
+      print('ERREUR: Aucune conversation trouvée');
+      return [];
+    } catch (e, stackTrace) {
+      print('=== ERREUR DANS getProducerConversations ===');
+      print('Erreur: $e');
+      print('Stack trace: $stackTrace');
+      return [];
+    }
+  }
+
+  /// Récupérer les messages reçus par un producteur (alternative simple)
+  /// Cette méthode récupère tous les messages où le producteur est le destinataire
+  Future<List<Map<String, dynamic>>> getReceivedMessages(int producteurId) async {
+    try {
+      // Pour l'instant, on retourne une liste vide
+      // Cette méthode peut être implémentée si un endpoint existe
+      return [];
+    } catch (e) {
+      print('Erreur lors de la récupération des messages reçus: $e');
+      return [];
+    }
+  }
+
   /// Marquer un message comme lu
   Future<void> markMessageAsRead(int messageId) async {
     try {

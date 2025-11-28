@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:suguconnect_mobile/theme/app_theme.dart';
 import 'package:suguconnect_mobile/screens/producer/producer_product_form_screen.dart';
 import 'package:suguconnect_mobile/screens/producer/stock_management_screen.dart';
 import 'package:suguconnect_mobile/screens/consumer/driver_list_screen.dart';
+import 'package:suguconnect_mobile/providers/auth_provider.dart';
+import 'package:suguconnect_mobile/services/api_service.dart';
 import '../consumer/notifications_page.dart';
 import '../consumer/messaging_page.dart';
 import '../../constantes.dart';
@@ -17,6 +20,83 @@ class ProducerDashboardScreen extends StatefulWidget {
 }
 
 class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
+  final ApiService _apiService = ApiService();
+  int _produitsEnStock = 0;
+  int _ruptureDeStock = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStatistics();
+  }
+
+  Future<void> _loadStatistics() async {
+    setState(() {
+      _isLoadingStats = true;
+    });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final producerId = authProvider.currentUser?.id;
+
+      if (producerId == null || producerId <= 0) {
+        setState(() {
+          _produitsEnStock = 0;
+          _ruptureDeStock = 0;
+          _isLoadingStats = false;
+        });
+        return;
+      }
+
+      // Récupérer tous les produits du producteur
+      final response = await _apiService.get<List<dynamic>>(
+        '/producteur/$producerId/produit',
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final products = response.data!;
+
+        // Calculer les statistiques
+        int enStock = 0;
+        int rupture = 0;
+
+        for (var product in products) {
+          // Extraire la quantité depuis différents champs possibles
+          final quantite = product['quantite'] ?? 
+                          product['stockDisponible'] ?? 
+                          product['quantiteStock'] ?? 
+                          0;
+          
+          if (quantite is num && quantite > 0) {
+            enStock++;
+          } else {
+            rupture++;
+          }
+        }
+
+        setState(() {
+          _produitsEnStock = enStock;
+          _ruptureDeStock = rupture;
+          _isLoadingStats = false;
+        });
+      } else {
+        setState(() {
+          _produitsEnStock = 0;
+          _ruptureDeStock = 0;
+          _isLoadingStats = false;
+        });
+      }
+    } catch (e) {
+      print('Erreur lors du chargement des statistiques: $e');
+      setState(() {
+        _produitsEnStock = 0;
+        _ruptureDeStock = 0;
+        _isLoadingStats = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,7 +186,10 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                           MaterialPageRoute(
                             builder: (context) => const StockManagementScreen(),
                           ),
-                        );
+                        ).then((_) {
+                          // Rafraîchir les statistiques après retour
+                          _loadStatistics();
+                        });
                       },
                       child: Container(
                         padding: const EdgeInsets.all(20),
@@ -136,15 +219,24 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 12),
-                            Text(
-                              '20',
-                              style: GoogleFonts.itim(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                            _isLoadingStats
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFFFB662F),
+                                    ),
+                                  )
+                                : Text(
+                                    '$_produitsEnStock',
+                                    style: GoogleFonts.itim(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                           ],
                         ),
                       ),
@@ -185,15 +277,24 @@ class _ProducerDashboardScreenState extends State<ProducerDashboardScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
-                          Text(
-                            '10',
-                            style: GoogleFonts.itim(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                          _isLoadingStats
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.grey,
+                                  ),
+                                )
+                              : Text(
+                                  '$_ruptureDeStock',
+                                  style: GoogleFonts.itim(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
                         ],
                       ),
                     ),

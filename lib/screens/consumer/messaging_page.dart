@@ -3,6 +3,7 @@ import 'notifications_page.dart';
 import '../producer/producer_refunds_screen.dart';
 import '../producer/producer_payments_screen.dart';
 import '../producer/producer_orders_screen.dart';
+import '../producer/producer_conversations_screen.dart';
 import 'driver_list_screen.dart';
 
 // Page principale de notifications
@@ -19,7 +20,7 @@ class _MessagingPageState extends State<MessagingPage> {
   final List<NotificationItem> _notifications = [
     NotificationItem(
       title: "Commande",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Gérer vos commandes",
       time: "10:20",
       icon: Icons.receipt,
       iconColor: Colors.blue,
@@ -27,7 +28,7 @@ class _MessagingPageState extends State<MessagingPage> {
     ),
     NotificationItem(
       title: "Livraison",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Suivre les livraisons",
       time: "Hier",
       icon: Icons.local_shipping,
       iconColor: Colors.orange,
@@ -35,11 +36,19 @@ class _MessagingPageState extends State<MessagingPage> {
     ),
     NotificationItem(
       title: "Paiement",
-      description: "Lorem ipsum dolor sit amet, elit.",
+      description: "Voir les paiements",
       time: "10:20",
       icon: Icons.account_balance_wallet,
       iconColor: const Color(0xFF8FA31E), // Olive green
       cardColor: const Color(0xFFE8F5E8), // Vert clair
+    ),
+    NotificationItem(
+      title: "Message",
+      description: "Voir les messages reçus",
+      time: "Maintenant",
+      icon: Icons.chat_bubble_outline,
+      iconColor: const Color(0xFFFB662F), // Orange principal
+      cardColor: const Color(0xFFFFF5F0), // Orange très clair
     ),
   ];
 
@@ -153,6 +162,13 @@ class _MessagingPageState extends State<MessagingPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const ProducerPaymentsScreen(),
+                  ),
+                );
+              } else if (notification.title == "Message") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProducerConversationsScreen(),
                   ),
                 );
               }
