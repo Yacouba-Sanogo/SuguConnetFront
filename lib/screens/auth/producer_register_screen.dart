@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../constantes.dart';
 import '../auth/login_screen.dart';
 import '../producer/producer_main_screen.dart';
+import 'producer_pending_approval_screen.dart';
 
 class ProducerRegisterScreen extends StatefulWidget {
   const ProducerRegisterScreen({super.key});
@@ -73,12 +74,16 @@ class _ProducerRegisterScreenState extends State<ProducerRegisterScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Inscription producteur réussie'), backgroundColor: Color(0xFF4CAF50)),
-      );
+      
+      // Afficher une page d'attente au lieu de rediriger vers le dashboard
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ProducerMainScreen()),
+        MaterialPageRoute(
+          builder: (_) => ProducerPendingApprovalScreen(
+            producerName: '${_prenomCtrl.text.trim()} ${_nomCtrl.text.trim()}',
+            email: _emailCtrl.text.trim(),
+          ),
+        ),
       );
     } catch (e) {
       if (!mounted) return;

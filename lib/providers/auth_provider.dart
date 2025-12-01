@@ -117,8 +117,8 @@ class AuthProvider with ChangeNotifier {
         description: '',
       );
 
-      // Après l'inscription, connectons l'utilisateur pour obtenir un vrai token
-      await login(telephone, motDePasse);
+      // Ne pas connecter automatiquement - le producteur doit attendre la validation admin
+      // Le statut est EN_ATTENTE, donc il ne peut pas se connecter tant qu'il n'est pas ACCEPTE
     } catch (e) {
       _setError('Erreur d\'inscription: $e');
       rethrow;

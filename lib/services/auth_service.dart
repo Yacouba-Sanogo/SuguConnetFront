@@ -134,8 +134,10 @@ class AuthService {
   }) async {
     try {
       await _ensureBaseUrl();
+      // Utilisation du bon endpoint backend: /consommateur/inscription
+      // Le backend attend: localisation (pas adresse), latitude, longitude
       final response = await http.post(
-        Uri.parse('$_baseUrl/auth/register/consommateur'),
+        Uri.parse('$_baseUrl/consommateur/inscription'),
         headers: _headers,
         body: jsonEncode({
           'nom': nom,
@@ -143,17 +145,20 @@ class AuthService {
           'email': email,
           'motDePasse': motDePasse,
           'telephone': telephone,
-          'adresse': adresse,
-          'preferencesAlimentaires': preferencesAlimentaires ?? '',
-          'allergies': allergies ?? '',
-          'adresseLivraison': adresseLivraison ?? adresse,
+          'localisation': adresse, // Mapper adresse -> localisation
+          'latitude': 0, // TODO: Remplacer par géolocalisation réelle
+          'longitude': 0, // TODO: Remplacer par géolocalisation réelle
         }),
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        // Le backend renvoie une chaîne de caractères, pas un JSON
+        final responseBody = response.body;
+        return {'message': responseBody};
       } else {
-        final errorBody = jsonDecode(response.body);
+        final errorBody = response.body.isNotEmpty 
+            ? (response.body.startsWith('{') ? jsonDecode(response.body) : response.body)
+            : 'Erreur inconnue';
         throw Exception('Erreur d\'inscription: ${errorBody.toString()}');
       }
     } catch (e) {

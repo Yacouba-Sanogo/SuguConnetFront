@@ -56,12 +56,23 @@ class _ConsumerRegisterScreenState extends State<ConsumerRegisterScreen> {
         throw Exception('Impossible de se connecter au serveur. Vérifiez que le backend est démarré.');
       }
 
+      // S'assurer que le numéro de téléphone complet est disponible
+      String telephone = _completePhoneNumber;
+      if (telephone.isEmpty && _telephoneController.text.isNotEmpty) {
+        // Fallback: construire le numéro avec le code pays par défaut (ML = +223)
+        telephone = '+223${_telephoneController.text.trim()}';
+      }
+      
+      if (telephone.isEmpty) {
+        throw Exception('Numéro de téléphone requis');
+      }
+
       await Provider.of<AuthProvider>(context, listen: false).registerConsommateur(
         nom: _nomController.text.trim(),
         prenom: _prenomController.text.trim(),
         email: _emailController.text.trim(),
         motDePasse: _passwordController.text,
-        telephone: _completePhoneNumber,
+        telephone: telephone,
         adresse: _adresseController.text.trim(),
       );
 
